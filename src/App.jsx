@@ -605,73 +605,35 @@ function StepProcess({ file, onDone, onBack }) {
 const EXPIRY_MINUTES = 30;
 const EXPIRY_MS      = EXPIRY_MINUTES * 60 * 1000;
 
-function StepExport({ terms, onBack, onExpire }) {
-  const [theme, setTheme]           = useState({ ...THEMES[0] });
-  const [custom, setCustom]         = useState({ ...THEMES[0] });
-  const [activePreset, setPreset]   = useState(0);
-  const [generating, setGenerating] = useState(false);
-  const [htmlReady, setHtmlReady]   = useState(null);
-  const [filterLetter, setFilter]   = useState(null);
 
-  // ── Expiry countdown ──────────────────────────────
-  const expiryRef   = useRef(Date.now() + EXPIRY_MS);
-  const [secsLeft, setSecsLeft] = useState(EXPIRY_MINUTES * 60);
-  const expired = secsLeft <= 0;
+// ═══════════════════════════════════════════════════════════════════════════
+// INLINE SVG CLIPART (top-level — no JSX parsing issues)
+// ═══════════════════════════════════════════════════════════════════════════
+const SVGS = {
+  star:    '<svg viewBox="0 0 40 40"><polygon points="20,2 25,14 38,14 28,22 32,35 20,27 8,35 12,22 2,14 15,14" fill="#FFD700" stroke="#E5A800" stroke-width="1.5"/></svg>',
+  pencil:  '<svg viewBox="0 0 40 40" fill="none"><rect x="16" y="4" width="9" height="24" rx="2" fill="#FFD700" stroke="#E5A800" stroke-width="1.5"/><polygon points="16,28 25,28 20.5,36" fill="#FF7043"/><rect x="16" y="4" width="9" height="5" rx="1" fill="#FFA0A0"/></svg>',
+  book:    '<svg viewBox="0 0 40 40" fill="none"><rect x="6" y="6" width="28" height="28" rx="3" fill="#42A5F5" stroke="#1976D2" stroke-width="1.5"/><rect x="20" y="6" width="2" height="28" fill="#1565C0"/><line x1="10" y1="14" x2="18" y2="14" stroke="white" stroke-width="2"/><line x1="23" y1="14" x2="31" y2="14" stroke="white" stroke-width="2"/></svg>',
+  apple:   '<svg viewBox="0 0 40 40" fill="none"><ellipse cx="20" cy="23" rx="13" ry="12" fill="#E53935" stroke="#B71C1C" stroke-width="1.5"/><path d="M20 11 Q22 6 26 7" stroke="#4CAF50" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="20" rx="4" ry="6" fill="rgba(255,255,255,0.2)"/></svg>',
+  owl:     '<svg viewBox="0 0 40 40" fill="none"><ellipse cx="20" cy="25" rx="12" ry="12" fill="#8D6E63" stroke="#5D4037" stroke-width="1.5"/><circle cx="15" cy="20" r="5" fill="white" stroke="#5D4037" stroke-width="1"/><circle cx="25" cy="20" r="5" fill="white" stroke="#5D4037" stroke-width="1"/><circle cx="15" cy="20" r="3" fill="#1A237E"/><circle cx="25" cy="20" r="3" fill="#1A237E"/><polygon points="20,24 18,27 22,27" fill="#FF8F00"/><ellipse cx="20" cy="10" rx="6" ry="5" fill="#8D6E63" stroke="#5D4037" stroke-width="1"/></svg>',
+  rocket:  '<svg viewBox="0 0 40 40" fill="none"><path d="M20 4 C14 10 12 20 12 28 L20 32 L28 28 C28 20 26 10 20 4Z" fill="#EF5350" stroke="#C62828" stroke-width="1.5"/><ellipse cx="20" cy="17" rx="4" ry="4" fill="#E3F2FD" stroke="#90CAF9" stroke-width="1"/><path d="M12 28 L8 34 L14 31Z" fill="#FF7043"/><path d="M28 28 L32 34 L26 31Z" fill="#FF7043"/></svg>',
+  trophy:  '<svg viewBox="0 0 40 40" fill="none"><path d="M12 6 L28 6 L26 22 Q20 28 14 22Z" fill="#FFD700" stroke="#E5A800" stroke-width="1.5"/><rect x="17" y="26" width="6" height="6" fill="#FFD700"/><rect x="13" y="32" width="14" height="3" rx="1" fill="#E5A800"/><path d="M12 8 Q6 8 6 15 Q6 20 12 20" stroke="#FFD700" stroke-width="2.5" fill="none"/><path d="M28 8 Q34 8 34 15 Q34 20 28 20" stroke="#FFD700" stroke-width="2.5" fill="none"/></svg>',
+  magnify: '<svg viewBox="0 0 40 40" fill="none"><circle cx="17" cy="17" r="10" fill="#E3F2FD" stroke="#1976D2" stroke-width="2.5"/><line x1="24" y1="24" x2="34" y2="34" stroke="#1976D2" stroke-width="3" stroke-linecap="round"/></svg>',
+  bulb:    '<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="16" r="10" fill="#FFF176" stroke="#F9A825" stroke-width="1.5"/><rect x="16" y="26" width="8" height="3" rx="1" fill="#E5A800"/><rect x="17" y="29" width="6" height="3" rx="1" fill="#E5A800"/><line x1="20" y1="6" x2="20" y2="3" stroke="#F9A825" stroke-width="2"/></svg>',
+  check:   '<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="16" fill="#4CAF50" stroke="#388E3C" stroke-width="1.5"/><polyline points="11,21 17,27 29,13" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>',
+  globe:   '<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="15" fill="#29B6F6" stroke="#0277BD" stroke-width="1.5"/><ellipse cx="20" cy="20" rx="7" ry="15" fill="none" stroke="#0277BD" stroke-width="1"/><line x1="5" y1="20" x2="35" y2="20" stroke="#0277BD" stroke-width="1"/></svg>',
+};
+const SVGK = Object.keys(SVGS);
+const svgAt = (i) => SVGS[SVGK[i % SVGK.length]];
+const esc   = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const shuf  = (a) => [...a].sort(() => Math.random() - 0.5);
 
-  useEffect(() => {
-    const tick = setInterval(() => {
-      const remaining = Math.max(0, Math.round((expiryRef.current - Date.now()) / 1000));
-      setSecsLeft(remaining);
-      if (remaining <= 0) {
-        clearInterval(tick);
-        setHtmlReady(null);
-        onExpire();
-      }
-    }, 1000);
-    return () => clearInterval(tick);
-  }, []);
+// ═══════════════════════════════════════════════════════════════════════════
+// HTML GENERATORS (pure functions — no JSX, no hooks)
+// ═══════════════════════════════════════════════════════════════════════════
 
-  const fmtTime = (s) => {
-    const m = Math.floor(s / 60), sec = s % 60;
-    return `${m}:${String(sec).padStart(2, "0")}`;
-  };
-
-  const urgency   = secsLeft < 120 ? "danger" : secsLeft < 300 ? "warn" : "info";
-  const urgencyBg = { info:"#E3F2FD", warn:"#FFF8E1", danger:"#FDECEA" };
-  const urgencyFg = { info:"#1565C0", warn:"#E67E22", danger:"#C0392B" };
-
-  const applyPreset = (i) => { setTheme({ ...THEMES[i] }); setCustom({ ...THEMES[i] }); setPreset(i); setHtmlReady(null); };
-  const updateColor = (key, val) => { const u = { ...custom, [key]:val }; setCustom(u); setTheme(u); setPreset(-1); setHtmlReady(null); };
-
-
-  // ── format state ─────────────────────────────────────────────────────────
-  const [activeFormat, setFmt]  = React.useState("glossary");
-  const [readyLabel,   setRLbl] = React.useState("Glossary");
-
-  // ── inline SVG clipart (no external deps) ────────────────────────────────
-  const SVGS = {
-    star:     '<svg viewBox="0 0 40 40"><polygon points="20,2 25,14 38,14 28,22 32,35 20,27 8,35 12,22 2,14 15,14" fill="#FFD700" stroke="#E5A800" stroke-width="1.5"/></svg>',
-    pencil:   '<svg viewBox="0 0 40 40" fill="none"><rect x="16" y="4" width="9" height="24" rx="2" fill="#FFD700" stroke="#E5A800" stroke-width="1.5"/><polygon points="16,28 25,28 20.5,36" fill="#FF7043"/><rect x="16" y="4" width="9" height="5" rx="1" fill="#FFA0A0"/></svg>',
-    book:     '<svg viewBox="0 0 40 40" fill="none"><rect x="6" y="6" width="28" height="28" rx="3" fill="#42A5F5" stroke="#1976D2" stroke-width="1.5"/><rect x="20" y="6" width="2" height="28" fill="#1565C0"/><line x1="10" y1="14" x2="18" y2="14" stroke="white" stroke-width="2"/><line x1="10" y1="19" x2="18" y2="19" stroke="white" stroke-width="2"/><line x1="10" y1="24" x2="18" y2="24" stroke="white" stroke-width="2"/><line x1="23" y1="14" x2="31" y2="14" stroke="white" stroke-width="2"/><line x1="23" y1="19" x2="31" y2="19" stroke="white" stroke-width="2"/></svg>',
-    apple:    '<svg viewBox="0 0 40 40" fill="none"><ellipse cx="20" cy="23" rx="13" ry="12" fill="#E53935" stroke="#B71C1C" stroke-width="1.5"/><path d="M20 11 Q22 6 26 7" stroke="#4CAF50" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="20" rx="4" ry="6" fill="rgba(255,255,255,0.2)"/></svg>',
-    owl:      '<svg viewBox="0 0 40 40" fill="none"><ellipse cx="20" cy="25" rx="12" ry="12" fill="#8D6E63" stroke="#5D4037" stroke-width="1.5"/><circle cx="15" cy="20" r="5" fill="white" stroke="#5D4037" stroke-width="1"/><circle cx="25" cy="20" r="5" fill="white" stroke="#5D4037" stroke-width="1"/><circle cx="15" cy="20" r="3" fill="#1A237E"/><circle cx="25" cy="20" r="3" fill="#1A237E"/><circle cx="16" cy="19" r="1" fill="white"/><circle cx="26" cy="19" r="1" fill="white"/><polygon points="20,24 18,27 22,27" fill="#FF8F00"/><ellipse cx="20" cy="10" rx="6" ry="5" fill="#8D6E63" stroke="#5D4037" stroke-width="1"/><polygon points="15,7 13,3 17,6" fill="#795548"/><polygon points="25,7 27,3 23,6" fill="#795548"/></svg>',
-    rocket:   '<svg viewBox="0 0 40 40" fill="none"><path d="M20 4 C14 10 12 20 12 28 L20 32 L28 28 C28 20 26 10 20 4Z" fill="#EF5350" stroke="#C62828" stroke-width="1.5"/><ellipse cx="20" cy="17" rx="4" ry="4" fill="#E3F2FD" stroke="#90CAF9" stroke-width="1"/><path d="M12 28 L8 34 L14 31Z" fill="#FF7043"/><path d="M28 28 L32 34 L26 31Z" fill="#FF7043"/><path d="M16 32 L20 38 L24 32" fill="#FDD835" stroke="#F9A825" stroke-width="1"/></svg>',
-    trophy:   '<svg viewBox="0 0 40 40" fill="none"><path d="M12 6 L28 6 L26 22 Q20 28 14 22Z" fill="#FFD700" stroke="#E5A800" stroke-width="1.5"/><rect x="17" y="26" width="6" height="6" fill="#FFD700" stroke="#E5A800" stroke-width="1"/><rect x="13" y="32" width="14" height="3" rx="1" fill="#E5A800"/><path d="M12 8 Q6 8 6 15 Q6 20 12 20" stroke="#FFD700" stroke-width="2.5" fill="none"/><path d="M28 8 Q34 8 34 15 Q34 20 28 20" stroke="#FFD700" stroke-width="2.5" fill="none"/></svg>',
-    magnify:  '<svg viewBox="0 0 40 40" fill="none"><circle cx="17" cy="17" r="10" fill="#E3F2FD" stroke="#1976D2" stroke-width="2.5"/><line x1="24" y1="24" x2="34" y2="34" stroke="#1976D2" stroke-width="3" stroke-linecap="round"/></svg>',
-    bulb:     '<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="16" r="10" fill="#FFF176" stroke="#F9A825" stroke-width="1.5"/><rect x="16" y="26" width="8" height="3" rx="1" fill="#E5A800"/><rect x="17" y="29" width="6" height="3" rx="1" fill="#E5A800"/><line x1="20" y1="6" x2="20" y2="3" stroke="#F9A825" stroke-width="2"/><line x1="30" y1="11" x2="32" y2="9" stroke="#F9A825" stroke-width="2"/><line x1="10" y1="11" x2="8" y2="9" stroke="#F9A825" stroke-width="2"/></svg>',
-    check:    '<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="16" fill="#4CAF50" stroke="#388E3C" stroke-width="1.5"/><polyline points="11,21 17,27 29,13" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>',
-    globe:    '<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="15" fill="#29B6F6" stroke="#0277BD" stroke-width="1.5"/><ellipse cx="20" cy="20" rx="7" ry="15" fill="none" stroke="#0277BD" stroke-width="1"/><line x1="5" y1="20" x2="35" y2="20" stroke="#0277BD" stroke-width="1"/><line x1="7" y1="13" x2="33" y2="13" stroke="#0277BD" stroke-width="1"/><line x1="7" y1="27" x2="33" y2="27" stroke="#0277BD" stroke-width="1"/></svg>',
-  };
-  const SVGK = Object.keys(SVGS);
-  const svgAt = (i) => SVGS[SVGK[i % SVGK.length]];
-  const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-
-  // ════════════════════════════════════════════════════════════════════════════
-  // GLOSSARY HTML (original — unchanged)
-  // ════════════════════════════════════════════════════════════════════════════
-  const mkGlossary = (t, data) => {
-    const sd = JSON.stringify(data).replace(/<\/script>/gi, '<\\/script>');
-    return `<!DOCTYPE html>
+function mkGlossary(t, data) {
+  const sd = JSON.stringify(data).replace(/<\/script>/gi, '<\\/script>');
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -716,7 +678,6 @@ function StepExport({ terms, onBack, onExpire }) {
     .gcard-actions{display:none;position:absolute;top:12px;right:14px;gap:6px;}
     .gcard:hover .gcard-actions{display:flex;}
     .act-btn{background:none;border:1px solid #e0e0d8;border-radius:5px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;}
-    .act-edit{color:#555;}
     .act-edit:hover{background:${t.accent};border-color:${t.accent};color:${t.text};}
     .act-del{color:#c0392b;}
     .act-del:hover{background:#c0392b;border-color:#c0392b;color:#fff;}
@@ -739,9 +700,8 @@ function StepExport({ terms, onBack, onExpire }) {
     .add-panel textarea{min-height:90px;line-height:1.6;}
     .add-err{color:#c0392b;font-size:13px;margin-bottom:10px;display:none;}
     .empty{text-align:center;padding:56px 24px;color:#999;}
-    .empty-icon{font-size:48px;margin-bottom:12px;}
     mark{background:${t.accent}55;color:inherit;border-radius:2px;padding:0 1px;}
-    .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:#fff;padding:10px 22px;border-radius:50px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap;}
+    .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:#fff;padding:10px 22px;border-radius:50px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;pointer-events:none;z-index:999;}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
     .top-btn{position:fixed;bottom:24px;right:24px;background:${t.accent};color:${t.text};width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;font-weight:700;font-size:18px;box-shadow:0 4px 14px rgba(0,0,0,.2);}
     .ftr{background:${t.nav};color:rgba(255,255,255,.3);text-align:center;padding:16px;font-size:12px;margin-top:48px;}
@@ -777,10 +737,8 @@ function StepExport({ terms, onBack, onExpire }) {
   <div class="add-panel" id="add-panel">
     <h3>Add a New Term</h3>
     <div class="add-err" id="add-err"></div>
-    <label>Term</label>
-    <input type="text" id="add-term" placeholder="e.g. Ansible" />
-    <label>Description</label>
-    <textarea id="add-desc" placeholder="Enter the definition&hellip;"></textarea>
+    <label>Term</label><input type="text" id="add-term" placeholder="e.g. Photosynthesis"/>
+    <label>Description</label><textarea id="add-desc" placeholder="Enter the definition&hellip;"></textarea>
     <div style="display:flex;gap:8px;">
       <button class="btn-confirm" onclick="confirmAdd()">Add Term</button>
       <button class="btn-cancel" onclick="toggleAdd()">Cancel</button>
@@ -804,70 +762,62 @@ function StepExport({ terms, onBack, onExpire }) {
 </div>
 <div class="toast" id="toast"></div>
 <script>
-const STORAGE_KEY = 'glossary_pro_data';
-const INITIAL_DATA = ${sd};
-let terms = [];
-let searchQ = '';
-let pendingDeleteId = null;
-function loadData() {
-  try { const s=localStorage.getItem(STORAGE_KEY); if(s){const p=JSON.parse(s);if(Array.isArray(p)&&p.length>0){terms=p;return;}}} catch(e){}
-  terms = INITIAL_DATA.map((t,i)=>({id:i+1,term:t.term,description:t.description}));
-}
-function saveData() { try{localStorage.setItem(STORAGE_KEY,JSON.stringify(terms));}catch(e){} }
-function nextId() { return terms.length?Math.max(...terms.map(t=>t.id||0))+1:1; }
-function getSorted() { return [...terms].sort((a,b)=>a.term.localeCompare(b.term,undefined,{sensitivity:'base'})); }
-function groupBy(arr) { const g={}; arr.forEach(t=>{const l=t.term[0].toUpperCase();if(!g[l])g[l]=[];g[l].push(t);}); return g; }
-function highlight(text,q) { if(!q)return escHtml(text); const re=new RegExp('('+q.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')+')','gi'); return escHtml(text).replace(re,'<mark>$1</mark>'); }
-function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function getFiltered() { if(!searchQ)return getSorted(); const q=searchQ.toLowerCase(); return getSorted().filter(t=>t.term.toLowerCase().includes(q)||t.description.toLowerCase().includes(q)); }
-function onSearch(val) { searchQ=val.trim(); document.getElementById('search-clear').style.display=searchQ?'block':'none'; render(); }
-function clearSearch() { searchQ=''; document.getElementById('search-input').value=''; document.getElementById('search-clear').style.display='none'; render(); }
-function render() {
-  const filtered=getFiltered(); const grouped=groupBy(filtered); const allLetters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''); const hasLetters=new Set(Object.keys(grouped));
-  document.getElementById('hdr-count').textContent=searchQ?\`\${filtered.length} result\${filtered.length!==1?'s':''} for "\${searchQ}"\`:\`\${terms.length} term\${terms.length!==1?'s':''}\`;
-  document.getElementById('alpha-nav').innerHTML=\`<a href="#" onclick="clearSearch();return false;" class="alpha-all \${!searchQ?'active':''}">All</a>\`+allLetters.map(l=>\`<a href="#s-\${l}" class="\${hasLetters.has(l)?'':'empty'}">\${l}</a>\`).join('');
+const STORAGE_KEY='glossary_pro_data';
+const INITIAL_DATA=${sd};
+let terms=[],searchQ='',pendingDeleteId=null;
+function loadData(){try{const s=localStorage.getItem(STORAGE_KEY);if(s){const p=JSON.parse(s);if(Array.isArray(p)&&p.length>0){terms=p;return;}}}catch(e){}terms=INITIAL_DATA.map((t,i)=>({id:i+1,term:t.term,description:t.description}));}
+function saveData(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(terms));}catch(e){}}
+function nextId(){return terms.length?Math.max(...terms.map(t=>t.id||0))+1:1;}
+function getSorted(){return[...terms].sort((a,b)=>a.term.localeCompare(b.term,undefined,{sensitivity:'base'}));}
+function groupBy(arr){const g={};arr.forEach(t=>{const l=t.term[0].toUpperCase();if(!g[l])g[l]=[];g[l].push(t);});return g;}
+function highlight(text,q){if(!q)return escH(text);const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');return escH(text).replace(re,'<mark>$1</mark>');}
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function getFiltered(){if(!searchQ)return getSorted();const q=searchQ.toLowerCase();return getSorted().filter(t=>t.term.toLowerCase().includes(q)||t.description.toLowerCase().includes(q));}
+function onSearch(v){searchQ=v.trim();document.getElementById('search-clear').style.display=searchQ?'block':'none';render();}
+function clearSearch(){searchQ='';document.getElementById('search-input').value='';document.getElementById('search-clear').style.display='none';render();}
+function render(){
+  const fl=getFiltered(),gr=groupBy(fl),al='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),hl=new Set(Object.keys(gr));
+  document.getElementById('hdr-count').textContent=searchQ?fl.length+' result'+(fl.length!==1?'s':'')+' for "'+searchQ+'"':terms.length+' term'+(terms.length!==1?'s':'');
+  document.getElementById('alpha-nav').innerHTML='<a href="#" onclick="clearSearch();return false;" class="alpha-all '+(searchQ?'':'active')+'">All</a>'+al.map(l=>'<a href="#s-'+l+'" class="'+(hl.has(l)?'':'empty')+'">'+l+'</a>').join('');
   const root=document.getElementById('glossary-root');
-  if(filtered.length===0){root.innerHTML=\`<div class="empty"><div class="empty-icon">&#x1F50D;</div><div>\${searchQ?'No terms match your search.':'No terms yet &mdash; click <strong>+ Add Term</strong> to get started.'}</div></div>\`;return;}
-  root.innerHTML=Object.keys(grouped).sort().map(letter=>{
-    const tms=grouped[letter];
-    const cards=tms.map(item=>\`<div class="gcard" id="card-\${item.id}"><div class="gcard-term">\${highlight(item.term,searchQ)}</div><div class="gcard-desc">\${highlight(item.description,searchQ)}</div><div class="gcard-actions"><button class="act-btn act-edit" onclick="startEdit(\${item.id})">&#x270F; Edit</button><button class="act-btn act-del" onclick="openDelDialog(\${item.id})">&#x2715; Delete</button></div></div>\`).join('');
-    return \`<div class="letter-section" id="s-\${letter}"><div class="letter-hdr"><div class="letter-badge">\${letter}</div><div class="letter-line"></div><span class="letter-count">\${tms.length} term\${tms.length!==1?'s':''}</span></div>\${cards}</div>\`;
+  if(fl.length===0){root.innerHTML='<div class="empty">&#x1F50D; '+(searchQ?'No terms match your search.':'No terms yet.')+'</div>';return;}
+  root.innerHTML=Object.keys(gr).sort().map(lt=>{
+    const tms=gr[lt];
+    return '<div class="letter-section" id="s-'+lt+'"><div class="letter-hdr"><div class="letter-badge">'+lt+'</div><div class="letter-line"></div><span class="letter-count">'+tms.length+' term'+(tms.length!==1?'s':'')+'</span></div>'+
+      tms.map(it=>'<div class="gcard" id="card-'+it.id+'"><div class="gcard-term">'+highlight(it.term,searchQ)+'</div><div class="gcard-desc">'+highlight(it.description,searchQ)+'</div><div class="gcard-actions"><button class="act-btn act-edit" onclick="startEdit('+it.id+')">&#x270F; Edit</button><button class="act-btn act-del" onclick="openDelDialog('+it.id+')">&#x2715; Delete</button></div></div>').join('')+
+    '</div>';
   }).join('');
 }
 function toggleAdd(){const p=document.getElementById('add-panel');const o=p.classList.contains('open');p.classList.toggle('open',!o);if(!o){document.getElementById('add-term').focus();document.getElementById('add-err').style.display='none';}else{document.getElementById('add-term').value='';document.getElementById('add-desc').value='';}}
-function confirmAdd(){const term=document.getElementById('add-term').value.trim();const desc=document.getElementById('add-desc').value.trim();const e=document.getElementById('add-err');if(!term||!desc){e.textContent=!term?'Please enter a term.':'Please enter a description.';e.style.display='block';return;}e.style.display='none';terms.push({id:nextId(),term,description:desc});saveData();document.getElementById('add-term').value='';document.getElementById('add-desc').value='';document.getElementById('add-panel').classList.remove('open');render();toast('&#x2713; Term added');}
-function startEdit(id){const item=terms.find(t=>t.id===id);if(!item)return;const el=document.getElementById('card-'+id);if(!el)return;el.outerHTML=\`<div class="edit-form" id="edit-\${id}"><div class="err" id="edit-err-\${id}"></div><input id="edit-term-\${id}" value="\${escHtml(item.term)}" placeholder="Term"/><textarea id="edit-desc-\${id}" placeholder="Description">\${escHtml(item.description)}</textarea><div class="edit-form-actions"><button class="btn-confirm" onclick="confirmEdit(\${id})">Save Changes</button><button class="btn-cancel" onclick="cancelEdit(\${id})">Cancel</button></div></div>\`;document.getElementById('edit-term-'+id).focus();}
-function confirmEdit(id){const term=document.getElementById('edit-term-'+id).value.trim();const desc=document.getElementById('edit-desc-'+id).value.trim();const e=document.getElementById('edit-err-'+id);if(!term||!desc){e.textContent=!term?'Term cannot be empty.':'Description cannot be empty.';e.style.display='block';return;}const idx=terms.findIndex(t=>t.id===id);if(idx>=0){terms[idx].term=term;terms[idx].description=desc;}saveData();render();toast('&#x2713; Changes saved');}
-function cancelEdit(id){render();}
-function openDelDialog(id){pendingDeleteId=id;const item=terms.find(t=>t.id===id);document.getElementById('del-term-name').textContent=item?item.term:'';document.getElementById('del-overlay').classList.add('open');}
+function confirmAdd(){const tm=document.getElementById('add-term').value.trim();const dc=document.getElementById('add-desc').value.trim();const e=document.getElementById('add-err');if(!tm||!dc){e.textContent=!tm?'Please enter a term.':'Please enter a description.';e.style.display='block';return;}e.style.display='none';terms.push({id:nextId(),term:tm,description:dc});saveData();document.getElementById('add-term').value='';document.getElementById('add-desc').value='';document.getElementById('add-panel').classList.remove('open');render();toast('Term added');}
+function startEdit(id){const item=terms.find(t=>t.id===id);if(!item)return;const el=document.getElementById('card-'+id);if(!el)return;el.outerHTML='<div class="edit-form" id="edit-'+id+'"><div class="err" id="edit-err-'+id+'"></div><input id="edit-term-'+id+'" value="'+escH(item.term)+'" placeholder="Term"/><textarea id="edit-desc-'+id+'" placeholder="Description">'+escH(item.description)+'</textarea><div class="edit-form-actions"><button class="btn-confirm" onclick="confirmEdit('+id+')">Save</button><button class="btn-cancel" onclick="render()">Cancel</button></div></div>';document.getElementById('edit-term-'+id).focus();}
+function confirmEdit(id){const tm=document.getElementById('edit-term-'+id).value.trim();const dc=document.getElementById('edit-desc-'+id).value.trim();const e=document.getElementById('edit-err-'+id);if(!tm||!dc){e.textContent=!tm?'Term cannot be empty.':'Description cannot be empty.';e.style.display='block';return;}const idx=terms.findIndex(t=>t.id===id);if(idx>=0){terms[idx].term=tm;terms[idx].description=dc;}saveData();render();toast('Changes saved');}
+function openDelDialog(id){pendingDeleteId=id;const it=terms.find(t=>t.id===id);document.getElementById('del-term-name').textContent=it?it.term:'';document.getElementById('del-overlay').classList.add('open');}
 function closeDelDialog(){pendingDeleteId=null;document.getElementById('del-overlay').classList.remove('open');}
 function confirmDelete(){if(pendingDeleteId==null)return;terms=terms.filter(t=>t.id!==pendingDeleteId);saveData();closeDelDialog();render();toast('Term deleted');}
 function saveFile(){
-  const freshData=JSON.stringify(terms.map(({term,description})=>({term,description}))).replace(/<\/script>/gi,'<\\/script>');
+  const fd=JSON.stringify(terms.map(({term,description})=>({term,description}))).replace(/<\/script>/gi,'<\\/script>');
   const src=document.documentElement.outerHTML;
-  const updated=src.replace(/const INITIAL_DATA = \\[.*?\\];/s,'const INITIAL_DATA = '+freshData+';');
-  const blob=new Blob([updated],{type:'text/html'});const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  const upd=src.replace(/const INITIAL_DATA=\[.*?\];/s,'const INITIAL_DATA='+fd+';');
+  const blob=new Blob([upd],{type:'text/html'});const url=URL.createObjectURL(blob);const a=document.createElement('a');
   a.href=url;a.download='my-glossary-'+new Date().toISOString().split('T')[0]+'.html';
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-  const btn=document.getElementById('save-btn');btn.classList.add('flash');setTimeout(()=>btn.classList.remove('flash'),1500);toast('&#x2713; Updated file downloaded');
+  const btn=document.getElementById('save-btn');btn.classList.add('flash');setTimeout(()=>btn.classList.remove('flash'),1500);toast('Updated file downloaded');
 }
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
-loadData(); render();
+loadData();render();
 document.getElementById('del-overlay').addEventListener('click',function(e){if(e.target===this)closeDelDialog();});
 document.getElementById('add-term').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('add-desc').focus();});
 document.getElementById('add-desc').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.ctrlKey)confirmAdd();});
 </script>
 </body>
 </html>`;
-  };
+}
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // FLASH CARDS
-  // ════════════════════════════════════════════════════════════════════════════
-  const mkFlashCards = (t, data) => {
-    const pairs = data.map((d, i) => {
-      const icon = svgAt(i);
-      return `
+function mkFlashCards(t, data) {
+  const pairs = data.map((d, i) => {
+    const icon = svgAt(i);
+    return `
 <div class="fc-front fc-cell">
   <div class="fc-icon">${icon}</div>
   <div class="fc-badge">TERM</div>
@@ -879,390 +829,288 @@ document.getElementById('add-desc').addEventListener('keydown',function(e){if(e.
   <div class="fc-def">${esc(d.description)}</div>
   <div class="fc-num">${i+1}</div>
 </div>`;
-    }).join('\n');
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <title>Flash Cards</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;}
-    .hdr{background:${t.nav};color:#fff;text-align:center;padding:22px 20px 16px;}
-    .hdr h1{font-family:Georgia,serif;font-size:26px;font-weight:900;}
-    .hdr h1 em{color:${t.accent};}
-    .hdr-sub{color:rgba(255,255,255,.45);font-size:12px;margin-top:4px;}
-    .instr{max-width:700px;margin:18px auto 6px;padding:12px 18px;background:#fff;border-radius:10px;border-left:4px solid ${t.accent};font-size:13px;color:#555;line-height:1.6;}
-    .no-print{text-align:center;margin:12px 0 18px;}
-    .no-print button{background:${t.accent};color:${t.nav};border:none;padding:10px 28px;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
-    .grid{max-width:760px;margin:0 auto;padding:0 20px 40px;display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-    .fc-cell{background:#fff;border-radius:12px;padding:18px 16px;min-height:185px;border:2px solid #e8e8e0;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;}
-    .fc-front{border-top:5px solid ${t.accent};}
-    .fc-back{border-top:5px solid ${t.accentDark};background:${t.accentPale};}
-    .fc-icon{width:50px;height:50px;margin-bottom:8px;}
-    .fc-icon svg{width:100%;height:100%;}
-    .fc-badge{font-size:8px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:rgba(0,0,0,.3);margin-bottom:5px;}
-    .fc-badge-def{color:${t.accentDark};opacity:.7;}
-    .fc-term{font-family:Georgia,serif;font-size:clamp(15px,3vw,20px);font-weight:900;color:${t.nav};line-height:1.3;}
-    .fc-def{font-size:12px;color:#444;line-height:1.65;max-height:120px;overflow:hidden;}
-    .fc-num{position:absolute;bottom:7px;right:11px;font-size:9px;color:#ccc;font-weight:700;}
-    @media print{
-      body{background:#fff;}
-      .hdr,.instr,.no-print{display:none!important;}
-      .grid{max-width:100%;padding:0;gap:10px;}
-      .fc-cell{min-height:155px;border:1.5px solid #ccc;border-radius:8px;box-shadow:none;break-inside:avoid;}
-      .fc-front{border-top:4px solid ${t.accent};}
-      .fc-back{border-top:4px solid ${t.accentDark};}
-      .fc-back{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    }
-  </style>
+  }).join('\n');
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<title>Flash Cards</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;}
+.hdr{background:${t.nav};color:#fff;text-align:center;padding:22px 20px 16px;}
+.hdr h1{font-family:Georgia,serif;font-size:26px;font-weight:900;}
+.hdr h1 em{color:${t.accent};}
+.hdr-sub{color:rgba(255,255,255,.45);font-size:12px;margin-top:4px;}
+.instr{max-width:700px;margin:16px auto 6px;padding:12px 18px;background:#fff;border-radius:10px;border-left:4px solid ${t.accent};font-size:13px;color:#555;line-height:1.6;}
+.no-print{text-align:center;margin:12px 0 16px;}
+.no-print button{background:${t.accent};color:${t.nav};border:none;padding:10px 28px;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+.grid{max-width:760px;margin:0 auto;padding:0 20px 40px;display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fc-cell{background:#fff;border-radius:12px;padding:18px 16px;min-height:185px;border:2px solid #e8e8e0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;}
+.fc-front{border-top:5px solid ${t.accent};}
+.fc-back{border-top:5px solid ${t.accentDark};background:${t.accentPale};}
+.fc-icon{width:50px;height:50px;margin-bottom:8px;}
+.fc-icon svg{width:100%;height:100%;}
+.fc-badge{font-size:8px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:rgba(0,0,0,.3);margin-bottom:5px;}
+.fc-badge-def{color:${t.accentDark};opacity:.8;}
+.fc-term{font-family:Georgia,serif;font-size:clamp(15px,3vw,20px);font-weight:900;color:${t.nav};line-height:1.3;}
+.fc-def{font-size:12px;color:#444;line-height:1.65;max-height:115px;overflow:hidden;}
+.fc-num{position:absolute;bottom:7px;right:11px;font-size:9px;color:#ccc;font-weight:700;}
+@media print{
+  body{background:#fff;}
+  .hdr,.instr,.no-print{display:none!important;}
+  .grid{max-width:100%;padding:0;gap:10px;}
+  .fc-cell{min-height:155px;border:1.5px solid #ccc;border-radius:8px;box-shadow:none;break-inside:avoid;}
+  .fc-back{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+</style>
 </head>
 <body>
-<div class="hdr">
-  <h1>Flash Cards <em>&#9734;</em></h1>
-  <div class="hdr-sub">${data.length} terms &nbsp;&middot;&nbsp; Print, cut &amp; fold &nbsp;&middot;&nbsp; Made with Live Glossary Pro</div>
-</div>
-<div class="instr">
-  &#128203; <strong>Instructions:</strong> Print this page. Each pair (left = Term, right = Definition) makes one flash card.
-  Cut along grid lines, then fold each pair in half for instant fold-and-study cards.
-  Or print double-sided and cut for classic front/back cards.
-</div>
+<div class="hdr"><h1>Flash Cards <em>&#9734;</em></h1>
+<div class="hdr-sub">${data.length} terms &nbsp;&middot;&nbsp; Print, cut &amp; fold &nbsp;&middot;&nbsp; Made with Live Glossary Pro</div></div>
+<div class="instr">&#128203; <strong>Instructions:</strong> Print this page. Each left/right pair makes one card — TERM on the left, DEFINITION on the right. Cut along grid lines and fold in half, or print double-sided for classic flash cards.</div>
 <div class="no-print"><button onclick="window.print()">&#128424; Print Flash Cards</button></div>
 <div class="grid">${pairs}</div>
 </body></html>`;
-  };
-
-  // ════════════════════════════════════════════════════════════════════════════
-  // STUDY SHEET
-  // ════════════════════════════════════════════════════════════════════════════
-  const mkStudySheet = (t, data) => {
-    const sh = (a) => [...a].sort(() => Math.random() - 0.5);
-    const termRows = data.map((d,i) => `
-      <tr class="${i%2===0?'row-e':'row-o'}">
-        <td class="td-n">${i+1}</td>
-        <td class="td-t">${esc(d.term)}</td>
-        <td class="td-b"></td>
-      </tr>`).join('');
-    const wb = [...data].sort((a,b)=>a.term.localeCompare(b.term))
-      .map(d=>`<span class="wb">${esc(d.term)}</span>`).join(' ');
-    const mData = sh(data).slice(0, Math.min(data.length, 20));
-    const mDefs = sh(mData);
-    const matchL = mData.map((d,i) => `<tr><td class="mn">${i+1}.</td><td class="mt">${esc(d.term)}</td><td class="mb">_____</td></tr>`).join('');
-    const matchR = mDefs.map((d,i) => `<li>${String.fromCharCode(65+i)}.&nbsp;${esc(d.description.length>90?d.description.slice(0,90)+'…':d.description)}</li>`).join('');
-    const akMatch = mData.map((d,i) => {
-      const li = mDefs.findIndex(x=>x.term===d.term);
-      return `${i+1}=${String.fromCharCode(65+li)}`;
-    }).join('  ');
-    const topIcons = [SVGS.pencil, SVGS.book, SVGS.apple, SVGS.star, SVGS.owl].join('');
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <title>Study Sheet</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;font-size:13px;}
-    .hdr{background:${t.nav};color:#fff;padding:18px 24px 14px;display:flex;align-items:center;gap:14px;}
-    .hdr-icons{display:flex;gap:5px;}
-    .hdr-icons svg{width:32px;height:32px;}
-    .hdr-text{flex:1;}
-    .hdr h1{font-family:Georgia,serif;font-size:24px;font-weight:900;color:#fff;}
-    .hdr h1 em{color:${t.accent};}
-    .hdr-sub{color:rgba(255,255,255,.45);font-size:11px;margin-top:3px;}
-    .namerow{max-width:820px;margin:14px auto 0;padding:0 20px;display:flex;gap:18px;}
-    .nf{flex:1;border-bottom:2px solid ${t.accent};padding-bottom:4px;font-size:13px;color:#888;}
-    .wrap{max-width:820px;margin:14px auto;padding:0 20px 40px;}
-    .sec{font-family:Georgia,serif;font-size:15px;font-weight:900;color:${t.nav};
-      border-bottom:3px solid ${t.accent};padding-bottom:5px;margin:22px 0 10px;
-      display:flex;align-items:center;gap:8px;}
-    .sec svg{width:20px;height:20px;flex-shrink:0;}
-    table{width:100%;border-collapse:collapse;}
-    .td-n{width:28px;color:#bbb;font-size:11px;padding:6px 2px;vertical-align:middle;}
-    .td-t{font-weight:700;padding:6px 8px;vertical-align:middle;color:${t.nav};width:36%;}
-    .td-b{border-bottom:1.5px solid #c0bfb5;min-width:200px;padding:6px 8px;}
-    .row-e{background:#fff;} .row-o{background:${t.accentPale};}
-    .word-bank{background:#fff;border-radius:8px;padding:12px 14px;border:1.5px solid ${t.accent}33;display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;}
-    .wb-lbl{font-size:10px;font-weight:800;letter-spacing:1px;color:#aaa;width:100%;margin-bottom:2px;}
-    .wb{background:${t.accentPale};border:1px solid ${t.accent}55;border-radius:20px;padding:3px 11px;font-size:12px;font-weight:600;color:${t.nav};}
-    .mn{width:26px;color:#bbb;font-size:11px;padding:5px 2px;}
-    .mt{font-weight:700;padding:5px 8px;color:${t.nav};width:34%;}
-    .mb{padding:5px 8px;color:#bbb;letter-spacing:3px;}
-    ol.mdefs{list-style:none;font-size:12px;color:#444;line-height:2.1;}
-    .ak{background:${t.nav};color:rgba(255,255,255,.6);margin-top:26px;padding:12px 16px;border-radius:8px;font-size:11px;line-height:2;}
-    .ak strong{color:${t.accent};}
-    .no-print{text-align:center;margin:10px 0 16px;}
-    .no-print button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-    @media print{
-      body{background:#fff;}
-      .hdr,.row-o,.row-e,.ak{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-      .no-print{display:none!important;}
-      .wrap{max-width:100%;padding:0 12px;}
-    }
-  </style>
-</head>
-<body>
-<div class="hdr">
-  <div class="hdr-icons">${topIcons}</div>
-  <div class="hdr-text">
-    <h1>Study Sheet <em>&#9734;</em></h1>
-    <div class="hdr-sub">${data.length} vocabulary terms &nbsp;&middot;&nbsp; Made with Live Glossary Pro</div>
-  </div>
-</div>
-<div class="namerow">
-  <div class="nf">Name: _________________________________</div>
-  <div class="nf">Date: _______________ &nbsp; Class: _______________</div>
-</div>
-<div class="wrap">
-  <div class="no-print"><button onclick="window.print()">&#128424; Print Study Sheet</button></div>
-  <div class="sec">${SVGS.pencil} Part 1 &mdash; Fill in the Blank</div>
-  <p style="font-size:12px;color:#666;margin-bottom:10px;">Write the definition for each term in the blank. Use the Word Bank if you need help.</p>
-  <div class="word-bank"><div class="wb-lbl">&#128218; WORD BANK</div>${wb}</div>
-  <table><tbody>${termRows}</tbody></table>
-  <div class="sec" style="margin-top:26px;">${SVGS.magnify} Part 2 &mdash; Matching</div>
-  <p style="font-size:12px;color:#666;margin-bottom:10px;">Match each term on the left to its definition on the right. Write the letter in the blank.</p>
-  <div style="display:flex;gap:22px;align-items:flex-start;">
-    <table><tbody>${matchL}</tbody></table>
-    <ol class="mdefs">${matchR}</ol>
-  </div>
-  <div class="ak"><strong>&#10003; Answer Key (Matching):</strong> ${akMatch}</div>
-</div>
-</body></html>`;
-  };
-
-  // ════════════════════════════════════════════════════════════════════════════
-  // QUIZ SHEET
-  // ════════════════════════════════════════════════════════════════════════════
-  const mkQuiz = (t, data) => {
-    const sh = (a) => [...a].sort(() => Math.random() - 0.5);
-    const mcQ = sh(data).slice(0, Math.min(data.length, 15)).map((item, qi) => {
-      const wrongs = sh(data.filter(d => d.term !== item.term)).slice(0, 3);
-      const opts   = sh([item, ...wrongs]);
-      const cIdx   = opts.findIndex(o => o.term === item.term);
-      const ltrs   = ['A','B','C','D'];
-      const optsHtml = opts.map((o,oi) =>
-        `<div class="mc-o"><span class="mc-l">${ltrs[oi]}</span>${esc(o.description.length>100?o.description.slice(0,100)+'…':o.description)}</div>`
-      ).join('');
-      return { qi, item, optsHtml, cl: ltrs[cIdx] };
-    });
-    const mcHtml = mcQ.map(({qi,item,optsHtml}) => `
-      <div class="qb">
-        <div class="qn">Q${qi+1}.</div>
-        <div class="qt">What is the definition of <strong>${esc(item.term)}</strong>?</div>
-        <div class="mc-opts">${optsHtml}</div>
-      </div>`).join('');
-    const mData = sh(data).slice(0, Math.min(data.length, 10));
-    const mDefs = sh(mData);
-    const matchL = mData.map((d,i) => `<tr><td class="mn">${i+1}.</td><td class="mt">${esc(d.term)}</td><td class="mb">_____</td></tr>`).join('');
-    const matchR = mDefs.map((d,i) => `<li>${String.fromCharCode(65+i)}.&nbsp;${esc(d.description.length>80?d.description.slice(0,80)+'…':d.description)}</li>`).join('');
-    const mcKey  = mcQ.map(({qi,cl}) => `Q${qi+1}=${cl}`).join('  ');
-    const matchKey = mData.map((d,i) => {
-      const li = mDefs.findIndex(x=>x.term===d.term);
-      return `${i+1}=${String.fromCharCode(65+li)}`;
-    }).join('  ');
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <title>Vocabulary Quiz</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;font-size:13px;}
-    .hdr{background:${t.nav};color:#fff;padding:18px 24px 14px;display:flex;align-items:center;gap:14px;}
-    .hdr svg{width:38px;height:38px;flex-shrink:0;}
-    .hdr h1{font-family:Georgia,serif;font-size:24px;font-weight:900;color:#fff;}
-    .hdr h1 em{color:${t.accent};}
-    .hdr-sub{color:rgba(255,255,255,.45);font-size:11px;margin-top:3px;}
-    .namerow{max-width:820px;margin:14px auto 0;padding:0 20px;display:flex;gap:16px;align-items:flex-end;}
-    .nf{flex:1;border-bottom:2px solid ${t.accent};padding-bottom:4px;font-size:13px;color:#888;}
-    .score-box{border:2px solid ${t.accent};border-radius:6px;padding:4px 12px;font-size:13px;color:#888;min-width:110px;text-align:center;}
-    .wrap{max-width:820px;margin:14px auto;padding:0 20px 40px;}
-    .sec{font-family:Georgia,serif;font-size:15px;font-weight:900;color:${t.nav};
-      border-bottom:3px solid ${t.accent};padding-bottom:5px;margin:24px 0 12px;
-      display:flex;align-items:center;gap:8px;}
-    .sec svg{width:20px;height:20px;}
-    .qb{margin-bottom:16px;padding:12px 15px;background:#fff;border-radius:8px;border-left:3px solid ${t.accent};box-shadow:0 1px 5px rgba(0,0,0,.05);}
-    .qn{font-size:10px;font-weight:800;color:${t.accent};letter-spacing:.5px;margin-bottom:3px;}
-    .qt{font-size:13px;color:#333;margin-bottom:8px;line-height:1.5;}
-    .mc-opts{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
-    .mc-o{font-size:12px;color:#555;line-height:1.5;padding:3px 0;display:flex;align-items:flex-start;gap:6px;}
-    .mc-l{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border:1.5px solid ${t.accent};
-      border-radius:50%;font-size:10px;font-weight:700;color:${t.accent};flex-shrink:0;margin-top:1px;}
-    table{width:100%;}
-    .mn{width:26px;color:#bbb;font-size:11px;padding:5px 2px;}
-    .mt{font-weight:700;padding:5px 8px;color:${t.nav};width:36%;}
-    .mb{padding:5px 8px;color:#bbb;letter-spacing:3px;}
-    ol.mdefs{list-style:none;font-size:12px;color:#444;line-height:2.1;}
-    .ak{background:${t.nav};color:rgba(255,255,255,.6);margin-top:26px;padding:12px 16px;border-radius:8px;font-size:11px;line-height:2;}
-    .ak strong{color:${t.accent};display:block;margin-bottom:3px;}
-    .no-print{text-align:center;margin:10px 0 16px;}
-    .no-print button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-    @media print{
-      body{background:#fff;}
-      .hdr,.qb,.ak{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-      .no-print{display:none!important;}
-      .wrap{max-width:100%;padding:0 12px;}
-      .qb{break-inside:avoid;}
-    }
-  </style>
-</head>
-<body>
-<div class="hdr">
-  ${SVGS.trophy}
-  <div>
-    <h1>Vocabulary Quiz <em>&#9734;</em></h1>
-    <div class="hdr-sub">${mcQ.length} multiple choice &nbsp;&middot;&nbsp; ${mData.length} matching &nbsp;&middot;&nbsp; Made with Live Glossary Pro</div>
-  </div>
-</div>
-<div class="namerow">
-  <div class="nf">Name: _________________________________</div>
-  <div class="nf">Date: _______________</div>
-  <div class="score-box">Score: _____ / ${mcQ.length + mData.length}</div>
-</div>
-<div class="wrap">
-  <div class="no-print"><button onclick="window.print()">&#128424; Print Quiz</button></div>
-  <div class="sec">${SVGS.bulb} Part 1 &mdash; Multiple Choice</div>
-  <p style="font-size:12px;color:#666;margin-bottom:12px;">Circle the letter of the best answer.</p>
-  ${mcHtml}
-  <div class="sec">${SVGS.magnify} Part 2 &mdash; Matching</div>
-  <p style="font-size:12px;color:#666;margin-bottom:10px;">Match each term to its definition. Write the letter in the blank.</p>
-  <div style="display:flex;gap:26px;align-items:flex-start;">
-    <table><tbody>${matchL}</tbody></table>
-    <ol class="mdefs">${matchR}</ol>
-  </div>
-  <div class="ak">
-    <strong>&#10003; Answer Key &mdash; Multiple Choice:</strong> ${mcKey}
-    <strong style="margin-top:5px;">&#10003; Answer Key &mdash; Matching:</strong> ${matchKey}
-  </div>
-</div>
-</body></html>`;
-  };
-
-  // ════════════════════════════════════════════════════════════════════════════
-  // BINGO + WORD WALL
-  // ════════════════════════════════════════════════════════════════════════════
-  const mkBingo = (t, data) => {
-    const sh = (a) => [...a].sort(() => Math.random() - 0.5);
-    const makeGrid = () => {
-      const pool = sh(data);
-      const grid = [];
-      let pi = 0;
-      for (let r=0; r<5; r++) {
-        const row = [];
-        for (let c=0; c<5; c++) {
-          if (r===2 && c===2) { row.push({term:'FREE',free:true}); }
-          else { row.push(pool[pi++ % pool.length] || {term:'?',free:false}); }
-        }
-        grid.push(row);
-      }
-      return grid;
-    };
-    const COLS = ['B','I','N','G','O'];
-    const renderCard = (grid, idx) => {
-      const icon = svgAt(idx);
-      const rows = grid.map(row =>
-        `<tr>${row.map((cell,ci) =>
-          cell.free
-            ? `<td class="free"><div class="free-svg">${SVGS.star}</div><div class="free-lbl">FREE</div></td>`
-            : `<td class="bc">${esc(cell.term.length>16?cell.term.slice(0,14)+'…':cell.term)}</td>`
-        ).join('')}</tr>`
-      ).join('');
-      return `
-<div class="card">
-  <div class="card-hdr">
-    <div class="card-icon">${icon}</div>
-    <div class="card-title">BINGO</div>
-    <div class="card-n">Card #${idx+1}</div>
-  </div>
-  <table class="bt">
-    <thead><tr>${COLS.map(l=>`<th class="bcol">${l}</th>`).join('')}</tr></thead>
-    <tbody>${rows}</tbody>
-  </table>
-</div>`;
-    };
-    const numCards = data.length >= 24 ? Math.min(6, 1 + Math.floor(data.length/24)) : 1;
-    const cards = Array.from({length:numCards},(_,i)=>renderCard(makeGrid(),i)).join('');
-    const wallCards = data.map((d,i) => `
-<div class="wc">
-  <div class="wc-icon">${svgAt(i)}</div>
-  <div class="wc-term">${esc(d.term)}</div>
-  <div class="wc-def">${esc(d.description.length>110?d.description.slice(0,110)+'…':d.description)}</div>
-</div>`).join('');
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <title>Bingo &amp; Word Wall</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;}
-    .hdr{background:${t.nav};color:#fff;padding:18px 24px 14px;text-align:center;}
-    .hdr h1{font-family:Georgia,serif;font-size:26px;font-weight:900;color:#fff;}
-    .hdr h1 em{color:${t.accent};}
-    .hdr-sub{color:rgba(255,255,255,.45);font-size:12px;margin-top:4px;}
-    .tabs{display:flex;justify-content:center;gap:8px;padding:14px;background:#fff;border-bottom:2px solid #eee;}
-    .tab{padding:8px 22px;border-radius:20px;border:2px solid ${t.accent};background:#fff;color:${t.nav};font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s;}
-    .tab.on{background:${t.accent};color:${t.nav};}
-    .no-print{text-align:center;padding:12px 0;}
-    .no-print button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-    #bs{display:block;} #ws{display:none;}
-    .card-grid{max-width:900px;margin:0 auto;padding:18px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:22px;}
-    .card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,.1);border:2px solid ${t.accent}33;}
-    .card-hdr{background:${t.nav};padding:10px 14px;display:flex;align-items:center;gap:10px;}
-    .card-icon{width:34px;height:34px;flex-shrink:0;}
-    .card-icon svg{width:100%;height:100%;}
-    .card-title{font-family:Georgia,serif;font-size:20px;font-weight:900;color:#fff;letter-spacing:5px;flex:1;text-align:center;}
-    .card-n{font-size:10px;color:rgba(255,255,255,.35);}
-    .bt{width:100%;border-collapse:collapse;}
-    .bcol{background:${t.accent};color:${t.nav};font-family:Georgia,serif;font-size:16px;font-weight:900;text-align:center;padding:7px 2px;width:20%;}
-    .bc{border:1px solid #eee;text-align:center;padding:6px 3px;font-size:10px;font-weight:700;color:${t.nav};height:50px;vertical-align:middle;line-height:1.3;}
-    .bc:nth-child(odd){background:#fafaf7;}
-    .free{border:1px solid #eee;text-align:center;padding:4px;background:${t.accentPale};height:50px;vertical-align:middle;}
-    .free-svg{width:26px;height:26px;margin:0 auto 1px;}
-    .free-svg svg{width:100%;height:100%;}
-    .free-lbl{font-size:8px;font-weight:900;letter-spacing:1px;color:${t.accentDark};}
-    .wall-grid{max-width:900px;margin:0 auto;padding:18px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;}
-    .wc{background:#fff;border-radius:10px;padding:14px 12px;text-align:center;border-top:4px solid ${t.accent};box-shadow:0 2px 8px rgba(0,0,0,.07);}
-    .wc-icon{width:42px;height:42px;margin:0 auto 7px;}
-    .wc-icon svg{width:100%;height:100%;}
-    .wc-term{font-family:Georgia,serif;font-size:14px;font-weight:900;color:${t.nav};margin-bottom:5px;line-height:1.3;}
-    .wc-def{font-size:11px;color:#666;line-height:1.6;}
-    @media print{
-      body{background:#fff;}
-      .hdr,.tabs,.no-print{display:none!important;}
-      #bs,#ws{display:block!important;}
-      .card-grid,.wall-grid{max-width:100%;padding:0;gap:10px;}
-      .card,.wc{break-inside:avoid;box-shadow:none;}
-      .card-hdr,.bcol,.bc:nth-child(odd),.free,.bcol{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    }
-  </style>
-</head>
-<body>
-<div class="hdr">
-  <h1>Bingo &amp; Word Wall <em>&#9734;</em></h1>
-  <div class="hdr-sub">${numCards} bingo card${numCards!==1?'s':''} &nbsp;&middot;&nbsp; ${data.length} word wall cards &nbsp;&middot;&nbsp; Made with Live Glossary Pro</div>
-</div>
-<div class="tabs">
-  <button class="tab on" onclick="showTab('b',this)">&#127922; Bingo Cards</button>
-  <button class="tab" onclick="showTab('w',this)">&#128204; Word Wall</button>
-</div>
-<div class="no-print"><button onclick="window.print()">&#128424; Print Current View</button></div>
-<div id="bs"><div class="card-grid">${cards}</div></div>
-<div id="ws"><div class="wall-grid">${wallCards}</div></div>
-<script>
-function showTab(n,btn){
-  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  document.getElementById('bs').style.display=n==='b'?'block':'none';
-  document.getElementById('ws').style.display=n==='w'?'block':'none';
 }
-<\/script>
+
+function mkStudySheet(t, data) {
+  const mData = shuf(data).slice(0, Math.min(data.length, 20));
+  const mDefs = shuf(mData);
+  const termRows = data.map((d,i) =>
+    `<tr class="${i%2===0?'re':'ro'}"><td class="tn">${i+1}</td><td class="tt">${esc(d.term)}</td><td class="tb"></td></tr>`
+  ).join('');
+  const wb = [...data].sort((a,b)=>a.term.localeCompare(b.term)).map(d=>`<span class="wb">${esc(d.term)}</span>`).join(' ');
+  const matchL = mData.map((d,i)=>`<tr><td class="mn">${i+1}.</td><td class="mt">${esc(d.term)}</td><td class="mb">_____</td></tr>`).join('');
+  const matchR = mDefs.map((d,i)=>`<li>${String.fromCharCode(65+i)}.&nbsp;${esc(d.description.length>90?d.description.slice(0,90)+'...':d.description)}</li>`).join('');
+  const ak = mData.map((d,i)=>{ const li=mDefs.findIndex(x=>x.term===d.term); return `${i+1}=${String.fromCharCode(65+li)}`; }).join('  ');
+  const icons5 = [SVGS.pencil,SVGS.book,SVGS.apple,SVGS.star,SVGS.owl].join('');
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<title>Study Sheet</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;font-size:13px;}
+.hdr{background:${t.nav};color:#fff;padding:18px 24px 14px;display:flex;align-items:center;gap:14px;}
+.hdr-icons{display:flex;gap:5px;} .hdr-icons svg{width:30px;height:30px;}
+.hdr h1{font-family:Georgia,serif;font-size:24px;font-weight:900;color:#fff;}
+.hdr h1 em{color:${t.accent};}
+.hdr-sub{color:rgba(255,255,255,.45);font-size:11px;margin-top:3px;}
+.nrow{max-width:820px;margin:14px auto 0;padding:0 20px;display:flex;gap:18px;}
+.nf{flex:1;border-bottom:2px solid ${t.accent};padding-bottom:4px;font-size:13px;color:#888;}
+.wrap{max-width:820px;margin:12px auto;padding:0 20px 40px;}
+.sec{font-family:Georgia,serif;font-size:15px;font-weight:900;color:${t.nav};border-bottom:3px solid ${t.accent};padding-bottom:5px;margin:20px 0 10px;display:flex;align-items:center;gap:8px;}
+.sec svg{width:20px;height:20px;flex-shrink:0;}
+table{width:100%;border-collapse:collapse;}
+.tn{width:28px;color:#bbb;font-size:11px;padding:6px 2px;vertical-align:middle;}
+.tt{font-weight:700;padding:6px 8px;vertical-align:middle;color:${t.nav};width:36%;}
+.tb{border-bottom:1.5px solid #c0bfb5;padding:6px 8px;}
+.re{background:#fff;} .ro{background:${t.accentPale};}
+.wbbox{background:#fff;border-radius:8px;padding:12px 14px;border:1.5px solid ${t.accent}33;display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
+.wbl{font-size:10px;font-weight:800;letter-spacing:1px;color:#aaa;width:100%;margin-bottom:2px;}
+.wb{background:${t.accentPale};border:1px solid ${t.accent}55;border-radius:20px;padding:3px 11px;font-size:12px;font-weight:600;color:${t.nav};}
+.mn{width:26px;color:#bbb;font-size:11px;padding:5px 2px;}
+.mt{font-weight:700;padding:5px 8px;color:${t.nav};width:34%;}
+.mb{padding:5px 8px;color:#bbb;letter-spacing:3px;}
+ol.md{list-style:none;font-size:12px;color:#444;line-height:2.1;}
+.ak{background:${t.nav};color:rgba(255,255,255,.6);margin-top:24px;padding:12px 16px;border-radius:8px;font-size:11px;line-height:2;}
+.ak strong{color:${t.accent};}
+.np{text-align:center;margin:10px 0 14px;}
+.np button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+@media print{body{background:#fff;}.hdr,.re,.ro,.ak{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.np{display:none!important;}.wrap{max-width:100%;padding:0 12px;}}
+</style></head>
+<body>
+<div class="hdr"><div class="hdr-icons">${icons5}</div><div><h1>Study Sheet <em>&#9734;</em></h1><div class="hdr-sub">${data.length} vocabulary terms &nbsp;&middot;&nbsp; Made with Live Glossary Pro</div></div></div>
+<div class="nrow"><div class="nf">Name: _________________________________</div><div class="nf">Date: _____________ &nbsp; Class: _____________</div></div>
+<div class="wrap">
+<div class="np"><button onclick="window.print()">&#128424; Print Study Sheet</button></div>
+<div class="sec">${SVGS.pencil} Part 1 &mdash; Fill in the Blank</div>
+<p style="font-size:12px;color:#666;margin-bottom:10px;">Write the definition for each term in the blank. Use the Word Bank if needed.</p>
+<div class="wbbox"><div class="wbl">&#128218; WORD BANK</div>${wb}</div>
+<table><tbody>${termRows}</tbody></table>
+<div class="sec" style="margin-top:24px;">${SVGS.magnify} Part 2 &mdash; Matching</div>
+<p style="font-size:12px;color:#666;margin-bottom:10px;">Match each term to its definition. Write the letter in the blank.</p>
+<div style="display:flex;gap:22px;align-items:flex-start;"><table><tbody>${matchL}</tbody></table><ol class="md">${matchR}</ol></div>
+<div class="ak"><strong>&#10003; Answer Key (Matching):</strong> ${ak}</div>
+</div></body></html>`;
+}
+
+function mkQuiz(t, data) {
+  const mcQ = shuf(data).slice(0, Math.min(data.length, 15)).map((item, qi) => {
+    const wrongs = shuf(data.filter(d=>d.term!==item.term)).slice(0,3);
+    const opts   = shuf([item,...wrongs]);
+    const cIdx   = opts.findIndex(o=>o.term===item.term);
+    const ltrs   = ['A','B','C','D'];
+    const oh = opts.map((o,oi)=>
+      `<div class="mo"><span class="ml">${ltrs[oi]}</span>${esc(o.description.length>100?o.description.slice(0,100)+'...':o.description)}</div>`
+    ).join('');
+    return {qi, item, oh, cl:ltrs[cIdx]};
+  });
+  const mData = shuf(data).slice(0, Math.min(data.length, 10));
+  const mDefs = shuf(mData);
+  const matchL = mData.map((d,i)=>`<tr><td class="mn">${i+1}.</td><td class="mt">${esc(d.term)}</td><td class="mb">_____</td></tr>`).join('');
+  const matchR = mDefs.map((d,i)=>`<li>${String.fromCharCode(65+i)}.&nbsp;${esc(d.description.length>80?d.description.slice(0,80)+'...':d.description)}</li>`).join('');
+  const mcKey  = mcQ.map(({qi,cl})=>`Q${qi+1}=${cl}`).join('  ');
+  const mkKey2 = mData.map((d,i)=>{ const li=mDefs.findIndex(x=>x.term===d.term); return `${i+1}=${String.fromCharCode(65+li)}`; }).join('  ');
+  const mcHtml = mcQ.map(({qi,item,oh})=>`<div class="qb"><div class="qn">Q${qi+1}.</div><div class="qt">What is the definition of <strong>${esc(item.term)}</strong>?</div><div class="mo-grid">${oh}</div></div>`).join('');
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<title>Vocabulary Quiz</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;font-size:13px;}
+.hdr{background:${t.nav};color:#fff;padding:18px 24px 14px;display:flex;align-items:center;gap:14px;}
+.hdr svg{width:38px;height:38px;flex-shrink:0;}
+.hdr h1{font-family:Georgia,serif;font-size:24px;font-weight:900;color:#fff;}
+.hdr h1 em{color:${t.accent};}
+.hdr-sub{color:rgba(255,255,255,.45);font-size:11px;margin-top:3px;}
+.nrow{max-width:820px;margin:14px auto 0;padding:0 20px;display:flex;gap:16px;align-items:flex-end;}
+.nf{flex:1;border-bottom:2px solid ${t.accent};padding-bottom:4px;font-size:13px;color:#888;}
+.sb{border:2px solid ${t.accent};border-radius:6px;padding:4px 12px;font-size:13px;color:#888;min-width:110px;text-align:center;}
+.wrap{max-width:820px;margin:12px auto;padding:0 20px 40px;}
+.sec{font-family:Georgia,serif;font-size:15px;font-weight:900;color:${t.nav};border-bottom:3px solid ${t.accent};padding-bottom:5px;margin:22px 0 12px;display:flex;align-items:center;gap:8px;}
+.sec svg{width:20px;height:20px;}
+.qb{margin-bottom:14px;padding:12px 15px;background:#fff;border-radius:8px;border-left:3px solid ${t.accent};box-shadow:0 1px 5px rgba(0,0,0,.05);}
+.qn{font-size:10px;font-weight:800;color:${t.accent};letter-spacing:.5px;margin-bottom:3px;}
+.qt{font-size:13px;color:#333;margin-bottom:8px;line-height:1.5;}
+.mo-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.mo{font-size:12px;color:#555;line-height:1.5;display:flex;align-items:flex-start;gap:6px;padding:3px 0;}
+.ml{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border:1.5px solid ${t.accent};border-radius:50%;font-size:10px;font-weight:700;color:${t.accent};flex-shrink:0;margin-top:1px;}
+table{width:100%;}
+.mn{width:26px;color:#bbb;font-size:11px;padding:5px 2px;}
+.mt{font-weight:700;padding:5px 8px;color:${t.nav};width:36%;}
+.mb{padding:5px 8px;color:#bbb;letter-spacing:3px;}
+ol.md{list-style:none;font-size:12px;color:#444;line-height:2.1;}
+.ak{background:${t.nav};color:rgba(255,255,255,.6);margin-top:24px;padding:12px 16px;border-radius:8px;font-size:11px;line-height:2;}
+.ak strong{color:${t.accent};display:block;margin-bottom:3px;}
+.np{text-align:center;margin:10px 0 14px;}
+.np button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+@media print{body{background:#fff;}.hdr,.qb,.ak{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.np{display:none!important;}.wrap{max-width:100%;padding:0 12px;}.qb{break-inside:avoid;}}
+</style></head>
+<body>
+<div class="hdr">${SVGS.trophy}<div><h1>Vocabulary Quiz <em>&#9734;</em></h1><div class="hdr-sub">${mcQ.length} multiple choice &nbsp;&middot;&nbsp; ${mData.length} matching &nbsp;&middot;&nbsp; Made with Live Glossary Pro</div></div></div>
+<div class="nrow"><div class="nf">Name: _________________________________</div><div class="nf">Date: _______________</div><div class="sb">Score: _____ / ${mcQ.length + mData.length}</div></div>
+<div class="wrap">
+<div class="np"><button onclick="window.print()">&#128424; Print Quiz</button></div>
+<div class="sec">${SVGS.bulb} Part 1 &mdash; Multiple Choice</div>
+<p style="font-size:12px;color:#666;margin-bottom:12px;">Circle the letter of the best answer.</p>
+${mcHtml}
+<div class="sec">${SVGS.magnify} Part 2 &mdash; Matching</div>
+<p style="font-size:12px;color:#666;margin-bottom:10px;">Match each term to its definition. Write the letter in the blank.</p>
+<div style="display:flex;gap:26px;align-items:flex-start;"><table><tbody>${matchL}</tbody></table><ol class="md">${matchR}</ol></div>
+<div class="ak"><strong>&#10003; Answer Key &mdash; Multiple Choice:</strong> ${mcKey}<strong style="margin-top:5px;">&#10003; Answer Key &mdash; Matching:</strong> ${mkKey2}</div>
+</div></body></html>`;
+}
+
+function mkBingo(t, data) {
+  const makeGrid = () => {
+    const pool = shuf(data); let pi=0;
+    return Array.from({length:5},(_,r)=>Array.from({length:5},(_,c)=>{
+      if(r===2&&c===2) return {term:'FREE',free:true};
+      return pool[pi++%pool.length]||{term:'?',free:false};
+    }));
+  };
+  const COLS=['B','I','N','G','O'];
+  const renderCard=(grid,idx)=>{
+    const icon=svgAt(idx);
+    const rows=grid.map(row=>'<tr>'+row.map(cell=>
+      cell.free
+        ? `<td class="fr"><div class="fsvg">${SVGS.star}</div><div class="fl">FREE</div></td>`
+        : `<td class="bc">${esc(cell.term.length>16?cell.term.slice(0,14)+'...':cell.term)}</td>`
+    ).join('')+'</tr>').join('');
+    return `<div class="card"><div class="ch"><div class="ci">${icon}</div><div class="ct">BINGO</div><div class="cn">Card #${idx+1}</div></div><table class="bt"><thead><tr>${COLS.map(l=>`<th class="bcol">${l}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  };
+  const numCards=data.length>=24?Math.min(6,1+Math.floor(data.length/24)):1;
+  const cards=Array.from({length:numCards},(_,i)=>renderCard(makeGrid(),i)).join('');
+  const wall=data.map((d,i)=>`<div class="wc"><div class="wi">${svgAt(i)}</div><div class="wt">${esc(d.term)}</div><div class="wd">${esc(d.description.length>110?d.description.slice(0,110)+'...':d.description)}</div></div>`).join('');
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<title>Bingo &amp; Word Wall</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;}
+.hdr{background:${t.nav};color:#fff;padding:18px 24px 14px;text-align:center;}
+.hdr h1{font-family:Georgia,serif;font-size:26px;font-weight:900;color:#fff;}
+.hdr h1 em{color:${t.accent};}
+.hdr-sub{color:rgba(255,255,255,.45);font-size:12px;margin-top:4px;}
+.tabs{display:flex;justify-content:center;gap:8px;padding:12px;background:#fff;border-bottom:2px solid #eee;}
+.tab{padding:8px 22px;border-radius:20px;border:2px solid ${t.accent};background:#fff;color:${t.nav};font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s;}
+.tab.on{background:${t.accent};}
+.np{text-align:center;padding:10px 0;}
+.np button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+#bs{display:block;} #ws{display:none;}
+.cg{max-width:900px;margin:0 auto;padding:16px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(370px,1fr));gap:20px;}
+.card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,.1);border:2px solid ${t.accent}33;}
+.ch{background:${t.nav};padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.ci{width:34px;height:34px;flex-shrink:0;} .ci svg{width:100%;height:100%;}
+.ct{font-family:Georgia,serif;font-size:20px;font-weight:900;color:#fff;letter-spacing:5px;flex:1;text-align:center;}
+.cn{font-size:10px;color:rgba(255,255,255,.35);}
+.bt{width:100%;border-collapse:collapse;}
+.bcol{background:${t.accent};color:${t.nav};font-family:Georgia,serif;font-size:16px;font-weight:900;text-align:center;padding:7px 2px;width:20%;}
+.bc{border:1px solid #eee;text-align:center;padding:5px 3px;font-size:10px;font-weight:700;color:${t.nav};height:50px;vertical-align:middle;line-height:1.3;}
+.bc:nth-child(odd){background:#fafaf7;}
+.fr{border:1px solid #eee;text-align:center;padding:4px;background:${t.accentPale};height:50px;vertical-align:middle;}
+.fsvg{width:26px;height:26px;margin:0 auto 1px;} .fsvg svg{width:100%;height:100%;}
+.fl{font-size:8px;font-weight:900;letter-spacing:1px;color:${t.accentDark};}
+.wg{max-width:900px;margin:0 auto;padding:16px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px;}
+.wc{background:#fff;border-radius:10px;padding:14px 12px;text-align:center;border-top:4px solid ${t.accent};box-shadow:0 2px 8px rgba(0,0,0,.07);}
+.wi{width:42px;height:42px;margin:0 auto 7px;} .wi svg{width:100%;height:100%;}
+.wt{font-family:Georgia,serif;font-size:14px;font-weight:900;color:${t.nav};margin-bottom:5px;line-height:1.3;}
+.wd{font-size:11px;color:#666;line-height:1.6;}
+@media print{body{background:#fff;}.hdr,.tabs,.np{display:none!important;}#bs,#ws{display:block!important;}.cg,.wg{max-width:100%;padding:0;gap:10px;}.card,.wc{break-inside:avoid;box-shadow:none;}.ch,.bcol,.bc:nth-child(odd),.fr{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+</style></head>
+<body>
+<div class="hdr"><h1>Bingo &amp; Word Wall <em>&#9734;</em></h1><div class="hdr-sub">${numCards} bingo card${numCards!==1?'s':''} &nbsp;&middot;&nbsp; ${data.length} word wall cards &nbsp;&middot;&nbsp; Made with Live Glossary Pro</div></div>
+<div class="tabs"><button class="tab on" onclick="st('b',this)">&#127922; Bingo Cards</button><button class="tab" onclick="st('w',this)">&#128204; Word Wall</button></div>
+<div class="np"><button onclick="window.print()">&#128424; Print Current View</button></div>
+<div id="bs"><div class="cg">${cards}</div></div>
+<div id="ws"><div class="wg">${wall}</div></div>
+<script>function st(n,b){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');document.getElementById('bs').style.display=n==='b'?'block':'none';document.getElementById('ws').style.display=n==='w'?'block':'none';}<\/script>
 </body></html>`;
+}
+
+
+function StepExport({ terms, onBack, onExpire }) {
+  const [theme, setTheme]           = useState({ ...THEMES[0] });
+  const [custom, setCustom]         = useState({ ...THEMES[0] });
+  const [activePreset, setPreset]   = useState(0);
+  const [generating, setGenerating] = useState(false);
+  const [htmlReady, setHtmlReady]   = useState(null);
+  const [filterLetter, setFilter]   = useState(null);
+
+  // ── Expiry countdown ──────────────────────────────
+  const expiryRef   = useRef(Date.now() + EXPIRY_MS);
+  const [secsLeft, setSecsLeft] = useState(EXPIRY_MINUTES * 60);
+  const expired = secsLeft <= 0;
+
+  useEffect(() => {
+    const tick = setInterval(() => {
+      const remaining = Math.max(0, Math.round((expiryRef.current - Date.now()) / 1000));
+      setSecsLeft(remaining);
+      if (remaining <= 0) {
+        clearInterval(tick);
+        setHtmlReady(null);
+        onExpire();
+      }
+    }, 1000);
+    return () => clearInterval(tick);
+  }, []);
+
+  const fmtTime = (s) => {
+    const m = Math.floor(s / 60), sec = s % 60;
+    return `${m}:${String(sec).padStart(2, "0")}`;
   };
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // DISPATCHER
-  // ════════════════════════════════════════════════════════════════════════════
+  const urgency   = secsLeft < 120 ? "danger" : secsLeft < 300 ? "warn" : "info";
+  const urgencyBg = { info:"#E3F2FD", warn:"#FFF8E1", danger:"#FDECEA" };
+  const urgencyFg = { info:"#1565C0", warn:"#E67E22", danger:"#C0392B" };
+
+  const applyPreset = (i) => { setTheme({ ...THEMES[i] }); setCustom({ ...THEMES[i] }); setPreset(i); setHtmlReady(null); };
+  const updateColor = (key, val) => { const u = { ...custom, [key]:val }; setCustom(u); setTheme(u); setPreset(-1); setHtmlReady(null); };
+
+
+  // ── format state
+  const [activeFormat, setFmt]  = useState("glossary");
+  const [readyLabel,   setRLbl] = useState("Glossary");
+
   const generate = () => {
     setGenerating(true);
     const t    = theme;
