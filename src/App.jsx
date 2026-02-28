@@ -770,7 +770,7 @@ function saveData(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(terms));
 function nextId(){return terms.length?Math.max(...terms.map(t=>t.id||0))+1:1;}
 function getSorted(){return[...terms].sort((a,b)=>a.term.localeCompare(b.term,undefined,{sensitivity:'base'}));}
 function groupBy(arr){const g={};arr.forEach(t=>{const l=t.term[0].toUpperCase();if(!g[l])g[l]=[];g[l].push(t);});return g;}
-function highlight(text,q){if(!q)return escH(text);const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');return escH(text).replace(re,'<mark>$1</mark>');}
+function highlight(text,q){if(!q)return escH(text);const re=new RegExp('('+q.replace(/[.*+?^\${}()|[\]\\]/g,'\\$&')+')','gi');return escH(text).replace(re,'<mark>$1</mark>');}
 function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function getFiltered(){if(!searchQ)return getSorted();const q=searchQ.toLowerCase();return getSorted().filter(t=>t.term.toLowerCase().includes(q)||t.description.toLowerCase().includes(q));}
 function onSearch(v){searchQ=v.trim();document.getElementById('search-clear').style.display=searchQ?'block':'none';render();}
