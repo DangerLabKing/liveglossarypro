@@ -8,6 +8,7 @@ const LOGO_B64 = "iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAGdUlEQVR4nO2db0
 // ─────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────
+const APP_VERSION     = "1.0.0";             // bump manually before each push
 const MAX_FILE_BYTES  = 2 * 1024 * 1024;  // 2 MB hard limit
 const MAX_TERMS       = 2000;              // row cap
 const ALPHABET        = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -393,8 +394,15 @@ function StepLanding({ onUpload }) {
   const handleFile = (f) => {
     setFileError(null);
     if (!f) return;
+    // Extension check
     if (!f.name.match(/\.(csv|txt|tsv)$/i)) { setFileError("Please upload a .csv, .txt, or .tsv file."); return; }
+    // Size check
     if (f.size > MAX_FILE_BYTES) { setFileError(`File is ${(f.size/1024/1024).toFixed(1)} MB — maximum is 2 MB.`); return; }
+    // MIME type check — browsers report text/plain, text/csv, application/vnd.ms-excel etc
+    const allowedMime = ['text/plain','text/csv','text/tab-separated-values','application/csv','application/vnd.ms-excel',''];
+    if (f.type && !allowedMime.some(m => f.type.toLowerCase().startsWith(m) || f.type === '')) {
+      setFileError("Unsupported file type. Please upload a plain text CSV file."); return;
+    }
     onUpload(f);
   };
 
@@ -626,13 +634,29 @@ const SVGK = Object.keys(SVGS);
 const svgAt = (i) => SVGS[SVGK[i % SVGK.length]];
 const esc   = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const shuf  = (a) => [...a].sort(() => Math.random() - 0.5);
+// Shared branded footer used in all generated HTML files
+const CREDIT_FOOTER = (navColor, accentColor, textColor) => `
+<div style="background:${navColor};color:rgba(255,255,255,.35);text-align:center;padding:14px 24px;font-size:11px;margin-top:auto;">
+  Made with <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${accentColor};text-decoration:none;font-weight:600;">Live Glossary Pro</a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.45);text-decoration:none;">cliffowright.com</a>
+</div>`;
+// Sanitize theme color values before injecting into CSS — only allow valid hex colors
+const sanitizeTheme = (t) => {
+  const hexRe = /^#[0-9A-Fa-f]{6}$/;
+  const safe = {};
+  for (const [k, v] of Object.entries(t)) {
+    safe[k] = (typeof v === 'string' && hexRe.test(v)) ? v : '#000000';
+  }
+  return safe;
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HTML GENERATORS (pure functions — no JSX, no hooks)
 // ═══════════════════════════════════════════════════════════════════════════
 
 function mkGlossary(t, data) {
-  const sd = JSON.stringify(data).replace(/<\/script>/gi, '<\\/script>');
+  const sd = JSON.stringify(data).replace(new RegExp('</'+'script>','gi'), '<\\/'+'script>');
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -653,6 +677,8 @@ function mkGlossary(t, data) {
     .btn-save{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);}
     .btn-save:hover{background:rgba(255,255,255,0.25);}
     .btn-save.flash{background:#2D7A4F;border-color:#2D7A4F;}
+    .notice{display:none;}
+    @media print{.notice{display:none!important;}}
     .search-wrap{background:${t.nav};padding:0 24px 20px;display:flex;justify-content:center;}
     .search-box{display:flex;max-width:580px;width:100%;background:#fff;border-radius:50px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.25);}
     .search-box input{flex:1;border:none;outline:none;padding:12px 20px;font-size:14px;font-family:inherit;background:transparent;}
@@ -725,7 +751,11 @@ function mkGlossary(t, data) {
     <button class="btn btn-add" onclick="toggleAdd()">&#xFF0B; Add Term</button>
     <button class="btn btn-save" id="save-btn" onclick="saveFile()">&#x2B07; Download Updated File</button>
   </div>
+  <div class="hdr-sub" style="margin-top:10px;opacity:0.6;font-size:11px;">
+    &#x26A0; Changes are browser-only &mdash; use <strong>&#x2B07;&nbsp;Download&nbsp;Updated&nbsp;File</strong> to save permanently.
+  </div>
 </div>
+<div class="notice"></div>
 <div class="search-wrap">
   <div class="search-box">
     <input type="text" id="search-input" placeholder="Search terms and definitions&hellip;" oninput="onSearch(this.value)" onkeydown="if(event.key==='Escape'){clearSearch();}"/>
@@ -737,8 +767,8 @@ function mkGlossary(t, data) {
   <div class="add-panel" id="add-panel">
     <h3>Add a New Term</h3>
     <div class="add-err" id="add-err"></div>
-    <label>Term</label><input type="text" id="add-term" placeholder="e.g. Photosynthesis"/>
-    <label>Description</label><textarea id="add-desc" placeholder="Enter the definition&hellip;"></textarea>
+    <label>Term</label><input type="text" id="add-term" placeholder="e.g. Photosynthesis" maxlength="500"/>
+    <label>Description</label><textarea id="add-desc" placeholder="Enter the definition&hellip;" maxlength="5000"></textarea>
     <div style="display:flex;gap:8px;">
       <button class="btn-confirm" onclick="confirmAdd()">Add Term</button>
       <button class="btn-cancel" onclick="toggleAdd()">Cancel</button>
@@ -747,7 +777,7 @@ function mkGlossary(t, data) {
   <div class="alpha" id="alpha-nav"></div>
   <div id="glossary-root"></div>
 </div>
-<div class="ftr">My Glossary Pro &middot; Powered by Live Glossary Pro</div>
+<div class="ftr">My Glossary Pro &middot; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">Live Glossary Pro</a> &middot; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a></div>
 <a href="#top" class="top-btn">&#x2191;</a>
 <div class="overlay" id="del-overlay">
   <div class="dialog">
@@ -770,7 +800,7 @@ function saveData(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(terms));
 function nextId(){return terms.length?Math.max(...terms.map(t=>t.id||0))+1:1;}
 function getSorted(){return[...terms].sort((a,b)=>a.term.localeCompare(b.term,undefined,{sensitivity:'base'}));}
 function groupBy(arr){const g={};arr.forEach(t=>{const l=t.term[0].toUpperCase();if(!g[l])g[l]=[];g[l].push(t);});return g;}
-function highlight(text,q){if(!q)return escH(text);const re=new RegExp('('+q.replace(/[.*+?^\${}()|[\]\\]/g,'\\$&')+')','gi');return escH(text).replace(re,'<mark>$1</mark>');}
+function highlight(text,q){if(!q)return escH(text);const tl=text.toLowerCase(),ql=q.toLowerCase();let out='',i=0;while(i<text.length){const f=tl.indexOf(ql,i);if(f<0){out+=escH(text.slice(i));break;}out+=escH(text.slice(i,f))+'<mark>'+escH(text.slice(f,f+q.length))+'</mark>';i=f+q.length;}return out;}
 function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function getFiltered(){if(!searchQ)return getSorted();const q=searchQ.toLowerCase();return getSorted().filter(t=>t.term.toLowerCase().includes(q)||t.description.toLowerCase().includes(q));}
 function onSearch(v){searchQ=v.trim();document.getElementById('search-clear').style.display=searchQ?'block':'none';render();}
@@ -789,16 +819,16 @@ function render(){
   }).join('');
 }
 function toggleAdd(){const p=document.getElementById('add-panel');const o=p.classList.contains('open');p.classList.toggle('open',!o);if(!o){document.getElementById('add-term').focus();document.getElementById('add-err').style.display='none';}else{document.getElementById('add-term').value='';document.getElementById('add-desc').value='';}}
-function confirmAdd(){const tm=document.getElementById('add-term').value.trim();const dc=document.getElementById('add-desc').value.trim();const e=document.getElementById('add-err');if(!tm||!dc){e.textContent=!tm?'Please enter a term.':'Please enter a description.';e.style.display='block';return;}e.style.display='none';terms.push({id:nextId(),term:tm,description:dc});saveData();document.getElementById('add-term').value='';document.getElementById('add-desc').value='';document.getElementById('add-panel').classList.remove('open');render();toast('Term added');}
+function confirmAdd(){const tm=document.getElementById('add-term').value.trim();const dc=document.getElementById('add-desc').value.trim();const e=document.getElementById('add-err');if(!tm||!dc){e.textContent=!tm?'Please enter a term.':'Please enter a description.';e.style.display='block';return;}if(tm.length>500){e.textContent='Term must be 500 characters or fewer.';e.style.display='block';return;}if(dc.length>5000){e.textContent='Description must be 5000 characters or fewer.';e.style.display='block';return;}e.style.display='none';terms.push({id:nextId(),term:tm,description:dc});saveData();document.getElementById('add-term').value='';document.getElementById('add-desc').value='';document.getElementById('add-panel').classList.remove('open');render();toast('Term added');}
 function startEdit(id){const item=terms.find(t=>t.id===id);if(!item)return;const el=document.getElementById('card-'+id);if(!el)return;el.outerHTML='<div class="edit-form" id="edit-'+id+'"><div class="err" id="edit-err-'+id+'"></div><input id="edit-term-'+id+'" value="'+escH(item.term)+'" placeholder="Term"/><textarea id="edit-desc-'+id+'" placeholder="Description">'+escH(item.description)+'</textarea><div class="edit-form-actions"><button class="btn-confirm" onclick="confirmEdit('+id+')">Save</button><button class="btn-cancel" onclick="render()">Cancel</button></div></div>';document.getElementById('edit-term-'+id).focus();}
-function confirmEdit(id){const tm=document.getElementById('edit-term-'+id).value.trim();const dc=document.getElementById('edit-desc-'+id).value.trim();const e=document.getElementById('edit-err-'+id);if(!tm||!dc){e.textContent=!tm?'Term cannot be empty.':'Description cannot be empty.';e.style.display='block';return;}const idx=terms.findIndex(t=>t.id===id);if(idx>=0){terms[idx].term=tm;terms[idx].description=dc;}saveData();render();toast('Changes saved');}
+function confirmEdit(id){const tm=document.getElementById('edit-term-'+id).value.trim();const dc=document.getElementById('edit-desc-'+id).value.trim();const e=document.getElementById('edit-err-'+id);if(!tm||!dc){e.textContent=!tm?'Term cannot be empty.':'Description cannot be empty.';e.style.display='block';return;}if(tm.length>500){e.textContent='Term must be 500 characters or fewer.';e.style.display='block';return;}if(dc.length>5000){e.textContent='Description must be 5000 characters or fewer.';e.style.display='block';return;}const idx=terms.findIndex(t=>t.id===id);if(idx>=0){terms[idx].term=tm;terms[idx].description=dc;}saveData();render();toast('Changes saved');}
 function openDelDialog(id){pendingDeleteId=id;const it=terms.find(t=>t.id===id);document.getElementById('del-term-name').textContent=it?it.term:'';document.getElementById('del-overlay').classList.add('open');}
 function closeDelDialog(){pendingDeleteId=null;document.getElementById('del-overlay').classList.remove('open');}
 function confirmDelete(){if(pendingDeleteId==null)return;terms=terms.filter(t=>t.id!==pendingDeleteId);saveData();closeDelDialog();render();toast('Term deleted');}
 function saveFile(){
-  const fd=JSON.stringify(terms.map(({term,description})=>({term,description}))).replace(/<\/script>/gi,'<\\/script>');
+  const fd=JSON.stringify(terms.map(({term,description})=>({term,description}))).replace(new RegExp('</'+'script>','gi'),'</'+'script>');
   const src=document.documentElement.outerHTML;
-  const upd=src.replace(/const INITIAL_DATA=\[.*?\];/s,'const INITIAL_DATA='+fd+';');
+  const marker='const INITIAL_DATA=';const p1=src.indexOf(marker);const p2=src.indexOf('];',p1)+2;const upd=src.slice(0,p1)+marker+fd+';'+src.slice(p2);
   const blob=new Blob([upd],{type:'text/html'});const url=URL.createObjectURL(blob);const a=document.createElement('a');
   a.href=url;a.download='my-glossary-'+new Date().toISOString().split('T')[0]+'.html';
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
@@ -809,13 +839,13 @@ loadData();render();
 document.getElementById('del-overlay').addEventListener('click',function(e){if(e.target===this)closeDelDialog();});
 document.getElementById('add-term').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('add-desc').focus();});
 document.getElementById('add-desc').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.ctrlKey)confirmAdd();});
-</script>
+<\/script>
 </body>
 </html>`;
 }
 
 function mkFlashCards(t, data) {
-  const pairs = data.map((d, i) => {
+  const pairs = shuf(data).map((d, i) => {
     const icon = svgAt(i);
     return `
 <div class="fc-front fc-cell">
@@ -865,7 +895,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </head>
 <body>
 <div class="hdr"><h1>Flash Cards <em>&#9734;</em></h1>
-<div class="hdr-sub">${data.length} terms &nbsp;&middot;&nbsp; Print, cut &amp; fold &nbsp;&middot;&nbsp; Made with Live Glossary Pro</div></div>
+<div class="hdr-sub">${data.length} terms &nbsp;&middot;&nbsp; Print, cut &amp; fold &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a></div></div>
 <div class="instr">&#128203; <strong>Instructions:</strong> Print this page. Each left/right pair makes one card — TERM on the left, DEFINITION on the right. Cut along grid lines and fold in half, or print double-sided for classic flash cards.</div>
 <div class="no-print"><button onclick="window.print()">&#128424; Print Flash Cards</button></div>
 <div class="grid">${pairs}</div>
@@ -875,7 +905,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 function mkStudySheet(t, data) {
   const mData = shuf(data).slice(0, Math.min(data.length, 20));
   const mDefs = shuf(mData);
-  const termRows = data.map((d,i) =>
+  const termRows = shuf(data).map((d,i) =>
     `<tr class="${i%2===0?'re':'ro'}"><td class="tn">${i+1}</td><td class="tt">${esc(d.term)}</td><td class="tb"></td></tr>`
   ).join('');
   const wb = [...data].sort((a,b)=>a.term.localeCompare(b.term)).map(d=>`<span class="wb">${esc(d.term)}</span>`).join(' ');
@@ -918,7 +948,7 @@ ol.md{list-style:none;font-size:12px;color:#444;line-height:2.1;}
 @media print{body{background:#fff;}.hdr,.re,.ro,.ak{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.np{display:none!important;}.wrap{max-width:100%;padding:0 12px;}}
 </style></head>
 <body>
-<div class="hdr"><div class="hdr-icons">${icons5}</div><div><h1>Study Sheet <em>&#9734;</em></h1><div class="hdr-sub">${data.length} vocabulary terms &nbsp;&middot;&nbsp; Made with Live Glossary Pro</div></div></div>
+<div class="hdr"><div class="hdr-icons">${icons5}</div><div><h1>Study Sheet <em>&#9734;</em></h1><div class="hdr-sub">${data.length} vocabulary terms &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a></div></div></div>
 <div class="nrow"><div class="nf">Name: _________________________________</div><div class="nf">Date: _____________ &nbsp; Class: _____________</div></div>
 <div class="wrap">
 <div class="np"><button onclick="window.print()">&#128424; Print Study Sheet</button></div>
@@ -986,7 +1016,7 @@ ol.md{list-style:none;font-size:12px;color:#444;line-height:2.1;}
 @media print{body{background:#fff;}.hdr,.qb,.ak{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.np{display:none!important;}.wrap{max-width:100%;padding:0 12px;}.qb{break-inside:avoid;}}
 </style></head>
 <body>
-<div class="hdr">${SVGS.trophy}<div><h1>Vocabulary Quiz <em>&#9734;</em></h1><div class="hdr-sub">${mcQ.length} multiple choice &nbsp;&middot;&nbsp; ${mData.length} matching &nbsp;&middot;&nbsp; Made with Live Glossary Pro</div></div></div>
+<div class="hdr">${SVGS.trophy}<div><h1>Vocabulary Quiz <em>&#9734;</em></h1><div class="hdr-sub">${mcQ.length} multiple choice &nbsp;&middot;&nbsp; ${mData.length} matching &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a></div></div></div>
 <div class="nrow"><div class="nf">Name: _________________________________</div><div class="nf">Date: _______________</div><div class="sb">Score: _____ / ${mcQ.length + mData.length}</div></div>
 <div class="wrap">
 <div class="np"><button onclick="window.print()">&#128424; Print Quiz</button></div>
@@ -1020,7 +1050,7 @@ function mkBingo(t, data) {
   };
   const numCards=data.length>=24?Math.min(6,1+Math.floor(data.length/24)):1;
   const cards=Array.from({length:numCards},(_,i)=>renderCard(makeGrid(),i)).join('');
-  const wall=data.map((d,i)=>`<div class="wc"><div class="wi">${svgAt(i)}</div><div class="wt">${esc(d.term)}</div><div class="wd">${esc(d.description.length>110?d.description.slice(0,110)+'...':d.description)}</div></div>`).join('');
+  const wall=shuf(data).map((d,i)=>`<div class="wc"><div class="wi">${svgAt(i)}</div><div class="wt">${esc(d.term)}</div><div class="wd">${esc(d.description.length>110?d.description.slice(0,110)+'...':d.description)}</div></div>`).join('');
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/>
 <title>Bingo &amp; Word Wall</title>
@@ -1058,12 +1088,343 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 @media print{body{background:#fff;}.hdr,.tabs,.np{display:none!important;}#bs,#ws{display:block!important;}.cg,.wg{max-width:100%;padding:0;gap:10px;}.card,.wc{break-inside:avoid;box-shadow:none;}.ch,.bcol,.bc:nth-child(odd),.fr{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
 </style></head>
 <body>
-<div class="hdr"><h1>Bingo &amp; Word Wall <em>&#9734;</em></h1><div class="hdr-sub">${numCards} bingo card${numCards!==1?'s':''} &nbsp;&middot;&nbsp; ${data.length} word wall cards &nbsp;&middot;&nbsp; Made with Live Glossary Pro</div></div>
+<div class="hdr"><h1>Bingo &amp; Word Wall <em>&#9734;</em></h1><div class="hdr-sub">${numCards} bingo card${numCards!==1?'s':''} &nbsp;&middot;&nbsp; ${data.length} word wall cards &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a></div></div>
 <div class="tabs"><button class="tab on" onclick="st('b',this)">&#127922; Bingo Cards</button><button class="tab" onclick="st('w',this)">&#128204; Word Wall</button></div>
 <div class="np"><button onclick="window.print()">&#128424; Print Current View</button></div>
 <div id="bs"><div class="cg">${cards}</div></div>
 <div id="ws"><div class="wg">${wall}</div></div>
 <script>function st(n,b){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');document.getElementById('bs').style.display=n==='b'?'block':'none';document.getElementById('ws').style.display=n==='w'?'block':'none';}<\/script>
+</body></html>`;
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// WORD SEARCH GENERATOR
+// ═══════════════════════════════════════════════════════════════════════════
+function mkWordSearch(t, data) {
+  const words = shuf(data).map(d => d.term.toUpperCase().replace(/[^A-Z]/g,''))
+                           .filter(w => w.length >= 3 && w.length <= 20)
+                           .slice(0, 24);
+  const SIZE = Math.max(20, Math.min(26, words.reduce((m,w)=>Math.max(m,w.length),0) + 6));
+  const DIRS = [[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
+  const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+  // Build empty grid
+  const grid = Array.from({length:SIZE}, () => Array(SIZE).fill(''));
+  const placed = [];
+
+  function canPlace(word, r, c, dr, dc) {
+    for (let i = 0; i < word.length; i++) {
+      const nr = r + dr*i, nc = c + dc*i;
+      if (nr < 0 || nr >= SIZE || nc < 0 || nc >= SIZE) return false;
+      if (grid[nr][nc] !== '' && grid[nr][nc] !== word[i]) return false;
+    }
+    return true;
+  }
+  function doPlace(word, r, c, dr, dc) {
+    for (let i = 0; i < word.length; i++) grid[r+dr*i][c+dc*i] = word[i];
+  }
+
+  for (const word of words) {
+    let ok = false;
+    const dirs = shuf(DIRS);
+    const positions = shuf(Array.from({length:SIZE*SIZE},(_,i)=>[Math.floor(i/SIZE),i%SIZE]));
+    for (const [dr,dc] of dirs) {
+      for (const [r,c] of positions) {
+        if (canPlace(word,r,c,dr,dc)) { doPlace(word,r,c,dr,dc); ok=true; break; }
+      }
+      if (ok) break;
+    }
+    if (ok) placed.push(word);
+  }
+
+  // Fill blanks with random letters
+  for (let r = 0; r < SIZE; r++)
+    for (let c = 0; c < SIZE; c++)
+      if (grid[r][c] === '') grid[r][c] = ALPHA[Math.floor(Math.random()*26)];
+
+  // Build answer grid (highlight placed letters)
+  const ansGrid = Array.from({length:SIZE}, () => Array(SIZE).fill(false));
+  for (const word of placed) {
+    outer: for (const [dr,dc] of DIRS) {
+      for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
+        let match=true;
+        for (let i=0;i<word.length;i++) {
+          const nr=r+dr*i,nc=c+dc*i;
+          if (nr<0||nr>=SIZE||nc<0||nc>=SIZE||grid[nr][nc]!==word[i]){match=false;break;}
+        }
+        if (match){for(let i=0;i<word.length;i++) ansGrid[r+dr*i][c+dc*i]=true; continue outer;}
+      }
+    }
+  }
+
+  const gridRows = grid.map((row,r) =>
+    '<tr>'+row.map((cell,c)=>`<td>${cell}</td>`).join('')+'</tr>'
+  ).join('');
+
+  const wordList = placed.map((w,i) => {
+    const orig = data.find(d=>d.term.toUpperCase().replace(/[^A-Z]/g,'')=== w);
+    return `<div class="wli"><span class="wlb">☐</span><span class="wlt">${esc(orig?orig.term:w)}</span></div>`;
+  }).join('');
+
+  const ansRows = grid.map((row,r) =>
+    '<tr>'+row.map((cell,c)=>`<td class="${ansGrid[r][c]?'ah':''}">${cell}</td>`).join('')+'</tr>'
+  ).join('');
+
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<title>Word Search</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;}
+.hdr{background:${t.nav};color:#fff;padding:18px 24px 14px;text-align:center;}
+.hdr h1{font-family:Georgia,serif;font-size:26px;font-weight:900;}
+.hdr h1 em{color:${t.accent};}
+.hdr-sub{color:rgba(255,255,255,.45);font-size:12px;margin-top:4px;}
+.np{text-align:center;padding:12px 0 6px;}
+.np button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.wrap{max-width:900px;margin:0 auto;padding:16px 20px 40px;}
+.nrow{display:flex;gap:18px;margin-bottom:16px;}
+.nf{flex:1;border-bottom:2px solid ${t.accent};padding-bottom:4px;font-size:13px;color:#888;}
+.layout{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;}
+.puzzle-wrap{overflow-x:auto;}
+table.grid{border-collapse:collapse;}
+table.grid td{width:24px;height:24px;text-align:center;font-size:12px;font-weight:700;font-family:'Courier New',monospace;color:#222;border:1px solid #ddd;cursor:default;}
+table.grid td.ah{background:${t.accent};color:${t.nav};-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.wordlist{min-width:170px;}
+.wl-title{font-family:Georgia,serif;font-size:14px;font-weight:900;color:${t.nav};border-bottom:3px solid ${t.accent};padding-bottom:5px;margin-bottom:10px;}
+.wli{display:flex;align-items:center;gap:7px;padding:3px 0;font-size:13px;color:#333;}
+.wlb{font-size:16px;color:${t.accent};}
+.wlt{font-weight:600;}
+.ans-section{margin-top:28px;padding-top:20px;border-top:2px dashed #ddd;}
+.ans-title{font-family:Georgia,serif;font-size:14px;font-weight:900;color:#999;margin-bottom:10px;}
+@media print{
+  body{background:#fff;}.hdr,.np{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .np{display:none!important;}.wrap{max-width:100%;padding:0 10px;}
+  table.grid td{width:20px;height:20px;font-size:10px;}
+  .ans-section{page-break-before:always;}
+}
+</style></head>
+<body>
+<div class="hdr">
+  <h1>Word Search <em>&#9733;</em></h1>
+  <div class="hdr-sub">${placed.length} hidden words &nbsp;&middot;&nbsp; ${SIZE}&times;${SIZE} grid &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a></div>
+</div>
+<div class="np"><button onclick="window.print()">&#128424; Print Word Search</button></div>
+<div class="wrap">
+  <div class="nrow">
+    <div class="nf">Name: _________________________________</div>
+    <div class="nf">Date: _______________ &nbsp; Class: ___________</div>
+  </div>
+  <div class="layout">
+    <div class="puzzle-wrap"><table class="grid"><tbody>${gridRows}</tbody></table></div>
+    <div class="wordlist">
+      <div class="wl-title">&#128269; Find these words</div>
+      ${wordList}
+    </div>
+  </div>
+  <div class="ans-section">
+    <div class="ans-title">&#10003; Answer Key</div>
+    <table class="grid"><tbody>${ansRows}</tbody></table>
+  </div>
+</div>
+</body></html>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CROSSWORD GENERATOR
+// ═══════════════════════════════════════════════════════════════════════════
+function mkCrossword(t, data) {
+  // Prep words — term is the answer, description is the clue
+  const pool = shuf(data)
+    .filter(d => d.term.replace(/[^A-Za-z]/g,'').length >= 3)
+    .slice(0, 20)
+    .map(d => ({ word: d.term.toUpperCase().replace(/[^A-Z]/g,''), clue: d.description }));
+
+  const SIZE = 22;
+  const grid  = Array.from({length:SIZE}, () => Array(SIZE).fill(null)); // null=empty, letter=placed
+  const placed = []; // {word, clue, r, c, dir, num}
+
+  function canPlace(word, r, c, dir) {
+    const dr = dir==='across'?0:1, dc = dir==='across'?1:0;
+    // check before start is empty
+    const br=r-dr, bc=c-dc;
+    if (br>=0&&br<SIZE&&bc>=0&&bc<SIZE&&grid[br][bc]!==null) return false;
+    // check after end is empty
+    const er=r+dr*word.length, ec=c+dc*word.length;
+    if (er>=0&&er<SIZE&&ec>=0&&ec<SIZE&&grid[er][ec]!==null) return false;
+    let intersects = 0;
+    for (let i=0;i<word.length;i++) {
+      const nr=r+dr*i, nc=c+dc*i;
+      if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) return false;
+      const cell = grid[nr][nc];
+      if (cell===null) {
+        // check perpendicular neighbors aren't part of another word
+        const pr=nr+(dir==='across'?1:0), pc=nc+(dir==='across'?0:1);
+        const qr=nr-(dir==='across'?1:0), qc=nc-(dir==='across'?0:1);
+        if ((pr<SIZE&&pr>=0&&qc<SIZE&&pc>=0&&grid[pr][pc]!==null)||
+            (qr>=0&&qr<SIZE&&qc>=0&&qc<SIZE&&grid[qr][qc]!==null)) return false;
+      } else if (cell===word[i]) {
+        intersects++;
+      } else return false;
+    }
+    return placed.length===0 || intersects>0;
+  }
+
+  function doPlace(word, r, c, dir) {
+    const dr=dir==='across'?0:1, dc=dir==='across'?1:0;
+    for (let i=0;i<word.length;i++) grid[r+dr*i][c+dc*i]=word[i];
+  }
+
+  // Place first word in center
+  if (pool.length > 0) {
+    const w = pool[0];
+    const r = Math.floor(SIZE/2), c = Math.floor((SIZE-w.word.length)/2);
+    doPlace(w.word, r, c, 'across');
+    placed.push({...w, r, c, dir:'across', num:1});
+  }
+
+  // Place remaining words by finding intersections
+  for (let pi=1; pi<pool.length; pi++) {
+    const {word, clue} = pool[pi];
+    let best = null;
+    for (const p of placed) {
+      const pdr=p.dir==='across'?0:1, pdc=p.dir==='across'?1:0;
+      const newDir = p.dir==='across'?'down':'across';
+      const ndr=newDir==='across'?0:1, ndc=newDir==='across'?1:0;
+      for (let pi2=0;pi2<p.word.length;pi2++) {
+        const ch = p.word[pi2];
+        for (let wi=0;wi<word.length;wi++) {
+          if (word[wi]!==ch) continue;
+          const r = p.r+pdr*pi2 - ndr*wi;
+          const c = p.c+pdc*pi2 - ndc*wi;
+          if (canPlace(word,r,c,newDir)) {
+            const score = placed.filter(pp=>{
+              const pdr2=pp.dir==='across'?0:1,pdc2=pp.dir==='across'?1:0;
+              for(let i=0;i<word.length;i++){const nr=r+ndr*i,nc=c+ndc*i;for(let j=0;j<pp.word.length;j++) if(nr===pp.r+pdr2*j&&nc===pp.c+pdc2*j) return true;} return false;
+            }).length;
+            if (!best || score > best.score) best={r,c,dir:newDir,score};
+          }
+        }
+      }
+    }
+    if (best) {
+      doPlace(word, best.r, best.c, best.dir);
+      placed.push({word, clue, r:best.r, c:best.c, dir:best.dir, num:placed.length+1});
+    }
+  }
+
+  if (placed.length === 0) return `<!DOCTYPE html><html><body><p>Could not build crossword — try more terms.</p></body></html>`;
+
+  // Trim grid to bounding box
+  let minR=SIZE,maxR=0,minC=SIZE,maxC=0;
+  for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) if (grid[r][c]!==null){minR=Math.min(minR,r);maxR=Math.max(maxR,r);minC=Math.min(minC,c);maxC=Math.max(maxC,c);}
+  const PAD=1;
+  minR=Math.max(0,minR-PAD); maxR=Math.min(SIZE-1,maxR+PAD);
+  minC=Math.max(0,minC-PAD); maxC=Math.min(SIZE-1,maxC+PAD);
+
+  // Assign numbers to start cells
+  const nums = {};
+  for (const p of placed) nums[`${p.r},${p.c}`] = p.num;
+
+  // Build puzzle grid HTML (blank squares)
+  const puzzleRows = [];
+  for (let r=minR;r<=maxR;r++) {
+    let row = '<tr>';
+    for (let c=minC;c<=maxC;c++) {
+      const cell=grid[r][c];
+      const num=nums[`${r},${c}`]||'';
+      if (cell===null) row+=`<td class="blk"></td>`;
+      else row+=`<td class="cel">${num?`<span class="cn">${num}</span>`:''}<span class="cl"></span></td>`;
+    }
+    row+='</tr>';
+    puzzleRows.push(row);
+  }
+
+  // Build answer grid HTML
+  const answerRows = [];
+  for (let r=minR;r<=maxR;r++) {
+    let row = '<tr>';
+    for (let c=minC;c<=maxC;c++) {
+      const cell=grid[r][c];
+      const num=nums[`${r},${c}`]||'';
+      if (cell===null) row+=`<td class="blk"></td>`;
+      else row+=`<td class="cel afill">${num?`<span class="cn">${num}</span>`:''}<span class="cl">${cell}</span></td>`;
+    }
+    row+='</tr>';
+    answerRows.push(row);
+  }
+
+  // Clue lists
+  const across = placed.filter(p=>p.dir==='across').sort((a,b)=>a.num-b.num);
+  const down   = placed.filter(p=>p.dir==='down'  ).sort((a,b)=>a.num-b.num);
+  const acrossHtml = across.map(p=>`<div class="cli"><span class="cnum">${p.num}.</span><span class="ctxt">${esc(p.clue)}</span></div>`).join('');
+  const downHtml   = down  .map(p=>`<div class="cli"><span class="cnum">${p.num}.</span><span class="ctxt">${esc(p.clue)}</span></div>`).join('');
+
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<title>Crossword Puzzle</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;font-size:13px;}
+.hdr{background:${t.nav};color:#fff;padding:18px 24px 14px;text-align:center;}
+.hdr h1{font-family:Georgia,serif;font-size:26px;font-weight:900;}
+.hdr h1 em{color:${t.accent};}
+.hdr-sub{color:rgba(255,255,255,.45);font-size:12px;margin-top:4px;}
+.np{text-align:center;padding:12px 0 6px;}
+.np button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.wrap{max-width:960px;margin:0 auto;padding:16px 20px 40px;}
+.nrow{display:flex;gap:18px;margin-bottom:16px;}
+.nf{flex:1;border-bottom:2px solid ${t.accent};padding-bottom:4px;font-size:13px;color:#888;}
+.layout{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;}
+.puzzle-wrap{overflow-x:auto;}
+table.cw{border-collapse:collapse;}
+table.cw td{width:28px;height:28px;padding:0;position:relative;}
+table.cw td.blk{background:#222;}
+table.cw td.cel{border:1.5px solid #333;background:#fff;vertical-align:bottom;text-align:center;}
+table.cw td.afill{background:${t.accentPale};}
+.cn{position:absolute;top:1px;left:2px;font-size:7px;font-weight:900;color:#333;line-height:1;}
+.cl{display:block;font-size:13px;font-weight:700;text-align:center;line-height:28px;color:#111;}
+.clues{min-width:220px;max-width:320px;}
+.clue-sec{margin-bottom:18px;}
+.clue-hdr{font-family:Georgia,serif;font-size:14px;font-weight:900;color:${t.nav};border-bottom:3px solid ${t.accent};padding-bottom:4px;margin-bottom:8px;}
+.cli{display:flex;gap:6px;margin-bottom:5px;line-height:1.5;}
+.cnum{font-weight:800;color:${t.accent};min-width:22px;flex-shrink:0;}
+.ctxt{font-size:12px;color:#444;}
+.ans-section{margin-top:28px;padding-top:20px;border-top:2px dashed #ddd;}
+.ans-title{font-family:Georgia,serif;font-size:14px;font-weight:900;color:#999;margin-bottom:10px;}
+@media print{
+  body{background:#fff;}.hdr,.np{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .np{display:none!important;}.wrap{padding:0 10px;}
+  table.cw td{width:24px;height:24px;}
+  .cl{font-size:11px;line-height:24px;}
+  .ans-section{page-break-before:always;}
+  table.cw td.blk,.afill{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+</style></head>
+<body>
+<div class="hdr">
+  <h1>Crossword Puzzle <em>&#9733;</em></h1>
+  <div class="hdr-sub">${placed.length} words &nbsp;&middot;&nbsp; ${across.length} across &nbsp;&middot;&nbsp; ${down.length} down &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a></div>
+</div>
+<div class="np"><button onclick="window.print()">&#128424; Print Crossword</button></div>
+<div class="wrap">
+  <div class="nrow">
+    <div class="nf">Name: _________________________________</div>
+    <div class="nf">Date: _______________ &nbsp; Class: ___________</div>
+  </div>
+  <div class="layout">
+    <div class="puzzle-wrap"><table class="cw"><tbody>${puzzleRows.join('')}</tbody></table></div>
+    <div class="clues">
+      <div class="clue-sec"><div class="clue-hdr">&#10140; Across</div>${acrossHtml}</div>
+      <div class="clue-sec"><div class="clue-hdr">&#11015; Down</div>${downHtml}</div>
+    </div>
+  </div>
+  <div class="ans-section">
+    <div class="ans-title">&#10003; Answer Key</div>
+    <table class="cw"><tbody>${answerRows.join('')}</tbody></table>
+  </div>
+</div>
 </body></html>`;
 }
 
@@ -1104,7 +1465,11 @@ function StepExport({ terms, onBack, onExpire }) {
   const urgencyFg = { info:"#1565C0", warn:"#E67E22", danger:"#C0392B" };
 
   const applyPreset = (i) => { setTheme({ ...THEMES[i] }); setCustom({ ...THEMES[i] }); setPreset(i); setHtmlReady(null); };
-  const updateColor = (key, val) => { const u = { ...custom, [key]:val }; setCustom(u); setTheme(u); setPreset(-1); setHtmlReady(null); };
+  const updateColor = (key, val) => {
+    // Validate strictly: only accept 6-digit hex colors to prevent CSS injection
+    if (!/^#[0-9A-Fa-f]{6}$/.test(val)) return;
+    const u = { ...custom, [key]:val }; setCustom(u); setTheme(u); setPreset(-1); setHtmlReady(null);
+  };
 
 
   // ── format state
@@ -1113,15 +1478,20 @@ function StepExport({ terms, onBack, onExpire }) {
 
   const generate = () => {
     setGenerating(true);
-    const t    = theme;
-    const data = terms.map(({ term, description }) => ({ term, description }));
+    const t    = sanitizeTheme(theme);  // strip any non-hex values before CSS injection
+    const data = terms.map(({ term, description }) => ({
+      term:        String(term       ||'').slice(0, 500),   // hard cap: 500 chars per term
+      description: String(description||'').slice(0, 5000),  // hard cap: 5000 chars per description
+    })).filter(d => d.term && d.description);               // drop blanks
     let html;
     if      (activeFormat === "flashcards") html = mkFlashCards(t, data);
     else if (activeFormat === "studysheet") html = mkStudySheet(t, data);
     else if (activeFormat === "quiz")       html = mkQuiz(t, data);
     else if (activeFormat === "bingo")      html = mkBingo(t, data);
+    else if (activeFormat === "wordsearch") html = mkWordSearch(t, data);
+    else if (activeFormat === "crossword")  html = mkCrossword(t, data);
     else                                    html = mkGlossary(t, data);
-    setRLbl({"glossary":"Glossary","flashcards":"Flash Cards","studysheet":"Study Sheet","quiz":"Quiz","bingo":"Bingo & Word Wall"}[activeFormat]||"File");
+    setRLbl({"glossary":"Glossary","flashcards":"Flash Cards","studysheet":"Study Sheet","quiz":"Quiz","bingo":"Bingo & Word Wall","wordsearch":"Word Search","crossword":"Crossword"}[activeFormat]||"File");
     setHtmlReady(html);
     setGenerating(false);
   };
@@ -1131,7 +1501,7 @@ function StepExport({ terms, onBack, onExpire }) {
     const blob = new Blob([htmlReady], { type:"text/html" });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement("a");
-    const slug = {"glossary":"glossary","flashcards":"flashcards","studysheet":"study-sheet","quiz":"quiz","bingo":"bingo-wordwall"}[activeFormat]||"glossary";
+    const slug = {"glossary":"glossary","flashcards":"flashcards","studysheet":"study-sheet","quiz":"quiz","bingo":"bingo-wordwall","wordsearch":"word-search","crossword":"crossword"}[activeFormat]||"glossary";
     a.href = url; a.download = `${slug}-${new Date().toISOString().split("T")[0]}.html`;
     document.body.appendChild(a); a.click();
     document.body.removeChild(a); URL.revokeObjectURL(url);
@@ -1155,7 +1525,7 @@ function StepExport({ terms, onBack, onExpire }) {
   }
 
   return (
-    <div className="main">
+    <div className="main" id="step3-top">
       <div className="section-title">Choose Style & Download</div>
       <p className="section-sub">{terms.length} terms ready. Pick a color scheme, preview live, then download your glossary.</p>
 
@@ -1189,6 +1559,23 @@ function StepExport({ terms, onBack, onExpire }) {
         <div className="stat-box"><span className="stat-box-num">{terms.length}</span><span className="stat-box-label">Terms</span></div>
         <div className="stat-box"><span className="stat-box-num">{new Set(terms.map(t => t.term[0].toUpperCase())).size}</span><span className="stat-box-label">Letters</span></div>
         <div className="stat-box"><span className="stat-box-num">{EXPIRY_MINUTES}m</span><span className="stat-box-label">Time Limit</span></div>
+      </div>
+
+      {/* ── QUICK JUMP ── */}
+      <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:20 }}>
+        <a href="#section-choose-format"
+          style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"9px 16px",
+            background:"var(--accent)", color:"var(--dark)", borderRadius:8,
+            fontWeight:700, fontSize:13, textDecoration:"none", boxShadow:"0 2px 8px rgba(0,0,0,.1)" }}>
+          ⬇ Skip to: Choose Format &amp; Download
+        </a>
+        <a href="#section-how-it-works"
+          style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"9px 16px",
+            background:"var(--white)", color:"var(--dark)", borderRadius:8,
+            fontWeight:700, fontSize:13, textDecoration:"none", border:"1.5px solid #E0E0D8",
+            boxShadow:"0 2px 8px rgba(0,0,0,.06)" }}>
+          📘 How the Downloaded File Works
+        </a>
       </div>
 
       {/* ── COLOR PICKER ── */}
@@ -1254,7 +1641,7 @@ function StepExport({ terms, onBack, onExpire }) {
 
       {/* ── HOW YOUR DOWNLOADED FILE WORKS ── */}
       <div className="form-card" style={{ background:"#FAFAF7", border:"1.5px solid #E8E8E0" }}>
-        <h3 style={{ marginBottom:16 }}>📘 How Your Downloaded Glossary File Works</h3>
+        <h3 id="section-how-it-works" style={{ marginBottom:16 }}>📘 How Your Downloaded Glossary File Works</h3>
         <p style={{ fontSize:13, color:"#444", lineHeight:1.7, marginBottom:16 }}>
           When you download your glossary, you get a <strong>single self-contained HTML file</strong> that works
           in any browser — no internet connection, no account, no server needed. Here's exactly what you can do with it:
@@ -1360,7 +1747,7 @@ function StepExport({ terms, onBack, onExpire }) {
 
       {/* ── FORMAT SELECTOR + GENERATE ── */}
       <div className="form-card">
-        <h3>⬇ Choose Format & Download</h3>
+        <h3 id="section-choose-format">⬇ Choose Format & Download</h3>
         <p style={{ fontSize:14, color:"var(--mid)", marginBottom:18 }}>
           Every format is a <strong>self-contained HTML file</strong> — print-ready, opens in any browser, no internet needed.
           Your data is <strong>never stored on our servers</strong>.
@@ -1374,6 +1761,8 @@ function StepExport({ terms, onBack, onExpire }) {
             { id:"studysheet", icon:"✏️",  label:"Study Sheet",       desc:"Fill-in-the-blank + matching section with answer key" },
             { id:"quiz",       icon:"📝", label:"Quiz Sheet",        desc:"Auto-generated multiple choice + matching with full answer key" },
             { id:"bingo",      icon:"🎲", label:"Bingo & Word Wall", desc:"Up to 6 unique bingo cards + printable word wall with clipart" },
+            { id:"wordsearch", icon:"🔍", label:"Word Search",       desc:"Hidden-word puzzle with answer key — up to 24 terms in a letter grid" },
+            { id:"crossword",  icon:"⬛", label:"Crossword",         desc:"Auto-placed crossword with across/down clues and answer key" },
           ].map(f => (
             <div key={f.id}
               onClick={() => { setFmt(f.id); setHtmlReady(null); }}
@@ -1407,7 +1796,7 @@ function StepExport({ terms, onBack, onExpire }) {
 
         <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
           <button className="btn btn-primary" onClick={generate} disabled={generating || expired}>
-            {generating ? <><Spinner/> Generating…</> : `⚙ Generate ${{"glossary":"📖 Glossary","flashcards":"🃏 Flash Cards","studysheet":"✏️ Study Sheet","quiz":"📝 Quiz","bingo":"🎲 Bingo & Word Wall"}[activeFormat]}`}
+            {generating ? <><Spinner/> Generating…</> : `⚙ Generate ${{"glossary":"📖 Glossary","flashcards":"🃏 Flash Cards","studysheet":"✏️ Study Sheet","quiz":"📝 Quiz","bingo":"🎲 Bingo & Word Wall","wordsearch":"🔍 Word Search","crossword":"⬛ Crossword"}[activeFormat]}`}
           </button>
           {htmlReady && <button className="btn btn-secondary" onClick={download}>⬇ Download {readyLabel} & Clear</button>}
           <button className="btn btn-ghost" onClick={onBack}>← Back</button>
@@ -1418,6 +1807,17 @@ function StepExport({ terms, onBack, onExpire }) {
             <Alert type="success">✓ {readyLabel} ready — {Math.round(htmlReady.length / 1024)} KB · {terms.length} terms</Alert>
           </div>
         )}
+      </div>
+
+      {/* ── BACK TO TOP ── */}
+      <div style={{ textAlign:"center", padding:"10px 0 28px" }}>
+        <a href="#step3-top"
+          style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"9px 18px",
+            background:"var(--white)", color:"var(--mid)", borderRadius:8,
+            fontWeight:600, fontSize:13, textDecoration:"none",
+            border:"1.5px solid #E0E0D8", boxShadow:"0 1px 4px rgba(0,0,0,.06)" }}>
+          ↑ Back to Top
+        </a>
       </div>
     </div>
   );
@@ -1502,6 +1902,7 @@ export default function App() {
 
       <div className="footer">
         <strong>Live Glossary Pro</strong> · Upload CSV · Style · Download · No data stored
+        <span style={{ opacity:.5, marginLeft:12 }}>v{APP_VERSION}</span>
       </div>
     </div>
   );
