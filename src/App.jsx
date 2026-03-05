@@ -415,7 +415,7 @@ function StepLanding({ onUpload }) {
           <span>Live Glossary Pro</span>
         </div>
         <h1 className="hero-title">Turn your CSV into a<br/><em>Beautiful Glossary</em></h1>
-        <p className="hero-sub">Upload a two-column CSV of terms and definitions. We'll format, sort, and style it into a polished downloadable HTML glossary — in seconds.</p>
+        <p className="hero-sub">Upload a two-column CSV of terms and definitions. We'll instantly generate <strong style={{color:"var(--accent)"}}>7 ready-to-download formats</strong> — a searchable glossary, flash cards, study sheet, quiz, bingo cards, word search, and crossword puzzle. Print-ready, styled, and yours in seconds.</p>
         <button className="hero-cta" onClick={() => uploadRef.current?.click()}>
           ↑ Upload Your CSV to Get Started
         </button>
