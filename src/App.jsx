@@ -634,12 +634,21 @@ const SVGK = Object.keys(SVGS);
 const svgAt = (i) => SVGS[SVGK[i % SVGK.length]];
 const esc   = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const shuf  = (a) => [...a].sort(() => Math.random() - 0.5);
+// Buy Me a Coffee link
+const BMC_URL = "https://buymeacoffee.com/cliffowright";
+const BMC_BTN = (accent) =>
+  `<a href="${BMC_URL}" target="_blank" rel="noopener" ` +
+  `style="display:inline-flex;align-items:center;gap:6px;background:#FFDD00;color:#000;` +
+  `text-decoration:none;font-weight:700;font-size:12px;padding:5px 12px;border-radius:20px;` +
+  `white-space:nowrap;">☕ Buy me a coffee</a>`;
 // Shared branded footer used in all generated HTML files
 const CREDIT_FOOTER = (navColor, accentColor, textColor) => `
 <div style="background:${navColor};color:rgba(255,255,255,.35);text-align:center;padding:14px 24px;font-size:11px;margin-top:auto;">
   Made with <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${accentColor};text-decoration:none;font-weight:600;">Live Glossary Pro</a>
   &nbsp;&middot;&nbsp;
   <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.45);text-decoration:none;">cliffowright.com</a>
+  &nbsp;&middot;&nbsp;
+  ${BMC_BTN(accentColor)}
 </div>`;
 // Sanitize theme color values before injecting into CSS — only allow valid hex colors
 const sanitizeTheme = (t) => {
@@ -777,7 +786,7 @@ function mkGlossary(t, data) {
   <div class="alpha" id="alpha-nav"></div>
   <div id="glossary-root"></div>
 </div>
-<div class="ftr">My Glossary Pro &middot; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">Live Glossary Pro</a> &middot; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a></div>
+<div class="ftr">My Glossary Pro &middot; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">Live Glossary Pro</a> &middot; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a> &middot; <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#FFDD00;color:#000;text-decoration:none;font-weight:700;font-size:11px;padding:4px 10px;border-radius:16px;vertical-align:middle;">☕ Buy me a coffee</a></div>
 <a href="#top" class="top-btn">&#x2191;</a>
 <div class="overlay" id="del-overlay">
   <div class="dialog">
@@ -895,7 +904,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </head>
 <body>
 <div class="hdr"><h1>Flash Cards <em>&#9734;</em></h1>
-<div class="hdr-sub">${data.length} terms &nbsp;&middot;&nbsp; Print, cut &amp; fold &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a></div></div>
+<div class="hdr-sub">${data.length} terms &nbsp;&middot;&nbsp; Print, cut &amp; fold &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a> &nbsp;&middot;&nbsp; <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#FFDD00;color:#000;text-decoration:none;font-weight:700;font-size:11px;padding:3px 10px;border-radius:16px;vertical-align:middle;">&#x2615; Buy me a coffee</a></div></div>
 <div class="instr">&#128203; <strong>Instructions:</strong> Print this page. Each left/right pair makes one card — TERM on the left, DEFINITION on the right. Cut along grid lines and fold in half, or print double-sided for classic flash cards.</div>
 <div class="no-print"><button onclick="window.print()">&#128424; Print Flash Cards</button></div>
 <div class="grid">${pairs}</div>
@@ -948,7 +957,7 @@ ol.md{list-style:none;font-size:12px;color:#444;line-height:2.1;}
 @media print{body{background:#fff;}.hdr,.re,.ro,.ak{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.np{display:none!important;}.wrap{max-width:100%;padding:0 12px;}}
 </style></head>
 <body>
-<div class="hdr"><div class="hdr-icons">${icons5}</div><div><h1>Study Sheet <em>&#9734;</em></h1><div class="hdr-sub">${data.length} vocabulary terms &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a></div></div></div>
+<div class="hdr"><div class="hdr-icons">${icons5}</div><div><h1>Study Sheet <em>&#9734;</em></h1><div class="hdr-sub">${data.length} vocabulary terms &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a> &nbsp;&middot;&nbsp; <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#FFDD00;color:#000;text-decoration:none;font-weight:700;font-size:11px;padding:3px 10px;border-radius:16px;vertical-align:middle;">&#x2615; Buy me a coffee</a></div></div></div>
 <div class="nrow"><div class="nf">Name: _________________________________</div><div class="nf">Date: _____________ &nbsp; Class: _____________</div></div>
 <div class="wrap">
 <div class="np"><button onclick="window.print()">&#128424; Print Study Sheet</button></div>
@@ -1016,7 +1025,7 @@ ol.md{list-style:none;font-size:12px;color:#444;line-height:2.1;}
 @media print{body{background:#fff;}.hdr,.qb,.ak{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.np{display:none!important;}.wrap{max-width:100%;padding:0 12px;}.qb{break-inside:avoid;}}
 </style></head>
 <body>
-<div class="hdr">${SVGS.trophy}<div><h1>Vocabulary Quiz <em>&#9734;</em></h1><div class="hdr-sub">${mcQ.length} multiple choice &nbsp;&middot;&nbsp; ${mData.length} matching &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a></div></div></div>
+<div class="hdr">${SVGS.trophy}<div><h1>Vocabulary Quiz <em>&#9734;</em></h1><div class="hdr-sub">${mcQ.length} multiple choice &nbsp;&middot;&nbsp; ${mData.length} matching &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a> &nbsp;&middot;&nbsp; <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#FFDD00;color:#000;text-decoration:none;font-weight:700;font-size:11px;padding:3px 10px;border-radius:16px;vertical-align:middle;">&#x2615; Buy me a coffee</a></div></div></div>
 <div class="nrow"><div class="nf">Name: _________________________________</div><div class="nf">Date: _______________</div><div class="sb">Score: _____ / ${mcQ.length + mData.length}</div></div>
 <div class="wrap">
 <div class="np"><button onclick="window.print()">&#128424; Print Quiz</button></div>
@@ -1088,7 +1097,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 @media print{body{background:#fff;}.hdr,.tabs,.np{display:none!important;}#bs,#ws{display:block!important;}.cg,.wg{max-width:100%;padding:0;gap:10px;}.card,.wc{break-inside:avoid;box-shadow:none;}.ch,.bcol,.bc:nth-child(odd),.fr{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
 </style></head>
 <body>
-<div class="hdr"><h1>Bingo &amp; Word Wall <em>&#9734;</em></h1><div class="hdr-sub">${numCards} bingo card${numCards!==1?'s':''} &nbsp;&middot;&nbsp; ${data.length} word wall cards &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a></div></div>
+<div class="hdr"><h1>Bingo &amp; Word Wall <em>&#9734;</em></h1><div class="hdr-sub">${numCards} bingo card${numCards!==1?'s':''} &nbsp;&middot;&nbsp; ${data.length} word wall cards &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a> &nbsp;&middot;&nbsp; <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#FFDD00;color:#000;text-decoration:none;font-weight:700;font-size:11px;padding:3px 10px;border-radius:16px;vertical-align:middle;">&#x2615; Buy me a coffee</a></div></div>
 <div class="tabs"><button class="tab on" onclick="st('b',this)">&#127922; Bingo Cards</button><button class="tab" onclick="st('w',this)">&#128204; Word Wall</button></div>
 <div class="np"><button onclick="window.print()">&#128424; Print Current View</button></div>
 <div id="bs"><div class="cg">${cards}</div></div>
@@ -1208,7 +1217,7 @@ table.grid td.ah{background:${t.accent};color:${t.nav};-webkit-print-color-adjus
 <body>
 <div class="hdr">
   <h1>Word Search <em>&#9733;</em></h1>
-  <div class="hdr-sub">${placed.length} hidden words &nbsp;&middot;&nbsp; ${SIZE}&times;${SIZE} grid &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a></div>
+  <div class="hdr-sub">${placed.length} hidden words &nbsp;&middot;&nbsp; ${SIZE}&times;${SIZE} grid &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a> &nbsp;&middot;&nbsp; <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#FFDD00;color:#000;text-decoration:none;font-weight:700;font-size:11px;padding:3px 10px;border-radius:16px;vertical-align:middle;">&#x2615; Buy me a coffee</a></div>
 </div>
 <div class="np"><button onclick="window.print()">&#128424; Print Word Search</button></div>
 <div class="wrap">
@@ -1405,7 +1414,7 @@ table.cw td.afill{background:${t.accentPale};}
 <body>
 <div class="hdr">
   <h1>Crossword Puzzle <em>&#9733;</em></h1>
-  <div class="hdr-sub">${placed.length} words &nbsp;&middot;&nbsp; ${across.length} across &nbsp;&middot;&nbsp; ${down.length} down &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a></div>
+  <div class="hdr-sub">${placed.length} words &nbsp;&middot;&nbsp; ${across.length} across &nbsp;&middot;&nbsp; ${down.length} down &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a> &nbsp;&middot;&nbsp; <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#FFDD00;color:#000;text-decoration:none;font-weight:700;font-size:11px;padding:3px 10px;border-radius:16px;vertical-align:middle;">&#x2615; Buy me a coffee</a></div>
 </div>
 <div class="np"><button onclick="window.print()">&#128424; Print Crossword</button></div>
 <div class="wrap">
@@ -1903,6 +1912,12 @@ export default function App() {
       <div className="footer">
         <strong>Live Glossary Pro</strong> · Upload CSV · Style · Download · No data stored
         <span style={{ opacity:.5, marginLeft:12 }}>v{APP_VERSION}</span>
+        <span style={{ marginLeft:16 }}>
+          <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener"
+            style={{ display:"inline-flex", alignItems:"center", gap:6, background:"#FFDD00", color:"#000", textDecoration:"none", fontWeight:700, fontSize:12, padding:"4px 12px", borderRadius:20 }}>
+            ☕ Buy me a coffee
+          </a>
+        </span>
       </div>
     </div>
   );
