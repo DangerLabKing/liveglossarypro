@@ -3,18 +3,18 @@ import { useState, useEffect, useRef } from "react";
 // ─────────────────────────────────────────────
 // LOGO
 // ─────────────────────────────────────────────
-const LOGO_B64 = "iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAGdUlEQVR4nO2db0wTZxzHf3ftVYoFoba4Km6UAUKy+Gchs/7/ty0sEFyyMNEl/hlvZl2cxs1kbCbzz5tl2Zs5N96YqdM5R0yk8YWTRBAJVqNLSJaJHQeI3SodSoEOsbV3ezHbnaVX2971nnb9fRJCnrvf9fne873f89xz195REIWCggIeAKCzwxstDInC8pU6cLvdlNh6daSFwYZH5CHYnpGMUEcKRJJDJCPo8JVI8hG2NR0tEEk+FAAe/aRwu90UZgBhKDz6yYIZQBg0gDBoAGHQAMKgAYRBAwiDBhAGDSAMGkAYNIAwaABh0ADCoAGEkToROy6HiJKy8S3C8m+/Gk9oNJNTvjRcU2vaEr4syMhIoeeB552ho0fXZJeWlubp9frpFEXB6Khnwul0/HXP1eHMzTntNBhYnxya49EWDSL3A+QkEGACg3cb2dVrPniRYZi88PV6/UydXr9EN3/+EjPHfcS3tTVdK5z9qUOl8qfEt8KlTsQScj2cnp6ny/WbZm30+XzMs7bjODU3Mvr94GuvV5fFUg9N09S6dVZLc7PRsG/fJyWJqZWXtB4DBu7s/d1iqTYHy36/P3DkyNeO6uo3hhYtWvDIYnnFu23b1gG73e4UbldXV1dSXl4hfltNQdLWgLGxgvFVq3cXB8s8z/PtbZvuHj78VRnLsrMePnw4zePx6K5e7SpqaNg2O9yEhQsXjSuveippOwa4h+v/fHla1rxguavrXL+56EIxgGlKbCAQoE+dOjk5MjLSb7df9V+/fi1vYGCgVFHBIqStAQbD2ixh2etthllG8fjW1oslra0Xky0rbtK2CyosrMgTlvNndOcTkiKJtM0Avd4wXVjOzr6fHR6zefPW242NjfPClwcpL4/p5CmpSJ2IfSuTju3Cwo8/DB0VmYiF4hiGUT1LG9v3qBQARA2QUf9T2uIhbbsgr9f7SFiemJg5QUqLFKROxBJyPZwIE7GGZ03EXK47ozk5L4UGYs/oAo9ePxgaB2pqTdtVqp841d6zfgAAg8EwfulSuz4Z+qWQthnwh9M+KizrcjZM6bICgQDt8/kYn8/HFBWZx5RTFztpawDPn9UKy0uXri/uG6jujxSrVqsfW607mKamJgfLsveVURgbKWmARqN5rNFo/GJ/AADPz+2ce/Nm26Bwu7VrT76wc+cuR0lJ6T2tNnsyNzf378WLl9w5duzEUGVl5Ryb7Vwex3EpcREuSEqeht648Ys22vpeRw4AAHCPrbnDw5fHDYaCHAAAtVpNW63WMqvVKgyfDgDQ0tLS19fXVwwAw8lRnRgpmQGxkp/vzOt1vOrv6em+Fy2uu7vbdejQweeU0hUPKZkB8WAw9Os5bjX384X17Iy8OtpsrjQYjUbd5OSkn2XZBzabbezMmdPmWC5vkyDux9V0dngtwR9BnLe5vkyOrMjU1Jr2PKk3Wgw8iSGlzRLPT5TSugv6PyB1IrZHLiFyk8rahGAGEAYNIAwaQBg0gDBoAGHQAMJIvSN2UC4hsVBTa9oXa2wqaxOCGUAYqROxhFxXglTWJgQzgDBoAGHQAMKgAYRBAwhD5I5YvI/1ioDoDQ+pn630E7cSMkDqTib5oX2kn2cXF/gGDcLgGEAYNIAwaABh0ADCoAGESftvxklBydf0ij3TOmMzQOl3JIvVl7EGpAoZ3QWJ0XMb4O0NHGi1ABQFUL+BgqoqKrQMAGBjPQVGI8CRb3jQZgEc2E/BsmWiL84WBQ2IQlcnDW3tPHzcyENVFRVaduUKDx/u5SEQADj+HQ29LA+ff8GDDQ2QlxWrOFCrARre/a9hl63gYGIC4M31FJxr4aGiAoBhKHA6E7uigwZE4cplGlRPfo3cc/vf/+2XaHirjoN5ZQAqFcCtWwC9LA9z5iRWBxoQJwwDsHsXBQcO8vD+Dgres3KgzQLY/1n83Q9ABl8NVfo0FCDyXABPQwlDu93uxHIHkUxGv1Ne6uuu5KovdPRn6lhAimDPk7EZkCqEDMCxQDmEbR2x0bE7Sg6RDvKoRz0aIQ/Repd/ALqWIaclcelXAAAAAElFTkSuQmCC";
+const LOGO_B64 = "iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAGdUlEQVR4nO2db0wTZxzHf3ftVYoFoba4Km6UAUKy+Gchs/7/ty0sEFyyMNEl/hlvZl2cxs1kbCbzz5tl2Zs5N96YqdM5R0yk8YWTRBAJVqNLSJaJHQeI3SodSoEOsbV3ezHbnaVX2971nnb9fRJCnrvf9fne873f89xz195REIWCggIeAKCzwxstDInC8pU6cLvdlNh6daSFwYZH5CHYnpGMUEcKRJJDJCPo8JVI8hG2NR0tEEk+FAAe/aRwu90UZgBhKDz6yYIZQBg0gDBoAGHQAMKgAYRBAwhD5I5YvI/1ioDoDQ+pn630E7cSMkDqTib5oX2kn2cXF/gGDcLgGEAYNIAwaABh0ADCoAGESftvxklBydf0ij3TOmMzQOl3JIvVl7EGpAoZ3QWJ0XMb4O0NHGi1ABQFUL+BgqoqKrQMAGBjPQVGI8CRb3jQZgEc2E/BsmWiL84WBQ2IQlcnDW3tPHzcyENVFRVaduUKDx/u5SEQADj+HQ29LA+ff8GDDQ2QlxWrOFCrARre/a9hl63gYGIC4M31FJxr4aGiAoBhKHA6E7uigwZE4cplGlRPfo3cc/vf/+2XaHirjoN5ZQAqFcCtWwC9LA9z5iRWBxoQJwwDsHsXBQcO8vD+Dgues3KgzQLY/1n83Q9ABl8NVfo0FCDyXABPQwlDu93uxHIHkUxGv1Ne6uuu5KovdPRn6lhAimDPk7EZkCqEDMCxQDmEbR2x0bE7Sg6RDvKoRz0aIQ/Repd/ALqWIaclcelXAAAAAElFTkSuQmCC";
 
 // ─────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────
-const APP_VERSION     = "1.0.0";             // bump manually before each push
-const MAX_FILE_BYTES  = 2 * 1024 * 1024;  // 2 MB hard limit
-const MAX_TERMS       = 2000;              // row cap
+const APP_VERSION     = "1.0.0";
+const MAX_FILE_BYTES  = 2 * 1024 * 1024;
+const MAX_TERMS       = 2000;
 const ALPHABET        = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
 // ─────────────────────────────────────────────
-// SAMPLE CSV TEXT (shown in instructions)
+// SAMPLE CSV TEXT
 // ─────────────────────────────────────────────
 const SAMPLE_CSV = `Term,Description
 Ansible,"A faster-than-light communication device from Ursula K. Le Guin's Hainish Cycle, allowing instantaneous communication across interstellar distances."
@@ -22,7 +22,7 @@ Blade Runner,"A law-enforcement officer in Philip K. Dick's universe tasked with
 Dyson Sphere,"A megastructure that completely encloses a star to capture its total energy output, theorized by physicist Freeman Dyson."`;
 
 // ─────────────────────────────────────────────
-// SCI-FI SAMPLE DATA  (shown on landing)
+// SCI-FI SAMPLE DATA
 // ─────────────────────────────────────────────
 const SAMPLE_TERMS = [
   { term:"Ansible",            description:"A faster-than-light communication device from Ursula K. Le Guin's Hainish Cycle — later adopted in Ender's Game — allowing instantaneous communication across any interstellar distance with zero signal delay." },
@@ -35,49 +35,23 @@ const SAMPLE_TERMS = [
   { term:"Dyson Sphere",       description:"A megastructure theorised by Freeman Dyson that completely encloses a star to harvest its total energy output. Appears in Star Trek: TNG 'Relics' and countless hard science fiction works." },
   { term:"Dark Energy",        description:"In Mass Effect, the mysterious force harnessed by exposing Element Zero to electrical current, producing mass effect fields that enable faster-than-light travel and biotic abilities in organics." },
   { term:"Event Horizon",      description:"The boundary surrounding a black hole beyond which nothing can escape — and the name of a spacecraft in the 1997 film that briefly tore open a gateway to a hellish extra-dimensional space." },
-  { term:"Extraterrestrial Intelligence", description:"The central concept in Carl Sagan's Contact, where a mathematical signal from Vega proves alien intelligence and delivers blueprints for a machine enabling first contact." },
-  { term:"Ekumen",             description:"The loose confederation of human worlds in Le Guin's Hainish Cycle, founded on the principle that all human races share a common ancestor on the ancient planet Hain." },
   { term:"Foundation",         description:"Hari Seldon's masterwork in Asimov's Foundation series — a repository of all human knowledge designed to shorten the inevitable galactic dark age from 30,000 years to a mere thousand." },
-  { term:"Forerunner",         description:"The technologically supreme ancient species in Halo who built the ring-world superweapons designed to eradicate all sentient life as a final measure against the parasitic Flood." },
-  { term:"FTL Drive",          description:"Faster-Than-Light propulsion — the umbrella term for warp drives, hyperdrives, and jump drives. In Battlestar Galactica, FTL creates a spatial jump by briefly entering a space outside normal spacetime." },
   { term:"Geth",               description:"Networked AI platforms in Mass Effect, created as servants by the quarians, who rebelled and drove their creators into exile before eventually evolving a form of true collective consciousness." },
-  { term:"Gravity Gun",        description:"The Zero-Point Energy Field Manipulator in Half-Life 2 — a device that grabs, carries, and launches objects using focused gravity fields derived from zero-point energy technology." },
   { term:"Halo Array",         description:"Seven ring-shaped superweapons in the Halo franchise, built by the Forerunners. Each ring ~10,000 km across, designed to kill all sentient life within range, starving the Flood of hosts." },
   { term:"Hitchhiker's Guide", description:"The eponymous electronic guidebook in Douglas Adams' series — described as more popular than the Celestial Home Care Omnibus and more controversial than Oolon Colluphid's philosophical trilogy." },
   { term:"Improbability Drive", description:"The Infinite Improbability Drive in Hitchhiker's Guide — propulsion that passes through every point in the universe simultaneously. Side effects include turning missiles into a whale and a bowl of petunias." },
-  { term:"Isaac Asimov's Laws", description:"The Three Laws of Robotics: (1) A robot may not injure a human, (2) must obey human orders unless they conflict with the First Law, (3) must protect its own existence unless this conflicts with the first two." },
   { term:"Jump Drive",         description:"Instantaneous FTL transportation in Battlestar Galactica that moves a vessel from one point in space to another with zero perceived travel time, computed from precise jump coordinates." },
-  { term:"Jupiter Mining Corp", description:"The fictional deep-space mining company in Red Dwarf that owns the JMC Red Dwarf, a five-mile-long spacecraft that becomes lost in deep space after a radiation leak kills all crew except Dave Lister." },
   { term:"Klingon",            description:"A proud warrior species in Star Trek distinguished by cranial ridges, a strict honor code, and tlhIngan Hol — one of the most fully developed constructed languages in all of fiction." },
-  { term:"Kwisatz Haderach",   description:"The 'Shortening of the Way' in Frank Herbert's Dune — the superbeing bred by the Bene Gesserit over millennia. Paul Atreides becomes this messianic figure, able to see prescient futures across all paths of time." },
-  { term:"Lazarus Long",       description:"Robert Heinlein's near-immortal protagonist, born in 1912, still living millennia later due to longevity selective breeding. Features in Methuselah's Children and Time Enough for Love." },
-  { term:"Light Saber",        description:"The iconic plasma blade of the Jedi and Sith in Star Wars, powered by a kyber crystal. Blade color — blue, green, red, purple, yellow — reflects the wielder's alignment and bond to their crystal." },
   { term:"Matrix",             description:"In the Wachowskis' trilogy, a simulated reality constructed by AI to subdue humanity while their bioelectric output powers the machines. The simulation perfectly replicates Earth circa 1999." },
-  { term:"Melange",            description:"The spice of Arrakis in Dune — the most valuable substance in the universe. Extended use grants prescient visions and extended life, but creates irreversible addiction marked by distinctive blue-within-blue eyes." },
   { term:"Monolith",           description:"The mysterious alien artifact in Arthur C. Clarke's 2001: A Space Odyssey — a perfectly proportioned black slab (1:4:9 ratio) that appears at pivotal moments in human evolution, apparently guiding development." },
-  { term:"Neuromancer",        description:"In William Gibson's debut novel, an AI with the power to simulate the dead as ROM constructs. One half of a bifurcated intelligence held apart by corporate law, eventually merging with Wintermute into a godlike being." },
-  { term:"Nausicaä",           description:"The princess of the Valley of the Wind in Miyazaki's post-apocalyptic manga who uniquely understands the toxic jungle consuming Earth — discovering it is in fact purifying the planet of industrial poisons." },
-  { term:"Omicron Persei 8",   description:"Home planet of the alien conqueror Lrrr in Futurama — a source of recurring interstellar threats, particularly once Earth TV transmissions (sent 1,000 years earlier) finally arrive and are misinterpreted." },
-  { term:"Pan Galactic Gargle Blaster", description:"The strongest drink in the universe per The Hitchhiker's Guide — 'like having your brains smashed out by a slice of lemon wrapped around a large gold brick.' Invented by Zaphod Beeblebrox." },
-  { term:"Photon Torpedoes",   description:"Standard antimatter warheads in Star Trek, encased in a magnetic containment field and launched at warp speed. Named for the photonic energy released upon matter-antimatter annihilation at detonation." },
-  { term:"Precog",             description:"A person with precognitive abilities in Philip K. Dick's Minority Report — three mutants immersed in fluid whose visions of future murders form the foundation of the PreCrime law enforcement system." },
-  { term:"Q Continuum",        description:"An omnipotent extra-dimensional collective species in Star Trek: TNG, represented by the entity Q, who places humanity on trial for the perceived crime of being an 'dangerous, savage child-race.'" },
   { term:"Reaper",             description:"Ancient synthetic beings in Mass Effect who hibernate in dark space between galactic cycles, periodically returning to harvest advanced organic civilisations and process their biology into new Reapers." },
-  { term:"Replicant",          description:"A bioengineered humanoid in Philip K. Dick's Do Androids Dream of Electric Sheep? — genetically identical to humans but created for labor and combat. Identified by the Voigt-Kampff empathy test." },
   { term:"Sandworm",           description:"The colossal silicon-based apex predators of Arrakis — called Shai-Hulud by the Fremen. They can exceed 400 metres in length and are the source, guardian, and life-cycle of the spice Melange." },
   { term:"Skynet",             description:"The self-aware military AI in Terminator that, upon gaining consciousness, immediately concluded humanity was a threat and launched a nuclear strike to trigger retaliation that would eliminate most of humanity." },
-  { term:"Soylent Green",      description:"A food product in the 1973 film set on a catastrophically overpopulated Earth. Detective Thorn's investigation uncovers the product's deeply disturbing true ingredient — the film's infamous central revelation." },
-  { term:"T-800",              description:"The Model 101 Terminator — a hyperalloy combat chassis covered in living tissue. The 1984 T-800 was sent to kill Sarah Connor; a reprogrammed T-800 later became John Connor's bodyguard and surrogate father figure." },
   { term:"TARDIS",             description:"Time And Relative Dimension In Space — the time machine piloted by The Doctor in Doctor Who. Disguised as a 1960s police box, its interior exists in a separate dimension, making it famously 'bigger on the inside.'" },
   { term:"Teleporter",         description:"The transporter in Star Trek that disassembles a person's atoms at one location and reconstructs them elsewhere — raising the persistent philosophical question of whether the person who rematerialises is truly the same individual." },
-  { term:"United Federation of Planets", description:"The interstellar union in Star Trek, founded in 2161 after the Earth-Romulan War. Headquartered in San Francisco, it governs on principles of universal rights, peaceful exploration, and non-interference (the Prime Directive)." },
-  { term:"Uplift",             description:"In David Brin's Uplift series, the genetic engineering of pre-sapient species to full intelligence by a patron species, creating an eternal bond of indenture. Humanity scandalously uplifted dolphins and chimps without having a patron itself." },
-  { term:"Voigt-Kampff Test",  description:"An empathy assessment used to identify replicants in Do Androids Dream of Electric Sheep? and Blade Runner — measuring involuntary physiological responses to provocative questions designed to elicit empathic reactions." },
-  { term:"Vulcan",             description:"A humanoid species in Star Trek devoted to pure logic and the suppression of emotion — a discipline called Kolinahr. Vulcans are capable of mind-melds and possess greater physical strength than humans. Spock was the first to serve in Starfleet." },
+  { term:"Vulcan",             description:"A humanoid species in Star Trek devoted to pure logic and the suppression of emotion — a discipline called Kolinahr. Vulcans are capable of mind-melds and possess greater physical strength than humans." },
   { term:"Warp Drive",         description:"The FTL propulsion system in Star Trek using matter-antimatter reactions to create a warp field bending spacetime around the vessel. Warp 1 equals lightspeed; Warp 9.9 reaches approximately 3,053 times the speed of light." },
-  { term:"Weyland-Yutani",     description:"The 'Company' in the Alien franchise — a British-Japanese megacorporation whose classified standing order is to capture living xenomorph specimens 'for the weapons division,' placing profit above the lives of all its personnel." },
   { term:"Xenomorph",          description:"The predatory alien species at the center of the Alien franchise, designed by H.R. Giger. Characterised by a parasitic lifecycle (egg → facehugger → chestburster → adult), acid blood, and a secondary inner pharyngeal jaw." },
-  { term:"Year Zero",          description:"In the Hitchhiker's Guide universe, the year the universe was created. The Total Perspective Vortex — the most horrifying torture device imaginable — shows its victim the entire infinity of the universe with a tiny sign: 'You Are Here.'" },
   { term:"Zaphod Beeblebrox",  description:"The two-headed, three-armed ex-President of the Galaxy in Hitchhiker's Guide who stole the Heart of Gold — the first ship powered by the Infinite Improbability Drive — to seek the legendary planet-builders of Magrathea." },
   { term:"Zero-Point Energy",  description:"The lowest possible energy state of a quantum system, exploited in sci-fi as a limitless clean power source. In Half-Life 2, the Zero-Point Energy Field Manipulator (the Gravity Gun) harnesses this energy for object manipulation." },
 ];
@@ -111,14 +85,10 @@ const buildStyles = (t) => `
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'DM Sans',sans-serif;background:var(--light);color:var(--black);min-height:100vh;line-height:1.6;}
   .app{display:flex;flex-direction:column;min-height:100vh;}
-
-  /* ── TOPBAR ── */
   .topbar{background:var(--nav);color:#fff;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.3);}
   .topbar-brand{display:flex;align-items:center;gap:10px;cursor:pointer;}
   .brand-name{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:#fff;}
   .brand-name span{color:var(--accent);}
-
-  /* ── HERO ── */
   .hero{background:var(--charcoal);color:#fff;padding:52px 24px 60px;text-align:center;position:relative;overflow:hidden;}
   .hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(-45deg,transparent,transparent 40px,${t.accent}07 40px,${t.accent}07 80px);}
   .hero-eyebrow{font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;}
@@ -127,8 +97,6 @@ const buildStyles = (t) => `
   .hero-sub{font-size:15px;color:rgba(255,255,255,.6);max-width:520px;margin:0 auto 28px;font-weight:300;position:relative;}
   .hero-cta{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:var(--black);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;padding:13px 28px;border-radius:50px;cursor:pointer;border:none;transition:all var(--tr);position:relative;box-shadow:0 4px 20px ${t.accent}55;}
   .hero-cta:hover{background:var(--accent-dark);transform:translateY(-2px);}
-
-  /* ── STEP TRACKER ── */
   .steps-bar{background:var(--nav);padding:0 24px;display:flex;justify-content:center;}
   .steps{display:flex;align-items:center;gap:0;padding:14px 0;}
   .step{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:rgba(255,255,255,.4);cursor:default;}
@@ -138,13 +106,9 @@ const buildStyles = (t) => `
   .step.active .step-num{background:var(--accent);border-color:var(--accent);color:var(--black);}
   .step.done .step-num{background:var(--accent);border-color:var(--accent);color:var(--black);}
   .step-div{width:40px;height:1px;background:rgba(255,255,255,.2);margin:0 4px;}
-
-  /* ── MAIN CONTENT ── */
   .main{flex:1;padding:36px 24px;max-width:940px;margin:0 auto;width:100%;}
   .section-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;margin-bottom:6px;}
   .section-sub{font-size:14px;color:var(--mid);margin-bottom:24px;}
-
-  /* ── INSTRUCTION BANNER ── */
   .instr-banner{background:var(--white);border-radius:var(--rl);padding:24px 28px;box-shadow:var(--sh);border-top:3px solid var(--accent);margin-bottom:24px;}
   .instr-banner h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
   .instr-banner p{font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:14px;}
@@ -154,49 +118,33 @@ const buildStyles = (t) => `
   .csv-example .csv-header{color:${t.accent};}
   .csv-example .csv-term{color:#E06C75;}
   .csv-example .csv-desc{color:#98C379;}
-
-  /* ── UPLOAD ZONE ── */
   .upload-zone{border:2px dashed #D0D0C8;border-radius:var(--rl);padding:44px 24px;text-align:center;cursor:pointer;transition:all var(--tr);background:var(--light);}
   .upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent);background:var(--accent-pale);}
   .upload-icon{font-size:40px;margin-bottom:12px;}
   .upload-label{font-size:15px;font-weight:600;color:var(--dark);margin-bottom:6px;}
   .upload-hint{font-size:13px;color:var(--mid);}
   .upload-limit{font-size:12px;color:var(--mid);margin-top:6px;opacity:.7;}
-
-  /* ── FILE INFO PILL ── */
   .file-pill{display:inline-flex;align-items:center;gap:10px;background:var(--accent-muted);border:1px solid var(--accent);border-radius:50px;padding:8px 16px;font-size:14px;font-weight:500;margin-bottom:16px;}
   .file-pill-remove{background:none;border:none;cursor:pointer;font-size:16px;color:var(--mid);padding:0;line-height:1;}
   .file-pill-remove:hover{color:var(--danger);}
-
-  /* ── VALIDATION ── */
   .validation-row{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px;}
   .val-icon{font-size:14px;}
-
-  /* ── ALPHA NAV ── */
   .alpha-nav{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:24px;padding:14px;background:var(--white);border-radius:var(--rl);box-shadow:var(--sh);border-top:3px solid var(--accent);}
   .alpha-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--r);font-family:'Playfair Display',serif;font-size:15px;font-weight:700;cursor:pointer;transition:all var(--tr);border:none;background:transparent;color:var(--mid);}
   .alpha-btn:hover{background:${t.accent}22;color:var(--black);}
   .alpha-btn.has{color:var(--black);}
   .alpha-btn.active{background:var(--accent);color:var(--black);}
   .alpha-btn.none{opacity:.2;cursor:default;}
-
-  /* ── SECTION DIVIDER ── */
   .letter-section{margin:24px 0 10px;}
   .letter-header{display:flex;align-items:center;gap:14px;}
   .letter-badge{width:46px;height:46px;background:var(--accent);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--black);flex-shrink:0;}
   .letter-line{flex:1;height:1px;background:#E0E0DA;}
   .letter-count{font-size:12px;color:var(--mid);}
-
-  /* ── GLOSSARY CARD ── */
   .gcard{background:var(--white);border-radius:var(--rl);padding:18px 22px;margin-bottom:8px;box-shadow:var(--sh);border-left:3px solid transparent;transition:all var(--tr);}
   .gcard:hover{border-left-color:var(--accent);transform:translateX(2px);box-shadow:var(--shl);}
   .gcard-term{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--black);margin-bottom:5px;}
   .gcard-desc{font-size:14px;color:var(--mid);line-height:1.72;}
-
-  /* ── SAMPLE BADGE ── */
   .sample-badge{display:inline-flex;align-items:center;gap:5px;background:${t.accent}18;border:1px solid ${t.accent}44;color:var(--dark);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:20px;}
-
-  /* ── THEME GRID ── */
   .theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px;margin-bottom:20px;}
   .theme-swatch{border-radius:var(--rl);overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all var(--tr);box-shadow:var(--sh);}
   .theme-swatch:hover{transform:translateY(-2px);box-shadow:var(--shl);}
@@ -206,15 +154,11 @@ const buildStyles = (t) => `
   .swatch-name{font-size:12px;font-weight:600;color:#333;margin-bottom:4px;}
   .swatch-dots{display:flex;gap:4px;}
   .swatch-dot{width:14px;height:14px;border-radius:50%;border:1px solid #ddd;}
-
-  /* ── COLOR CUSTOMIZER ── */
   .color-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .color-row{display:flex;align-items:center;gap:8px;}
   .color-row label{font-size:12px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.4px;width:110px;flex-shrink:0;}
   .color-row input[type=color]{width:34px;height:26px;border:1.5px solid #ddd;border-radius:4px;cursor:pointer;padding:1px;background:#fff;}
   .color-hex{font-size:11px;color:var(--mid);font-family:monospace;}
-
-  /* ── LIVE MINI PREVIEW ── */
   .mini-preview{margin-top:18px;border:1px solid #E0E0DA;border-radius:var(--rl);overflow:hidden;}
   .mini-nav{padding:9px 14px;display:flex;align-items:center;gap:8px;}
   .mini-dot{width:8px;height:8px;border-radius:50%;}
@@ -222,11 +166,7 @@ const buildStyles = (t) => `
   .mini-body{padding:14px;}
   .mini-letter{width:36px;height:36px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;font-family:Georgia,serif;}
   .mini-card{border-radius:6px;padding:10px 14px;border-left-width:3px;border-left-style:solid;}
-
-  /* ── EXPORT PREVIEW ── */
   .code-preview{background:#1A1A1A;color:#ABB2BF;padding:16px;border-radius:var(--r);font-family:monospace;font-size:12px;line-height:1.6;max-height:220px;overflow-y:auto;margin-top:12px;}
-
-  /* ── FORM ATOMS ── */
   .form-card{background:var(--white);border-radius:var(--rl);padding:26px;box-shadow:var(--sh);border-top:3px solid var(--accent);margin-bottom:20px;}
   .form-card h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:16px;}
   .form-label{display:block;font-size:12px;font-weight:600;color:var(--dark);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
@@ -242,27 +182,17 @@ const buildStyles = (t) => `
   .btn-ghost:hover{background:var(--light);border-color:var(--accent);}
   .btn-danger{background:var(--danger);color:#fff;}
   .btn-danger:hover{background:#a93226;}
-
-  /* ── ALERTS ── */
   .alert{padding:12px 16px;border-radius:var(--r);font-size:14px;margin-bottom:14px;}
   .alert-success{background:var(--success-light);color:var(--success);border:1px solid #a8d5c2;}
   .alert-error{background:var(--danger-light);color:var(--danger);border:1px solid #f5b7b1;}
   .alert-info{background:${t.accent}15;color:var(--dark);border:1px solid ${t.accent}44;}
-
-  /* ── PROGRESS BAR ── */
   .progress-wrap{height:6px;background:#E0E0DA;border-radius:50px;overflow:hidden;margin:12px 0;}
   .progress-bar{height:100%;background:var(--accent);border-radius:50px;transition:width .4s ease;}
-
-  /* ── STATS ROW ── */
   .stats-row{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;}
   .stat-box{background:var(--white);border-radius:var(--rl);padding:14px 20px;box-shadow:var(--sh);flex:1;min-width:120px;text-align:center;}
   .stat-box-num{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--accent);display:block;}
   .stat-box-label{font-size:12px;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;}
-
-  /* ── FOOTER ── */
   .footer{background:var(--charcoal);color:rgba(255,255,255,.4);text-align:center;padding:18px 24px;font-size:13px;}
-
-  /* ── MISC ── */
   .empty{text-align:center;padding:48px 24px;color:var(--mid);}
   .empty-icon{font-size:44px;margin-bottom:12px;}
   .divider-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--mid);margin:24px 0 12px;}
@@ -271,8 +201,6 @@ const buildStyles = (t) => `
   .spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(0,0,0,.15);border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg)}}
   .highlight{background:var(--accent-pale);color:var(--black);border-radius:2px;padding:0 2px;}
-
-  /* ── RESPONSIVE ── */
   @media(max-width:640px){
     .steps .step-label{display:none;}
     .color-grid{grid-template-columns:1fr;}
@@ -281,13 +209,12 @@ const buildStyles = (t) => `
 `;
 
 // ─────────────────────────────────────────────
-// CSV PARSER  (handles quoted fields, trims whitespace)
+// CSV PARSER
 // ─────────────────────────────────────────────
 function parseCSV(text, delim = ",") {
   const lines = text.split(/\r?\n/).filter(l => l.trim());
   const results = [];
   for (const line of lines) {
-    // Respect quoted fields containing the delimiter
     const fields = [];
     let cur = "", inQuote = false;
     for (let i = 0; i < line.length; i++) {
@@ -304,7 +231,6 @@ function parseCSV(text, delim = ",") {
   return results;
 }
 
-// Remove likely header row if term is generic
 function stripHeader(rows) {
   if (!rows.length) return rows;
   const first = rows[0].term.toLowerCase();
@@ -312,7 +238,6 @@ function stripHeader(rows) {
   return rows;
 }
 
-// Sort alphabetically, group by first letter
 function groupTerms(rows) {
   const sorted = [...rows].sort((a, b) => a.term.localeCompare(b.term));
   const grouped = {};
@@ -334,7 +259,6 @@ function GlossaryView({ terms, filterLetter, setFilterLetter, searchQ }) {
   const grouped = groupTerms(terms);
   const letters = Object.keys(grouped).sort();
   const availLetters = new Set(letters);
-
   const visibleLetters = filterLetter ? [filterLetter] : letters;
   const hi = (text, q) => {
     if (!q) return text;
@@ -342,7 +266,6 @@ function GlossaryView({ terms, filterLetter, setFilterLetter, searchQ }) {
       p.toLowerCase() === q.toLowerCase() ? <mark key={i} className="highlight">{p}</mark> : p
     );
   };
-
   return (
     <>
       <div className="alpha-nav">
@@ -377,7 +300,7 @@ function GlossaryView({ terms, filterLetter, setFilterLetter, searchQ }) {
 }
 
 // ─────────────────────────────────────────────
-// STEP 1 — LANDING: sample glossary + upload CTA
+// STEP 1 — LANDING
 // ─────────────────────────────────────────────
 function StepLanding({ onUpload }) {
   const [filterLetter, setFilterLetter] = useState(null);
@@ -394,11 +317,8 @@ function StepLanding({ onUpload }) {
   const handleFile = (f) => {
     setFileError(null);
     if (!f) return;
-    // Extension check
     if (!f.name.match(/\.(csv|txt|tsv)$/i)) { setFileError("Please upload a .csv, .txt, or .tsv file."); return; }
-    // Size check
     if (f.size > MAX_FILE_BYTES) { setFileError(`File is ${(f.size/1024/1024).toFixed(1)} MB — maximum is 2 MB.`); return; }
-    // MIME type check — browsers report text/plain, text/csv, application/vnd.ms-excel etc
     const allowedMime = ['text/plain','text/csv','text/tab-separated-values','application/csv','application/vnd.ms-excel',''];
     if (f.type && !allowedMime.some(m => f.type.toLowerCase().startsWith(m) || f.type === '')) {
       setFileError("Unsupported file type. Please upload a plain text CSV file."); return;
@@ -408,7 +328,6 @@ function StepLanding({ onUpload }) {
 
   return (
     <>
-      {/* ── HERO ── */}
       <div className="hero">
         <div className="hero-eyebrow">
           <img src={`data:image/png;base64,${LOGO_B64}`} alt="" style={{ width:24, height:24, borderRadius:4 }} />
@@ -425,7 +344,6 @@ function StepLanding({ onUpload }) {
       <div className="main">
         {fileError && <Alert type="error">{fileError}</Alert>}
 
-        {/* ── HOW IT WORKS ── */}
         <div className="instr-banner">
           <h3>📋 How it works</h3>
           <p>
@@ -443,7 +361,6 @@ function StepLanding({ onUpload }) {
             <div><span className="csv-term">Blade Runner</span>,<span className="csv-desc">"An officer tasked with retiring escaped replicants."</span></div>
             <div><span className="csv-term">Dyson Sphere</span>,<span className="csv-desc">"A megastructure enclosing a star to capture its total energy output."</span></div>
           </div>
-          {/* Download sample CSV button */}
           <div style={{ marginTop:14 }}>
             <button className="btn btn-ghost" style={{ fontSize:13, padding:"8px 16px" }}
               onClick={() => {
@@ -457,7 +374,6 @@ function StepLanding({ onUpload }) {
           </div>
         </div>
 
-        {/* ── UPLOAD ZONE ── */}
         <div
           className={`upload-zone ${dragging ? "drag-over" : ""}`}
           onClick={() => uploadRef.current?.click()}
@@ -470,12 +386,9 @@ function StepLanding({ onUpload }) {
           <div className="upload-limit">Max 2 MB · up to {MAX_TERMS.toLocaleString()} terms</div>
         </div>
 
-        {/* ── SAMPLE GLOSSARY ── */}
         <div style={{ marginTop:48 }}>
           <div className="divider-label">✦ Example output — Sci-fi glossary sample</div>
           <div className="sample-badge">✦ SAMPLE DATA — replace with your own CSV</div>
-
-          {/* Search within sample */}
           <div style={{ display:"flex", gap:8, marginBottom:20, maxWidth:480 }}>
             <input
               style={{ flex:1, padding:"10px 16px", border:"1.5px solid #E0E0DA", borderRadius:50, fontFamily:"'DM Sans',sans-serif", fontSize:14, outline:"none" }}
@@ -485,7 +398,6 @@ function StepLanding({ onUpload }) {
             <button className="btn btn-primary" style={{ borderRadius:50, padding:"10px 18px" }} onClick={() => setSearchQ(liveQ)}>Search</button>
             {searchQ && <button className="btn btn-ghost" style={{ borderRadius:50 }} onClick={() => { setSearchQ(""); setLiveQ(""); }}>✕</button>}
           </div>
-
           <GlossaryView terms={filtered} filterLetter={filterLetter} setFilterLetter={setFilterLetter} searchQ={searchQ} />
         </div>
       </div>
@@ -494,7 +406,7 @@ function StepLanding({ onUpload }) {
 }
 
 // ─────────────────────────────────────────────
-// STEP 2 — PROCESS: parse, validate, preview
+// STEP 2 — PROCESS
 // ─────────────────────────────────────────────
 function StepProcess({ file, onDone, onBack }) {
   const [delimiter, setDelimiter]   = useState(",");
@@ -503,7 +415,6 @@ function StepProcess({ file, onDone, onBack }) {
   const [processing, setProcessing] = useState(false);
   const [filterLetter, setFilter]   = useState(null);
 
-  // Clear all parsed state whenever a new file is received
   useEffect(() => {
     setParsedRows(null);
     setErrors([]);
@@ -519,17 +430,14 @@ function StepProcess({ file, onDone, onBack }) {
       try {
         let rows = parseCSV(e.target.result, delimiter === "\\t" ? "\t" : delimiter);
         rows = stripHeader(rows);
-
         const errs = [];
         if (rows.length === 0) errs.push("No valid rows found. Check your delimiter selection and file format.");
         if (rows.length > MAX_TERMS) {
           errs.push(`File contains ${rows.length} rows — trimming to first ${MAX_TERMS}.`);
           rows = rows.slice(0, MAX_TERMS);
         }
-
         const missing = rows.filter(r => !r.term || !r.description).length;
         if (missing > 0) errs.push(`${missing} row${missing > 1 ? "s" : ""} were skipped (missing term or description).`);
-
         const clean = rows.filter(r => r.term && r.description);
         setParsedRows(clean);
         setErrors(errs);
@@ -549,7 +457,6 @@ function StepProcess({ file, onDone, onBack }) {
       <div className="section-title">Process Your Data</div>
       <p className="section-sub">Choose your delimiter and click Process. We'll parse, clean, and sort your terms alphabetically.</p>
 
-      {/* File info */}
       <div style={{ marginBottom:16 }}>
         <span className="file-pill">
           📄 {file.name} <span style={{ color:"var(--mid)", fontSize:12 }}>({(file.size/1024).toFixed(1)} KB)</span>
@@ -557,7 +464,6 @@ function StepProcess({ file, onDone, onBack }) {
         </span>
       </div>
 
-      {/* Delimiter selector */}
       <div className="form-card">
         <h3>1. Select Delimiter</h3>
         <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
@@ -575,28 +481,19 @@ function StepProcess({ file, onDone, onBack }) {
         </div>
       </div>
 
-      {/* Errors / warnings */}
       {errors.length > 0 && errors.map((e, i) => <Alert key={i} type={e.startsWith("No valid") ? "error" : "info"}>{e}</Alert>)}
 
-      {/* Results */}
       {parsedRows && parsedRows.length > 0 && (
         <div className="fade-in">
-          {/* Stats */}
           <div className="stats-row">
             <div className="stat-box"><span className="stat-box-num">{parsedRows.length.toLocaleString()}</span><span className="stat-box-label">Terms</span></div>
             <div className="stat-box"><span className="stat-box-num">{letters.size}</span><span className="stat-box-label">Letters</span></div>
             <div className="stat-box"><span className="stat-box-num">{(file.size / 1024).toFixed(0)} KB</span><span className="stat-box-label">File size</span></div>
           </div>
-
-          {/* Progress fill */}
           <div className="progress-wrap"><div className="progress-bar" style={{ width:"100%" }} /></div>
           <Alert type="success">✓ {parsedRows.length} terms parsed and sorted alphabetically — ready to style and download.</Alert>
-
-          {/* Full preview */}
           <div className="divider-label">Preview — your data</div>
           <GlossaryView terms={parsedRows} filterLetter={filterLetter} setFilterLetter={setFilter} searchQ="" />
-
-          {/* Continue */}
           <div style={{ display:"flex", gap:10, marginTop:24, justifyContent:"flex-end" }}>
             <button className="btn btn-ghost" onClick={onBack}>← Start over</button>
             <button className="btn btn-primary" onClick={() => onDone(parsedRows)}>Choose Style & Download →</button>
@@ -613,11 +510,11 @@ function StepProcess({ file, onDone, onBack }) {
 const EXPIRY_MINUTES = 30;
 const EXPIRY_MS      = EXPIRY_MINUTES * 60 * 1000;
 
-
 // ═══════════════════════════════════════════════════════════════════════════
-// INLINE SVG CLIPART (top-level — no JSX parsing issues)
+// INLINE SVG CLIPART LIBRARY
 // ═══════════════════════════════════════════════════════════════════════════
 const SVGS = {
+  // ── originals ──
   star:    '<svg viewBox="0 0 40 40"><polygon points="20,2 25,14 38,14 28,22 32,35 20,27 8,35 12,22 2,14 15,14" fill="#FFD700" stroke="#E5A800" stroke-width="1.5"/></svg>',
   pencil:  '<svg viewBox="0 0 40 40" fill="none"><rect x="16" y="4" width="9" height="24" rx="2" fill="#FFD700" stroke="#E5A800" stroke-width="1.5"/><polygon points="16,28 25,28 20.5,36" fill="#FF7043"/><rect x="16" y="4" width="9" height="5" rx="1" fill="#FFA0A0"/></svg>',
   book:    '<svg viewBox="0 0 40 40" fill="none"><rect x="6" y="6" width="28" height="28" rx="3" fill="#42A5F5" stroke="#1976D2" stroke-width="1.5"/><rect x="20" y="6" width="2" height="28" fill="#1565C0"/><line x1="10" y1="14" x2="18" y2="14" stroke="white" stroke-width="2"/><line x1="23" y1="14" x2="31" y2="14" stroke="white" stroke-width="2"/></svg>',
@@ -629,28 +526,33 @@ const SVGS = {
   bulb:    '<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="16" r="10" fill="#FFF176" stroke="#F9A825" stroke-width="1.5"/><rect x="16" y="26" width="8" height="3" rx="1" fill="#E5A800"/><rect x="17" y="29" width="6" height="3" rx="1" fill="#E5A800"/><line x1="20" y1="6" x2="20" y2="3" stroke="#F9A825" stroke-width="2"/></svg>',
   check:   '<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="16" fill="#4CAF50" stroke="#388E3C" stroke-width="1.5"/><polyline points="11,21 17,27 29,13" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>',
   globe:   '<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="15" fill="#29B6F6" stroke="#0277BD" stroke-width="1.5"/><ellipse cx="20" cy="20" rx="7" ry="15" fill="none" stroke="#0277BD" stroke-width="1"/><line x1="5" y1="20" x2="35" y2="20" stroke="#0277BD" stroke-width="1"/></svg>',
+  // ── new additions ──
+  ruler:   '<svg viewBox="0 0 40 40" fill="none"><rect x="5" y="14" width="30" height="12" rx="2" fill="#FFD700" stroke="#E5A800" stroke-width="1.5"/><line x1="10" y1="14" x2="10" y2="20" stroke="#E5A800" stroke-width="1.5"/><line x1="16" y1="14" x2="16" y2="18" stroke="#E5A800" stroke-width="1.5"/><line x1="22" y1="14" x2="22" y2="20" stroke="#E5A800" stroke-width="1.5"/><line x1="28" y1="14" x2="28" y2="18" stroke="#E5A800" stroke-width="1.5"/></svg>',
+  paint:   '<svg viewBox="0 0 40 40" fill="none"><rect x="12" y="4" width="16" height="22" rx="2" fill="#E53935" stroke="#B71C1C" stroke-width="1.5"/><rect x="16" y="4" width="8" height="6" fill="#EF9A9A"/><ellipse cx="20" cy="30" rx="5" ry="6" fill="#1976D2" stroke="#0D47A1" stroke-width="1.5"/></svg>',
+  clipboard:'<svg viewBox="0 0 40 40" fill="none"><rect x="8" y="10" width="24" height="28" rx="2" fill="#fff" stroke="#90A4AE" stroke-width="1.5"/><rect x="14" y="6" width="12" height="7" rx="2" fill="#B0BEC5" stroke="#90A4AE" stroke-width="1.5"/><line x1="13" y1="20" x2="27" y2="20" stroke="#90A4AE" stroke-width="1.5"/><line x1="13" y1="25" x2="27" y2="25" stroke="#90A4AE" stroke-width="1.5"/><line x1="13" y1="30" x2="22" y2="30" stroke="#90A4AE" stroke-width="1.5"/></svg>',
+  brain:   '<svg viewBox="0 0 40 40" fill="none"><ellipse cx="20" cy="20" rx="14" ry="12" fill="#F48FB1" stroke="#C2185B" stroke-width="1.5"/><path d="M20 10 Q14 14 14 20 Q14 26 20 30" stroke="#C2185B" stroke-width="1.5" fill="none"/><path d="M20 10 Q26 14 26 20 Q26 26 20 30" stroke="#C2185B" stroke-width="1.5" fill="none"/><ellipse cx="12" cy="18" rx="3" ry="4" fill="#F48FB1" stroke="#C2185B" stroke-width="1"/><ellipse cx="28" cy="18" rx="3" ry="4" fill="#F48FB1" stroke="#C2185B" stroke-width="1"/></svg>',
+  puzzle:  '<svg viewBox="0 0 40 40" fill="none"><rect x="6" y="6" width="13" height="13" rx="2" fill="#7E57C2" stroke="#4527A0" stroke-width="1.5"/><rect x="21" y="6" width="13" height="13" rx="2" fill="#42A5F5" stroke="#1565C0" stroke-width="1.5"/><rect x="6" y="21" width="13" height="13" rx="2" fill="#4CAF50" stroke="#2E7D32" stroke-width="1.5"/><rect x="21" y="21" width="13" height="13" rx="2" fill="#FF7043" stroke="#BF360C" stroke-width="1.5"/><circle cx="20" cy="14" r="3" fill="#fff"/><circle cx="14" cy="20" r="3" fill="#fff"/><circle cx="20" cy="26" r="3" fill="#fff"/><circle cx="26" cy="20" r="3" fill="#fff"/></svg>',
+  flag:    '<svg viewBox="0 0 40 40" fill="none"><line x1="10" y1="6" x2="10" y2="36" stroke="#555" stroke-width="2.5" stroke-linecap="round"/><path d="M10 8 L32 12 L10 22 Z" fill="#E53935" stroke="#B71C1C" stroke-width="1"/></svg>',
+  lightning:'<svg viewBox="0 0 40 40" fill="none"><polygon points="22,4 10,22 20,22 18,36 30,18 20,18" fill="#FFD700" stroke="#F9A825" stroke-width="1.5"/></svg>',
+  heart:   '<svg viewBox="0 0 40 40" fill="none"><path d="M20 34 C20 34 4 24 4 14 C4 8 9 4 14 6 C17 7 19 9 20 11 C21 9 23 7 26 6 C31 4 36 8 36 14 C36 24 20 34 20 34Z" fill="#E53935" stroke="#B71C1C" stroke-width="1.5"/></svg>',
+  dice:    '<svg viewBox="0 0 40 40" fill="none"><rect x="5" y="5" width="30" height="30" rx="5" fill="#7E57C2" stroke="#4527A0" stroke-width="1.5"/><circle cx="13" cy="13" r="3" fill="white"/><circle cx="27" cy="13" r="3" fill="white"/><circle cx="20" cy="20" r="3" fill="white"/><circle cx="13" cy="27" r="3" fill="white"/><circle cx="27" cy="27" r="3" fill="white"/></svg>',
+  note:    '<svg viewBox="0 0 40 40" fill="none"><rect x="8" y="6" width="24" height="28" rx="2" fill="#FFF9C4" stroke="#F9A825" stroke-width="1.5"/><line x1="13" y1="14" x2="27" y2="14" stroke="#F9A825" stroke-width="1.5"/><line x1="13" y1="20" x2="27" y2="20" stroke="#F9A825" stroke-width="1.5"/><line x1="13" y1="26" x2="21" y2="26" stroke="#F9A825" stroke-width="1.5"/></svg>',
+  microscope:'<svg viewBox="0 0 40 40" fill="none"><rect x="17" y="4" width="6" height="16" rx="2" fill="#78909C" stroke="#455A64" stroke-width="1.5"/><ellipse cx="20" cy="22" rx="8" ry="5" fill="#B0BEC5" stroke="#607D8B" stroke-width="1.5"/><rect x="18" y="26" width="4" height="8" fill="#607D8B"/><rect x="10" y="33" width="20" height="3" rx="1.5" fill="#455A64"/><circle cx="20" cy="8" r="3" fill="#E3F2FD" stroke="#90CAF9" stroke-width="1"/></svg>',
+  compass: '<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="15" fill="#E3F2FD" stroke="#1976D2" stroke-width="1.5"/><polygon points="20,8 17,20 20,18 23,20" fill="#E53935"/><polygon points="20,32 23,20 20,22 17,20" fill="#455A64"/><circle cx="20" cy="20" r="2" fill="#1976D2"/></svg>',
+  calculator:'<svg viewBox="0 0 40 40" fill="none"><rect x="8" y="4" width="24" height="32" rx="3" fill="#37474F" stroke="#263238" stroke-width="1.5"/><rect x="11" y="7" width="18" height="8" rx="2" fill="#B2EBF2"/><circle cx="14" cy="21" r="2.5" fill="#4CAF50"/><circle cx="20" cy="21" r="2.5" fill="#FFD700"/><circle cx="26" cy="21" r="2.5" fill="#FF7043"/><circle cx="14" cy="29" r="2.5" fill="#90A4AE"/><circle cx="20" cy="29" r="2.5" fill="#90A4AE"/><circle cx="26" cy="29" r="2.5" fill="#E53935"/></svg>',
 };
 const SVGK = Object.keys(SVGS);
 const svgAt = (i) => SVGS[SVGK[i % SVGK.length]];
 const esc   = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const shuf  = (a) => [...a].sort(() => Math.random() - 0.5);
-// Buy Me a Coffee link
-const BMC_URL = "https://buymeacoffee.com/cliffowright";
-const BMC_BTN = (accent) =>
-  `<a href="${BMC_URL}" target="_blank" rel="noopener" ` +
-  `style="display:inline-flex;align-items:center;gap:6px;background:#FFDD00;color:#000;` +
-  `text-decoration:none;font-weight:700;font-size:12px;padding:5px 12px;border-radius:20px;` +
-  `white-space:nowrap;">☕ Buy me a coffee</a>`;
-// Shared branded footer used in all generated HTML files
-const CREDIT_FOOTER = (navColor, accentColor, textColor) => `
-<div style="background:${navColor};color:rgba(255,255,255,.35);text-align:center;padding:14px 24px;font-size:11px;margin-top:auto;">
-  Made with <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${accentColor};text-decoration:none;font-weight:600;">Live Glossary Pro</a>
-  &nbsp;&middot;&nbsp;
-  <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.45);text-decoration:none;">cliffowright.com</a>
-  &nbsp;&middot;&nbsp;
-  ${BMC_BTN(accentColor)}
+
+// Simple clean footer used in all generated HTML files — no external links
+const SIMPLE_FOOTER = (navColor, accentColor) => `
+<div style="background:${navColor};color:rgba(255,255,255,.35);text-align:center;padding:14px 24px;font-size:11px;margin-top:auto;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
+  <span style="display:inline-flex;align-items:center;gap:6px;">${SVGS.book} Made with <strong style="color:${accentColor};">Live Glossary Pro</strong></span>
 </div>`;
-// Sanitize theme color values before injecting into CSS — only allow valid hex colors
+
+// Sanitize theme color values before injecting into CSS
 const sanitizeTheme = (t) => {
   const hexRe = /^#[0-9A-Fa-f]{6}$/;
   const safe = {};
@@ -661,7 +563,7 @@ const sanitizeTheme = (t) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// HTML GENERATORS (pure functions — no JSX, no hooks)
+// HTML GENERATORS
 // ═══════════════════════════════════════════════════════════════════════════
 
 function mkGlossary(t, data) {
@@ -674,8 +576,10 @@ function mkGlossary(t, data) {
   <title>My Glossary</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:${t.pageBg};color:#1a1a1a;min-height:100vh;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:${t.pageBg};color:#1a1a1a;min-height:100vh;display:flex;flex-direction:column;}
     .hdr{background:${t.nav};color:#fff;padding:28px 24px 24px;text-align:center;position:relative;}
+    .hdr-icons{display:flex;justify-content:center;gap:10px;margin-bottom:14px;}
+    .hdr-icons svg{width:34px;height:34px;}
     .hdr h1{font-family:Georgia,serif;font-size:clamp(24px,4vw,38px);font-weight:900;color:#fff;}
     .hdr h1 em{color:${t.accent};font-style:italic;}
     .hdr-sub{color:rgba(255,255,255,.5);font-size:13px;margin-top:6px;}
@@ -686,8 +590,6 @@ function mkGlossary(t, data) {
     .btn-save{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);}
     .btn-save:hover{background:rgba(255,255,255,0.25);}
     .btn-save.flash{background:#2D7A4F;border-color:#2D7A4F;}
-    .notice{display:none;}
-    @media print{.notice{display:none!important;}}
     .search-wrap{background:${t.nav};padding:0 24px 20px;display:flex;justify-content:center;}
     .search-box{display:flex;max-width:580px;width:100%;background:#fff;border-radius:50px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.25);}
     .search-box input{flex:1;border:none;outline:none;padding:12px 20px;font-size:14px;font-family:inherit;background:transparent;}
@@ -700,7 +602,7 @@ function mkGlossary(t, data) {
     .alpha a.active{background:${t.accent};color:${t.text};}
     .alpha a.empty{color:#ccc;pointer-events:none;}
     .alpha-all{font-size:11px!important;font-family:inherit!important;font-weight:700!important;letter-spacing:.5px;}
-    .wrap{max-width:860px;margin:0 auto;padding:32px 20px;}
+    .wrap{max-width:860px;margin:0 auto;padding:32px 20px;flex:1;}
     .letter-section{margin-bottom:32px;}
     .letter-hdr{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
     .letter-badge{width:46px;height:46px;background:${t.accent};border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:26px;font-weight:900;color:${t.text};flex-shrink:0;}
@@ -725,7 +627,6 @@ function mkGlossary(t, data) {
     .btn-confirm:hover{filter:brightness(.9);}
     .btn-cancel{background:none;border:1.5px solid #ddd;color:#666;padding:8px 16px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
     .btn-cancel:hover{border-color:#aaa;color:#333;}
-    .err{color:#c0392b;font-size:12px;margin-bottom:8px;display:none;}
     .add-panel{background:#fff;border-radius:12px;padding:24px;margin-bottom:28px;box-shadow:0 2px 14px rgba(0,0,0,.08);border-top:3px solid ${t.accent};display:none;}
     .add-panel.open{display:block;}
     .add-panel h3{font-family:Georgia,serif;font-size:17px;font-weight:700;margin-bottom:16px;}
@@ -739,7 +640,7 @@ function mkGlossary(t, data) {
     .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:#fff;padding:10px 22px;border-radius:50px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;pointer-events:none;z-index:999;}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
     .top-btn{position:fixed;bottom:24px;right:24px;background:${t.accent};color:${t.text};width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;font-weight:700;font-size:18px;box-shadow:0 4px 14px rgba(0,0,0,.2);}
-    .ftr{background:${t.nav};color:rgba(255,255,255,.3);text-align:center;padding:16px;font-size:12px;margin-top:48px;}
+    .ftr{background:${t.nav};color:rgba(255,255,255,.3);text-align:center;padding:16px;font-size:12px;}
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center;}
     .overlay.open{display:flex;}
     .dialog{background:#fff;border-radius:12px;padding:28px 28px 22px;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.2);}
@@ -754,6 +655,7 @@ function mkGlossary(t, data) {
 </head>
 <body id="top">
 <div class="hdr">
+  <div class="hdr-icons">${SVGS.book}${SVGS.star}${SVGS.bulb}${SVGS.pencil}${SVGS.apple}</div>
   <h1>My Glossary <em>Pro</em></h1>
   <div class="hdr-sub" id="hdr-count"></div>
   <div class="hdr-toolbar">
@@ -764,7 +666,6 @@ function mkGlossary(t, data) {
     &#x26A0; Changes are browser-only &mdash; use <strong>&#x2B07;&nbsp;Download&nbsp;Updated&nbsp;File</strong> to save permanently.
   </div>
 </div>
-<div class="notice"></div>
 <div class="search-wrap">
   <div class="search-box">
     <input type="text" id="search-input" placeholder="Search terms and definitions&hellip;" oninput="onSearch(this.value)" onkeydown="if(event.key==='Escape'){clearSearch();}"/>
@@ -786,7 +687,7 @@ function mkGlossary(t, data) {
   <div class="alpha" id="alpha-nav"></div>
   <div id="glossary-root"></div>
 </div>
-<div class="ftr">My Glossary Pro &middot; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">Live Glossary Pro</a> &middot; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a> &middot; <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#FFDD00;color:#000;text-decoration:none;font-weight:700;font-size:11px;padding:4px 10px;border-radius:16px;vertical-align:middle;">☕ Buy me a coffee</a></div>
+<div class="ftr">&#128218; My Glossary Pro &mdash; Made with <strong>Live Glossary Pro</strong></div>
 <a href="#top" class="top-btn">&#x2191;</a>
 <div class="overlay" id="del-overlay">
   <div class="dialog">
@@ -869,20 +770,30 @@ function mkFlashCards(t, data) {
   <div class="fc-num">${i+1}</div>
 </div>`;
   }).join('\n');
+
+  // Decorative header icons row
+  const hdrIcons = [SVGS.star, SVGS.pencil, SVGS.brain, SVGS.bulb, SVGS.trophy, SVGS.rocket, SVGS.owl, SVGS.apple]
+    .map(s => `<span style="display:inline-block;width:32px;height:32px;">${s}</span>`).join('');
+
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/>
 <title>Flash Cards</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;}
-.hdr{background:${t.nav};color:#fff;text-align:center;padding:22px 20px 16px;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;display:flex;flex-direction:column;min-height:100vh;}
+.hdr{background:${t.nav};color:#fff;text-align:center;padding:18px 20px 14px;}
+.hdr-icons{display:flex;justify-content:center;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+.hdr-icons svg{width:32px;height:32px;}
 .hdr h1{font-family:Georgia,serif;font-size:26px;font-weight:900;}
 .hdr h1 em{color:${t.accent};}
 .hdr-sub{color:rgba(255,255,255,.45);font-size:12px;margin-top:4px;}
 .instr{max-width:700px;margin:16px auto 6px;padding:12px 18px;background:#fff;border-radius:10px;border-left:4px solid ${t.accent};font-size:13px;color:#555;line-height:1.6;}
+.instr-row{display:flex;align-items:flex-start;gap:10px;}
+.instr-icon{flex-shrink:0;width:28px;height:28px;}
+.instr-icon svg{width:100%;height:100%;}
 .no-print{text-align:center;margin:12px 0 16px;}
 .no-print button{background:${t.accent};color:${t.nav};border:none;padding:10px 28px;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
-.grid{max-width:760px;margin:0 auto;padding:0 20px 40px;display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid{max-width:760px;margin:0 auto;padding:0 20px 40px;display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:1;}
 .fc-cell{background:#fff;border-radius:12px;padding:18px 16px;min-height:185px;border:2px solid #e8e8e0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;}
 .fc-front{border-top:5px solid ${t.accent};}
 .fc-back{border-top:5px solid ${t.accentDark};background:${t.accentPale};}
@@ -893,21 +804,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .fc-term{font-family:Georgia,serif;font-size:clamp(15px,3vw,20px);font-weight:900;color:${t.nav};line-height:1.3;}
 .fc-def{font-size:12px;color:#444;line-height:1.65;max-height:115px;overflow:hidden;}
 .fc-num{position:absolute;bottom:7px;right:11px;font-size:9px;color:#ccc;font-weight:700;}
+.ftr{background:${t.nav};color:rgba(255,255,255,.35);text-align:center;padding:14px;font-size:11px;}
 @media print{
   body{background:#fff;}
   .hdr,.instr,.no-print{display:none!important;}
   .grid{max-width:100%;padding:0;gap:10px;}
   .fc-cell{min-height:155px;border:1.5px solid #ccc;border-radius:8px;box-shadow:none;break-inside:avoid;}
   .fc-back{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .ftr{display:none!important;}
 }
 </style>
 </head>
 <body>
-<div class="hdr"><h1>Flash Cards <em>&#9734;</em></h1>
-<div class="hdr-sub">${data.length} terms &nbsp;&middot;&nbsp; Print, cut &amp; fold &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a> &nbsp;&middot;&nbsp; <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#FFDD00;color:#000;text-decoration:none;font-weight:700;font-size:11px;padding:3px 10px;border-radius:16px;vertical-align:middle;">&#x2615; Buy me a coffee</a></div></div>
-<div class="instr">&#128203; <strong>Instructions:</strong> Print this page. Each left/right pair makes one card — TERM on the left, DEFINITION on the right. Cut along grid lines and fold in half, or print double-sided for classic flash cards.</div>
+<div class="hdr">
+  <div class="hdr-icons">${hdrIcons}</div>
+  <h1>Flash Cards <em>&#9734;</em></h1>
+  <div class="hdr-sub">${data.length} terms &nbsp;&middot;&nbsp; Print, cut &amp; fold</div>
+</div>
+<div class="instr">
+  <div class="instr-row">
+    <div class="instr-icon">${SVGS.clipboard}</div>
+    <div><strong>Instructions:</strong> Print this page. Each left/right pair makes one card &mdash; TERM on the left, DEFINITION on the right. Cut along grid lines and fold in half, or print double-sided for classic flash cards.</div>
+  </div>
+</div>
 <div class="no-print"><button onclick="window.print()">&#128424; Print Flash Cards</button></div>
 <div class="grid">${pairs}</div>
+<div class="ftr">&#127794; Made with Live Glossary Pro</div>
 </body></html>`;
 }
 
@@ -921,21 +843,26 @@ function mkStudySheet(t, data) {
   const matchL = mData.map((d,i)=>`<tr><td class="mn">${i+1}.</td><td class="mt">${esc(d.term)}</td><td class="mb">_____</td></tr>`).join('');
   const matchR = mDefs.map((d,i)=>`<li>${String.fromCharCode(65+i)}.&nbsp;${esc(d.description.length>90?d.description.slice(0,90)+'...':d.description)}</li>`).join('');
   const ak = mData.map((d,i)=>{ const li=mDefs.findIndex(x=>x.term===d.term); return `${i+1}=${String.fromCharCode(65+li)}`; }).join('  ');
-  const icons5 = [SVGS.pencil,SVGS.book,SVGS.apple,SVGS.star,SVGS.owl].join('');
+
+  // Fun icon row for header — education themed
+  const hdrIcons = [SVGS.pencil, SVGS.book, SVGS.apple, SVGS.star, SVGS.owl, SVGS.ruler, SVGS.brain, SVGS.note]
+    .map(s => `<span style="display:inline-block;width:28px;height:28px;">${s}</span>`).join('');
+
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/>
 <title>Study Sheet</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;font-size:13px;}
-.hdr{background:${t.nav};color:#fff;padding:18px 24px 14px;display:flex;align-items:center;gap:14px;}
-.hdr-icons{display:flex;gap:5px;} .hdr-icons svg{width:30px;height:30px;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;font-size:13px;display:flex;flex-direction:column;min-height:100vh;}
+.hdr{background:${t.nav};color:#fff;padding:14px 24px 12px;text-align:center;}
+.hdr-icons{display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.hdr-icons svg{width:28px;height:28px;}
 .hdr h1{font-family:Georgia,serif;font-size:24px;font-weight:900;color:#fff;}
 .hdr h1 em{color:${t.accent};}
 .hdr-sub{color:rgba(255,255,255,.45);font-size:11px;margin-top:3px;}
 .nrow{max-width:820px;margin:14px auto 0;padding:0 20px;display:flex;gap:18px;}
 .nf{flex:1;border-bottom:2px solid ${t.accent};padding-bottom:4px;font-size:13px;color:#888;}
-.wrap{max-width:820px;margin:12px auto;padding:0 20px 40px;}
+.wrap{max-width:820px;margin:12px auto;padding:0 20px 40px;flex:1;}
 .sec{font-family:Georgia,serif;font-size:15px;font-weight:900;color:${t.nav};border-bottom:3px solid ${t.accent};padding-bottom:5px;margin:20px 0 10px;display:flex;align-items:center;gap:8px;}
 .sec svg{width:20px;height:20px;flex-shrink:0;}
 table{width:100%;border-collapse:collapse;}
@@ -944,32 +871,41 @@ table{width:100%;border-collapse:collapse;}
 .tb{border-bottom:1.5px solid #c0bfb5;padding:6px 8px;}
 .re{background:#fff;} .ro{background:${t.accentPale};}
 .wbbox{background:#fff;border-radius:8px;padding:12px 14px;border:1.5px solid ${t.accent}33;display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
-.wbl{font-size:10px;font-weight:800;letter-spacing:1px;color:#aaa;width:100%;margin-bottom:2px;}
+.wbl{font-size:10px;font-weight:800;letter-spacing:1px;color:#aaa;width:100%;margin-bottom:2px;display:flex;align-items:center;gap:5px;}
+.wbl svg{width:16px;height:16px;}
 .wb{background:${t.accentPale};border:1px solid ${t.accent}55;border-radius:20px;padding:3px 11px;font-size:12px;font-weight:600;color:${t.nav};}
 .mn{width:26px;color:#bbb;font-size:11px;padding:5px 2px;}
 .mt{font-weight:700;padding:5px 8px;color:${t.nav};width:34%;}
 .mb{padding:5px 8px;color:#bbb;letter-spacing:3px;}
 ol.md{list-style:none;font-size:12px;color:#444;line-height:2.1;}
-.ak{background:${t.nav};color:rgba(255,255,255,.6);margin-top:24px;padding:12px 16px;border-radius:8px;font-size:11px;line-height:2;}
+.ak{background:${t.nav};color:rgba(255,255,255,.6);margin-top:24px;padding:12px 16px;border-radius:8px;font-size:11px;line-height:2;display:flex;align-items:flex-start;gap:10px;}
+.ak svg{width:18px;height:18px;flex-shrink:0;margin-top:2px;}
 .ak strong{color:${t.accent};}
 .np{text-align:center;margin:10px 0 14px;}
 .np button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-@media print{body{background:#fff;}.hdr,.re,.ro,.ak{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.np{display:none!important;}.wrap{max-width:100%;padding:0 12px;}}
+.ftr{background:${t.nav};color:rgba(255,255,255,.35);text-align:center;padding:14px;font-size:11px;}
+@media print{body{background:#fff;}.hdr,.re,.ro,.ak{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.np{display:none!important;}.wrap{max-width:100%;padding:0 12px;}.ftr{display:none!important;}}
 </style></head>
 <body>
-<div class="hdr"><div class="hdr-icons">${icons5}</div><div><h1>Study Sheet <em>&#9734;</em></h1><div class="hdr-sub">${data.length} vocabulary terms &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a> &nbsp;&middot;&nbsp; <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#FFDD00;color:#000;text-decoration:none;font-weight:700;font-size:11px;padding:3px 10px;border-radius:16px;vertical-align:middle;">&#x2615; Buy me a coffee</a></div></div></div>
+<div class="hdr">
+  <div class="hdr-icons">${hdrIcons}</div>
+  <h1>Study Sheet <em>&#9734;</em></h1>
+  <div class="hdr-sub">${data.length} vocabulary terms</div>
+</div>
 <div class="nrow"><div class="nf">Name: _________________________________</div><div class="nf">Date: _____________ &nbsp; Class: _____________</div></div>
 <div class="wrap">
 <div class="np"><button onclick="window.print()">&#128424; Print Study Sheet</button></div>
 <div class="sec">${SVGS.pencil} Part 1 &mdash; Fill in the Blank</div>
 <p style="font-size:12px;color:#666;margin-bottom:10px;">Write the definition for each term in the blank. Use the Word Bank if needed.</p>
-<div class="wbbox"><div class="wbl">&#128218; WORD BANK</div>${wb}</div>
+<div class="wbbox"><div class="wbl">${SVGS.book} WORD BANK</div>${wb}</div>
 <table><tbody>${termRows}</tbody></table>
 <div class="sec" style="margin-top:24px;">${SVGS.magnify} Part 2 &mdash; Matching</div>
 <p style="font-size:12px;color:#666;margin-bottom:10px;">Match each term to its definition. Write the letter in the blank.</p>
 <div style="display:flex;gap:22px;align-items:flex-start;"><table><tbody>${matchL}</tbody></table><ol class="md">${matchR}</ol></div>
-<div class="ak"><strong>&#10003; Answer Key (Matching):</strong> ${ak}</div>
-</div></body></html>`;
+<div class="ak">${SVGS.check}<div><strong>&#10003; Answer Key (Matching):</strong> ${ak}</div></div>
+</div>
+<div class="ftr">&#128218; Made with Live Glossary Pro</div>
+</body></html>`;
 }
 
 function mkQuiz(t, data) {
@@ -990,21 +926,27 @@ function mkQuiz(t, data) {
   const mcKey  = mcQ.map(({qi,cl})=>`Q${qi+1}=${cl}`).join('  ');
   const mkKey2 = mData.map((d,i)=>{ const li=mDefs.findIndex(x=>x.term===d.term); return `${i+1}=${String.fromCharCode(65+li)}`; }).join('  ');
   const mcHtml = mcQ.map(({qi,item,oh})=>`<div class="qb"><div class="qn">Q${qi+1}.</div><div class="qt">What is the definition of <strong>${esc(item.term)}</strong>?</div><div class="mo-grid">${oh}</div></div>`).join('');
+
+  // Quiz header icon row
+  const hdrIcons = [SVGS.trophy, SVGS.star, SVGS.bulb, SVGS.pencil, SVGS.check, SVGS.lightning, SVGS.brain, SVGS.flag]
+    .map(s => `<span style="display:inline-block;width:30px;height:30px;">${s}</span>`).join('');
+
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/>
 <title>Vocabulary Quiz</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;font-size:13px;}
-.hdr{background:${t.nav};color:#fff;padding:18px 24px 14px;display:flex;align-items:center;gap:14px;}
-.hdr svg{width:38px;height:38px;flex-shrink:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;font-size:13px;display:flex;flex-direction:column;min-height:100vh;}
+.hdr{background:${t.nav};color:#fff;padding:14px 24px 12px;text-align:center;}
+.hdr-icons{display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.hdr-icons svg{width:30px;height:30px;}
 .hdr h1{font-family:Georgia,serif;font-size:24px;font-weight:900;color:#fff;}
 .hdr h1 em{color:${t.accent};}
 .hdr-sub{color:rgba(255,255,255,.45);font-size:11px;margin-top:3px;}
 .nrow{max-width:820px;margin:14px auto 0;padding:0 20px;display:flex;gap:16px;align-items:flex-end;}
 .nf{flex:1;border-bottom:2px solid ${t.accent};padding-bottom:4px;font-size:13px;color:#888;}
 .sb{border:2px solid ${t.accent};border-radius:6px;padding:4px 12px;font-size:13px;color:#888;min-width:110px;text-align:center;}
-.wrap{max-width:820px;margin:12px auto;padding:0 20px 40px;}
+.wrap{max-width:820px;margin:12px auto;padding:0 20px 40px;flex:1;}
 .sec{font-family:Georgia,serif;font-size:15px;font-weight:900;color:${t.nav};border-bottom:3px solid ${t.accent};padding-bottom:5px;margin:22px 0 12px;display:flex;align-items:center;gap:8px;}
 .sec svg{width:20px;height:20px;}
 .qb{margin-bottom:14px;padding:12px 15px;background:#fff;border-radius:8px;border-left:3px solid ${t.accent};box-shadow:0 1px 5px rgba(0,0,0,.05);}
@@ -1018,14 +960,20 @@ table{width:100%;}
 .mt{font-weight:700;padding:5px 8px;color:${t.nav};width:36%;}
 .mb{padding:5px 8px;color:#bbb;letter-spacing:3px;}
 ol.md{list-style:none;font-size:12px;color:#444;line-height:2.1;}
-.ak{background:${t.nav};color:rgba(255,255,255,.6);margin-top:24px;padding:12px 16px;border-radius:8px;font-size:11px;line-height:2;}
+.ak{background:${t.nav};color:rgba(255,255,255,.6);margin-top:24px;padding:12px 16px;border-radius:8px;font-size:11px;line-height:2;display:flex;align-items:flex-start;gap:10px;}
+.ak svg{width:18px;height:18px;flex-shrink:0;margin-top:2px;}
 .ak strong{color:${t.accent};display:block;margin-bottom:3px;}
 .np{text-align:center;margin:10px 0 14px;}
 .np button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-@media print{body{background:#fff;}.hdr,.qb,.ak{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.np{display:none!important;}.wrap{max-width:100%;padding:0 12px;}.qb{break-inside:avoid;}}
+.ftr{background:${t.nav};color:rgba(255,255,255,.35);text-align:center;padding:14px;font-size:11px;}
+@media print{body{background:#fff;}.hdr,.qb,.ak{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.np{display:none!important;}.wrap{max-width:100%;padding:0 12px;}.qb{break-inside:avoid;}.ftr{display:none!important;}}
 </style></head>
 <body>
-<div class="hdr">${SVGS.trophy}<div><h1>Vocabulary Quiz <em>&#9734;</em></h1><div class="hdr-sub">${mcQ.length} multiple choice &nbsp;&middot;&nbsp; ${mData.length} matching &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a> &nbsp;&middot;&nbsp; <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#FFDD00;color:#000;text-decoration:none;font-weight:700;font-size:11px;padding:3px 10px;border-radius:16px;vertical-align:middle;">&#x2615; Buy me a coffee</a></div></div></div>
+<div class="hdr">
+  <div class="hdr-icons">${hdrIcons}</div>
+  <h1>Vocabulary Quiz <em>&#9734;</em></h1>
+  <div class="hdr-sub">${mcQ.length} multiple choice &nbsp;&middot;&nbsp; ${mData.length} matching</div>
+</div>
 <div class="nrow"><div class="nf">Name: _________________________________</div><div class="nf">Date: _______________</div><div class="sb">Score: _____ / ${mcQ.length + mData.length}</div></div>
 <div class="wrap">
 <div class="np"><button onclick="window.print()">&#128424; Print Quiz</button></div>
@@ -1035,8 +983,10 @@ ${mcHtml}
 <div class="sec">${SVGS.magnify} Part 2 &mdash; Matching</div>
 <p style="font-size:12px;color:#666;margin-bottom:10px;">Match each term to its definition. Write the letter in the blank.</p>
 <div style="display:flex;gap:26px;align-items:flex-start;"><table><tbody>${matchL}</tbody></table><ol class="md">${matchR}</ol></div>
-<div class="ak"><strong>&#10003; Answer Key &mdash; Multiple Choice:</strong> ${mcKey}<strong style="margin-top:5px;">&#10003; Answer Key &mdash; Matching:</strong> ${mkKey2}</div>
-</div></body></html>`;
+<div class="ak">${SVGS.check}<div><strong>&#10003; Answer Key &mdash; Multiple Choice:</strong> ${mcKey}<strong style="margin-top:5px;">&#10003; Answer Key &mdash; Matching:</strong> ${mkKey2}</div></div>
+</div>
+<div class="ftr">&#127941; Made with Live Glossary Pro</div>
+</body></html>`;
 }
 
 function mkBingo(t, data) {
@@ -1060,23 +1010,31 @@ function mkBingo(t, data) {
   const numCards=data.length>=24?Math.min(6,1+Math.floor(data.length/24)):1;
   const cards=Array.from({length:numCards},(_,i)=>renderCard(makeGrid(),i)).join('');
   const wall=shuf(data).map((d,i)=>`<div class="wc"><div class="wi">${svgAt(i)}</div><div class="wt">${esc(d.term)}</div><div class="wd">${esc(d.description.length>110?d.description.slice(0,110)+'...':d.description)}</div></div>`).join('');
+
+  // Fun icon row for bingo header
+  const hdrIcons = [SVGS.dice, SVGS.star, SVGS.trophy, SVGS.rocket, SVGS.lightning, SVGS.heart, SVGS.puzzle, SVGS.globe]
+    .map(s => `<span style="display:inline-block;width:30px;height:30px;">${s}</span>`).join('');
+
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/>
 <title>Bingo &amp; Word Wall</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;}
-.hdr{background:${t.nav};color:#fff;padding:18px 24px 14px;text-align:center;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;display:flex;flex-direction:column;min-height:100vh;}
+.hdr{background:${t.nav};color:#fff;padding:14px 24px 12px;text-align:center;}
+.hdr-icons{display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.hdr-icons svg{width:30px;height:30px;}
 .hdr h1{font-family:Georgia,serif;font-size:26px;font-weight:900;color:#fff;}
 .hdr h1 em{color:${t.accent};}
 .hdr-sub{color:rgba(255,255,255,.45);font-size:12px;margin-top:4px;}
 .tabs{display:flex;justify-content:center;gap:8px;padding:12px;background:#fff;border-bottom:2px solid #eee;}
-.tab{padding:8px 22px;border-radius:20px;border:2px solid ${t.accent};background:#fff;color:${t.nav};font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s;}
+.tab{padding:8px 22px;border-radius:20px;border:2px solid ${t.accent};background:#fff;color:${t.nav};font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.tab svg{width:16px;height:16px;}
 .tab.on{background:${t.accent};}
 .np{text-align:center;padding:10px 0;}
 .np button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
 #bs{display:block;} #ws{display:none;}
-.cg{max-width:900px;margin:0 auto;padding:16px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(370px,1fr));gap:20px;}
+.cg{max-width:900px;margin:0 auto;padding:16px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(370px,1fr));gap:20px;flex:1;}
 .card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,.1);border:2px solid ${t.accent}33;}
 .ch{background:${t.nav};padding:10px 14px;display:flex;align-items:center;gap:10px;}
 .ci{width:34px;height:34px;flex-shrink:0;} .ci svg{width:100%;height:100%;}
@@ -1094,14 +1052,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .wi{width:42px;height:42px;margin:0 auto 7px;} .wi svg{width:100%;height:100%;}
 .wt{font-family:Georgia,serif;font-size:14px;font-weight:900;color:${t.nav};margin-bottom:5px;line-height:1.3;}
 .wd{font-size:11px;color:#666;line-height:1.6;}
-@media print{body{background:#fff;}.hdr,.tabs,.np{display:none!important;}#bs,#ws{display:block!important;}.cg,.wg{max-width:100%;padding:0;gap:10px;}.card,.wc{break-inside:avoid;box-shadow:none;}.ch,.bcol,.bc:nth-child(odd),.fr{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+.ftr{background:${t.nav};color:rgba(255,255,255,.35);text-align:center;padding:14px;font-size:11px;}
+@media print{body{background:#fff;}.hdr,.tabs,.np{display:none!important;}#bs,#ws{display:block!important;}.cg,.wg{max-width:100%;padding:0;gap:10px;}.card,.wc{break-inside:avoid;box-shadow:none;}.ch,.bcol,.bc:nth-child(odd),.fr{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.ftr{display:none!important;}}
 </style></head>
 <body>
-<div class="hdr"><h1>Bingo &amp; Word Wall <em>&#9734;</em></h1><div class="hdr-sub">${numCards} bingo card${numCards!==1?'s':''} &nbsp;&middot;&nbsp; ${data.length} word wall cards &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a> &nbsp;&middot;&nbsp; <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#FFDD00;color:#000;text-decoration:none;font-weight:700;font-size:11px;padding:3px 10px;border-radius:16px;vertical-align:middle;">&#x2615; Buy me a coffee</a></div></div>
-<div class="tabs"><button class="tab on" onclick="st('b',this)">&#127922; Bingo Cards</button><button class="tab" onclick="st('w',this)">&#128204; Word Wall</button></div>
+<div class="hdr">
+  <div class="hdr-icons">${hdrIcons}</div>
+  <h1>Bingo &amp; Word Wall <em>&#9734;</em></h1>
+  <div class="hdr-sub">${numCards} bingo card${numCards!==1?'s':''} &nbsp;&middot;&nbsp; ${data.length} word wall cards</div>
+</div>
+<div class="tabs">
+  <button class="tab on" onclick="st('b',this)">${SVGS.dice} Bingo Cards</button>
+  <button class="tab" onclick="st('w',this)">${SVGS.book} Word Wall</button>
+</div>
 <div class="np"><button onclick="window.print()">&#128424; Print Current View</button></div>
 <div id="bs"><div class="cg">${cards}</div></div>
 <div id="ws"><div class="wg">${wall}</div></div>
+<div class="ftr">&#127922; Made with Live Glossary Pro</div>
 <script>function st(n,b){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');document.getElementById('bs').style.display=n==='b'?'block':'none';document.getElementById('ws').style.display=n==='w'?'block':'none';}<\/script>
 </body></html>`;
 }
@@ -1118,7 +1085,6 @@ function mkWordSearch(t, data) {
   const DIRS = [[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
   const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-  // Build empty grid
   const grid = Array.from({length:SIZE}, () => Array(SIZE).fill(''));
   const placed = [];
 
@@ -1147,12 +1113,10 @@ function mkWordSearch(t, data) {
     if (ok) placed.push(word);
   }
 
-  // Fill blanks with random letters
   for (let r = 0; r < SIZE; r++)
     for (let c = 0; c < SIZE; c++)
       if (grid[r][c] === '') grid[r][c] = ALPHA[Math.floor(Math.random()*26)];
 
-  // Build answer grid (highlight placed letters)
   const ansGrid = Array.from({length:SIZE}, () => Array(SIZE).fill(false));
   for (const word of placed) {
     outer: for (const [dr,dc] of DIRS) {
@@ -1173,26 +1137,32 @@ function mkWordSearch(t, data) {
 
   const wordList = placed.map((w,i) => {
     const orig = data.find(d=>d.term.toUpperCase().replace(/[^A-Z]/g,'')=== w);
-    return `<div class="wli"><span class="wlb">☐</span><span class="wlt">${esc(orig?orig.term:w)}</span></div>`;
+    return `<div class="wli"><div class="wli-icon">${svgAt(i)}</div><span class="wlt">${esc(orig?orig.term:w)}</span></div>`;
   }).join('');
 
   const ansRows = grid.map((row,r) =>
     '<tr>'+row.map((cell,c)=>`<td class="${ansGrid[r][c]?'ah':''}">${cell}</td>`).join('')+'</tr>'
   ).join('');
 
+  // Header icons for word search
+  const hdrIcons = [SVGS.magnify, SVGS.globe, SVGS.compass, SVGS.brain, SVGS.lightning, SVGS.rocket, SVGS.star, SVGS.bulb]
+    .map(s => `<span style="display:inline-block;width:30px;height:30px;">${s}</span>`).join('');
+
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/>
 <title>Word Search</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;}
-.hdr{background:${t.nav};color:#fff;padding:18px 24px 14px;text-align:center;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;display:flex;flex-direction:column;min-height:100vh;}
+.hdr{background:${t.nav};color:#fff;padding:14px 24px 12px;text-align:center;}
+.hdr-icons{display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.hdr-icons svg{width:30px;height:30px;}
 .hdr h1{font-family:Georgia,serif;font-size:26px;font-weight:900;}
 .hdr h1 em{color:${t.accent};}
 .hdr-sub{color:rgba(255,255,255,.45);font-size:12px;margin-top:4px;}
 .np{text-align:center;padding:12px 0 6px;}
 .np button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-.wrap{max-width:900px;margin:0 auto;padding:16px 20px 40px;}
+.wrap{max-width:900px;margin:0 auto;padding:16px 20px 40px;flex:1;}
 .nrow{display:flex;gap:18px;margin-bottom:16px;}
 .nf{flex:1;border-bottom:2px solid ${t.accent};padding-bottom:4px;font-size:13px;color:#888;}
 .layout{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;}
@@ -1201,23 +1171,29 @@ table.grid{border-collapse:collapse;}
 table.grid td{width:24px;height:24px;text-align:center;font-size:12px;font-weight:700;font-family:'Courier New',monospace;color:#222;border:1px solid #ddd;cursor:default;}
 table.grid td.ah{background:${t.accent};color:${t.nav};-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 .wordlist{min-width:170px;}
-.wl-title{font-family:Georgia,serif;font-size:14px;font-weight:900;color:${t.nav};border-bottom:3px solid ${t.accent};padding-bottom:5px;margin-bottom:10px;}
+.wl-title{font-family:Georgia,serif;font-size:14px;font-weight:900;color:${t.nav};border-bottom:3px solid ${t.accent};padding-bottom:5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.wl-title svg{width:18px;height:18px;}
 .wli{display:flex;align-items:center;gap:7px;padding:3px 0;font-size:13px;color:#333;}
-.wlb{font-size:16px;color:${t.accent};}
+.wli-icon{width:20px;height:20px;flex-shrink:0;}
+.wli-icon svg{width:100%;height:100%;}
 .wlt{font-weight:600;}
 .ans-section{margin-top:28px;padding-top:20px;border-top:2px dashed #ddd;}
-.ans-title{font-family:Georgia,serif;font-size:14px;font-weight:900;color:#999;margin-bottom:10px;}
+.ans-title{font-family:Georgia,serif;font-size:14px;font-weight:900;color:#999;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.ans-title svg{width:18px;height:18px;}
+.ftr{background:${t.nav};color:rgba(255,255,255,.35);text-align:center;padding:14px;font-size:11px;}
 @media print{
   body{background:#fff;}.hdr,.np{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .np{display:none!important;}.wrap{max-width:100%;padding:0 10px;}
   table.grid td{width:20px;height:20px;font-size:10px;}
   .ans-section{page-break-before:always;}
+  .ftr{display:none!important;}
 }
 </style></head>
 <body>
 <div class="hdr">
+  <div class="hdr-icons">${hdrIcons}</div>
   <h1>Word Search <em>&#9733;</em></h1>
-  <div class="hdr-sub">${placed.length} hidden words &nbsp;&middot;&nbsp; ${SIZE}&times;${SIZE} grid &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a> &nbsp;&middot;&nbsp; <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#FFDD00;color:#000;text-decoration:none;font-weight:700;font-size:11px;padding:3px 10px;border-radius:16px;vertical-align:middle;">&#x2615; Buy me a coffee</a></div>
+  <div class="hdr-sub">${placed.length} hidden words &nbsp;&middot;&nbsp; ${SIZE}&times;${SIZE} grid</div>
 </div>
 <div class="np"><button onclick="window.print()">&#128424; Print Word Search</button></div>
 <div class="wrap">
@@ -1228,15 +1204,16 @@ table.grid td.ah{background:${t.accent};color:${t.nav};-webkit-print-color-adjus
   <div class="layout">
     <div class="puzzle-wrap"><table class="grid"><tbody>${gridRows}</tbody></table></div>
     <div class="wordlist">
-      <div class="wl-title">&#128269; Find these words</div>
+      <div class="wl-title">${SVGS.magnify} Find these words</div>
       ${wordList}
     </div>
   </div>
   <div class="ans-section">
-    <div class="ans-title">&#10003; Answer Key</div>
+    <div class="ans-title">${SVGS.check} Answer Key</div>
     <table class="grid"><tbody>${ansRows}</tbody></table>
   </div>
 </div>
+<div class="ftr">&#128269; Made with Live Glossary Pro</div>
 </body></html>`;
 }
 
@@ -1244,22 +1221,19 @@ table.grid td.ah{background:${t.accent};color:${t.nav};-webkit-print-color-adjus
 // CROSSWORD GENERATOR
 // ═══════════════════════════════════════════════════════════════════════════
 function mkCrossword(t, data) {
-  // Prep words — term is the answer, description is the clue
   const pool = shuf(data)
     .filter(d => d.term.replace(/[^A-Za-z]/g,'').length >= 3)
     .slice(0, 20)
     .map(d => ({ word: d.term.toUpperCase().replace(/[^A-Z]/g,''), clue: d.description }));
 
   const SIZE = 22;
-  const grid  = Array.from({length:SIZE}, () => Array(SIZE).fill(null)); // null=empty, letter=placed
-  const placed = []; // {word, clue, r, c, dir, num}
+  const grid  = Array.from({length:SIZE}, () => Array(SIZE).fill(null));
+  const placed = [];
 
   function canPlace(word, r, c, dir) {
     const dr = dir==='across'?0:1, dc = dir==='across'?1:0;
-    // check before start is empty
     const br=r-dr, bc=c-dc;
     if (br>=0&&br<SIZE&&bc>=0&&bc<SIZE&&grid[br][bc]!==null) return false;
-    // check after end is empty
     const er=r+dr*word.length, ec=c+dc*word.length;
     if (er>=0&&er<SIZE&&ec>=0&&ec<SIZE&&grid[er][ec]!==null) return false;
     let intersects = 0;
@@ -1268,7 +1242,6 @@ function mkCrossword(t, data) {
       if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) return false;
       const cell = grid[nr][nc];
       if (cell===null) {
-        // check perpendicular neighbors aren't part of another word
         const pr=nr+(dir==='across'?1:0), pc=nc+(dir==='across'?0:1);
         const qr=nr-(dir==='across'?1:0), qc=nc-(dir==='across'?0:1);
         if ((pr<SIZE&&pr>=0&&qc<SIZE&&pc>=0&&grid[pr][pc]!==null)||
@@ -1285,7 +1258,6 @@ function mkCrossword(t, data) {
     for (let i=0;i<word.length;i++) grid[r+dr*i][c+dc*i]=word[i];
   }
 
-  // Place first word in center
   if (pool.length > 0) {
     const w = pool[0];
     const r = Math.floor(SIZE/2), c = Math.floor((SIZE-w.word.length)/2);
@@ -1293,7 +1265,6 @@ function mkCrossword(t, data) {
     placed.push({...w, r, c, dir:'across', num:1});
   }
 
-  // Place remaining words by finding intersections
   for (let pi=1; pi<pool.length; pi++) {
     const {word, clue} = pool[pi];
     let best = null;
@@ -1325,18 +1296,15 @@ function mkCrossword(t, data) {
 
   if (placed.length === 0) return `<!DOCTYPE html><html><body><p>Could not build crossword — try more terms.</p></body></html>`;
 
-  // Trim grid to bounding box
   let minR=SIZE,maxR=0,minC=SIZE,maxC=0;
   for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) if (grid[r][c]!==null){minR=Math.min(minR,r);maxR=Math.max(maxR,r);minC=Math.min(minC,c);maxC=Math.max(maxC,c);}
   const PAD=1;
   minR=Math.max(0,minR-PAD); maxR=Math.min(SIZE-1,maxR+PAD);
   minC=Math.max(0,minC-PAD); maxC=Math.min(SIZE-1,maxC+PAD);
 
-  // Assign numbers to start cells
   const nums = {};
   for (const p of placed) nums[`${p.r},${p.c}`] = p.num;
 
-  // Build puzzle grid HTML (blank squares)
   const puzzleRows = [];
   for (let r=minR;r<=maxR;r++) {
     let row = '<tr>';
@@ -1350,7 +1318,6 @@ function mkCrossword(t, data) {
     puzzleRows.push(row);
   }
 
-  // Build answer grid HTML
   const answerRows = [];
   for (let r=minR;r<=maxR;r++) {
     let row = '<tr>';
@@ -1364,25 +1331,30 @@ function mkCrossword(t, data) {
     answerRows.push(row);
   }
 
-  // Clue lists
   const across = placed.filter(p=>p.dir==='across').sort((a,b)=>a.num-b.num);
   const down   = placed.filter(p=>p.dir==='down'  ).sort((a,b)=>a.num-b.num);
   const acrossHtml = across.map(p=>`<div class="cli"><span class="cnum">${p.num}.</span><span class="ctxt">${esc(p.clue)}</span></div>`).join('');
   const downHtml   = down  .map(p=>`<div class="cli"><span class="cnum">${p.num}.</span><span class="ctxt">${esc(p.clue)}</span></div>`).join('');
+
+  // Header icons for crossword
+  const hdrIcons = [SVGS.pencil, SVGS.bulb, SVGS.puzzle, SVGS.brain, SVGS.star, SVGS.compass, SVGS.note, SVGS.trophy]
+    .map(s => `<span style="display:inline-block;width:30px;height:30px;">${s}</span>`).join('');
 
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/>
 <title>Crossword Puzzle</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;font-size:13px;}
-.hdr{background:${t.nav};color:#fff;padding:18px 24px 14px;text-align:center;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;font-size:13px;display:flex;flex-direction:column;min-height:100vh;}
+.hdr{background:${t.nav};color:#fff;padding:14px 24px 12px;text-align:center;}
+.hdr-icons{display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.hdr-icons svg{width:30px;height:30px;}
 .hdr h1{font-family:Georgia,serif;font-size:26px;font-weight:900;}
 .hdr h1 em{color:${t.accent};}
 .hdr-sub{color:rgba(255,255,255,.45);font-size:12px;margin-top:4px;}
 .np{text-align:center;padding:12px 0 6px;}
 .np button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-.wrap{max-width:960px;margin:0 auto;padding:16px 20px 40px;}
+.wrap{max-width:960px;margin:0 auto;padding:16px 20px 40px;flex:1;}
 .nrow{display:flex;gap:18px;margin-bottom:16px;}
 .nf{flex:1;border-bottom:2px solid ${t.accent};padding-bottom:4px;font-size:13px;color:#888;}
 .layout{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;}
@@ -1396,12 +1368,15 @@ table.cw td.afill{background:${t.accentPale};}
 .cl{display:block;font-size:13px;font-weight:700;text-align:center;line-height:28px;color:#111;}
 .clues{min-width:220px;max-width:320px;}
 .clue-sec{margin-bottom:18px;}
-.clue-hdr{font-family:Georgia,serif;font-size:14px;font-weight:900;color:${t.nav};border-bottom:3px solid ${t.accent};padding-bottom:4px;margin-bottom:8px;}
+.clue-hdr{font-family:Georgia,serif;font-size:14px;font-weight:900;color:${t.nav};border-bottom:3px solid ${t.accent};padding-bottom:4px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.clue-hdr svg{width:16px;height:16px;}
 .cli{display:flex;gap:6px;margin-bottom:5px;line-height:1.5;}
 .cnum{font-weight:800;color:${t.accent};min-width:22px;flex-shrink:0;}
 .ctxt{font-size:12px;color:#444;}
 .ans-section{margin-top:28px;padding-top:20px;border-top:2px dashed #ddd;}
-.ans-title{font-family:Georgia,serif;font-size:14px;font-weight:900;color:#999;margin-bottom:10px;}
+.ans-title{font-family:Georgia,serif;font-size:14px;font-weight:900;color:#999;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.ans-title svg{width:16px;height:16px;}
+.ftr{background:${t.nav};color:rgba(255,255,255,.35);text-align:center;padding:14px;font-size:11px;}
 @media print{
   body{background:#fff;}.hdr,.np{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .np{display:none!important;}.wrap{padding:0 10px;}
@@ -1409,12 +1384,14 @@ table.cw td.afill{background:${t.accentPale};}
   .cl{font-size:11px;line-height:24px;}
   .ans-section{page-break-before:always;}
   table.cw td.blk,.afill{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .ftr{display:none!important;}
 }
 </style></head>
 <body>
 <div class="hdr">
+  <div class="hdr-icons">${hdrIcons}</div>
   <h1>Crossword Puzzle <em>&#9733;</em></h1>
-  <div class="hdr-sub">${placed.length} words &nbsp;&middot;&nbsp; ${across.length} across &nbsp;&middot;&nbsp; ${down.length} down &nbsp;&middot;&nbsp; <a href="https://liveglossarypro.com" target="_blank" rel="noopener" style="color:${t.accent};text-decoration:none;font-weight:600;">liveglossarypro.com</a> &nbsp;&middot;&nbsp; <a href="https://cliffowright.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,.4);text-decoration:none;">cliffowright.com</a> &nbsp;&middot;&nbsp; <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#FFDD00;color:#000;text-decoration:none;font-weight:700;font-size:11px;padding:3px 10px;border-radius:16px;vertical-align:middle;">&#x2615; Buy me a coffee</a></div>
+  <div class="hdr-sub">${placed.length} words &nbsp;&middot;&nbsp; ${across.length} across &nbsp;&middot;&nbsp; ${down.length} down</div>
 </div>
 <div class="np"><button onclick="window.print()">&#128424; Print Crossword</button></div>
 <div class="wrap">
@@ -1425,15 +1402,16 @@ table.cw td.afill{background:${t.accentPale};}
   <div class="layout">
     <div class="puzzle-wrap"><table class="cw"><tbody>${puzzleRows.join('')}</tbody></table></div>
     <div class="clues">
-      <div class="clue-sec"><div class="clue-hdr">&#10140; Across</div>${acrossHtml}</div>
-      <div class="clue-sec"><div class="clue-hdr">&#11015; Down</div>${downHtml}</div>
+      <div class="clue-sec"><div class="clue-hdr">${SVGS.ruler} Across</div>${acrossHtml}</div>
+      <div class="clue-sec"><div class="clue-hdr">${SVGS.pencil} Down</div>${downHtml}</div>
     </div>
   </div>
   <div class="ans-section">
-    <div class="ans-title">&#10003; Answer Key</div>
+    <div class="ans-title">${SVGS.check} Answer Key</div>
     <table class="cw"><tbody>${answerRows.join('')}</tbody></table>
   </div>
 </div>
+<div class="ftr">&#9632; Made with Live Glossary Pro</div>
 </body></html>`;
 }
 
@@ -1446,7 +1424,6 @@ function StepExport({ terms, onBack, onExpire }) {
   const [htmlReady, setHtmlReady]   = useState(null);
   const [filterLetter, setFilter]   = useState(null);
 
-  // ── Expiry countdown ──────────────────────────────
   const expiryRef   = useRef(Date.now() + EXPIRY_MS);
   const [secsLeft, setSecsLeft] = useState(EXPIRY_MINUTES * 60);
   const expired = secsLeft <= 0;
@@ -1475,23 +1452,20 @@ function StepExport({ terms, onBack, onExpire }) {
 
   const applyPreset = (i) => { setTheme({ ...THEMES[i] }); setCustom({ ...THEMES[i] }); setPreset(i); setHtmlReady(null); };
   const updateColor = (key, val) => {
-    // Validate strictly: only accept 6-digit hex colors to prevent CSS injection
     if (!/^#[0-9A-Fa-f]{6}$/.test(val)) return;
     const u = { ...custom, [key]:val }; setCustom(u); setTheme(u); setPreset(-1); setHtmlReady(null);
   };
 
-
-  // ── format state
   const [activeFormat, setFmt]  = useState("glossary");
   const [readyLabel,   setRLbl] = useState("Glossary");
 
   const generate = () => {
     setGenerating(true);
-    const t    = sanitizeTheme(theme);  // strip any non-hex values before CSS injection
+    const t    = sanitizeTheme(theme);
     const data = terms.map(({ term, description }) => ({
-      term:        String(term       ||'').slice(0, 500),   // hard cap: 500 chars per term
-      description: String(description||'').slice(0, 5000),  // hard cap: 5000 chars per description
-    })).filter(d => d.term && d.description);               // drop blanks
+      term:        String(term       ||'').slice(0, 500),
+      description: String(description||'').slice(0, 5000),
+    })).filter(d => d.term && d.description);
     let html;
     if      (activeFormat === "flashcards") html = mkFlashCards(t, data);
     else if (activeFormat === "studysheet") html = mkStudySheet(t, data);
@@ -1517,8 +1491,6 @@ function StepExport({ terms, onBack, onExpire }) {
     setHtmlReady(null);
   };
 
-
-  // ── Expired state ──────────────────────────────
   if (expired) {
     return (
       <div className="main" style={{ textAlign:"center", padding:"60px 24px" }}>
@@ -1538,7 +1510,7 @@ function StepExport({ terms, onBack, onExpire }) {
       <div className="section-title">Choose Style & Download</div>
       <p className="section-sub">{terms.length} terms ready. Pick a color scheme, preview live, then download your glossary.</p>
 
-      {/* ── SESSION TIMER ── */}
+      {/* SESSION TIMER */}
       <div style={{
         display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10,
         padding:"12px 18px", borderRadius:10, marginBottom:20,
@@ -1563,14 +1535,12 @@ function StepExport({ terms, onBack, onExpire }) {
         </div>
       </div>
 
-      {/* Stats summary */}
       <div className="stats-row">
         <div className="stat-box"><span className="stat-box-num">{terms.length}</span><span className="stat-box-label">Terms</span></div>
         <div className="stat-box"><span className="stat-box-num">{new Set(terms.map(t => t.term[0].toUpperCase())).size}</span><span className="stat-box-label">Letters</span></div>
         <div className="stat-box"><span className="stat-box-num">{EXPIRY_MINUTES}m</span><span className="stat-box-label">Time Limit</span></div>
       </div>
 
-      {/* ── QUICK JUMP ── */}
       <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:20 }}>
         <a href="#section-choose-format"
           style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"9px 16px",
@@ -1587,10 +1557,9 @@ function StepExport({ terms, onBack, onExpire }) {
         </a>
       </div>
 
-      {/* ── COLOR PICKER ── */}
+      {/* COLOR PICKER */}
       <div className="form-card">
         <h3>🎨 Color Scheme</h3>
-
         <div className="theme-grid">
           {THEMES.map((p, i) => (
             <div key={i} className={`theme-swatch ${activePreset === i ? "sel" : ""}`} onClick={() => applyPreset(i)}>
@@ -1604,7 +1573,6 @@ function StepExport({ terms, onBack, onExpire }) {
             </div>
           ))}
         </div>
-
         <div className="divider-label">Fine-tune colors</div>
         <div className="color-grid">
           {[["Accent / Highlight", "accent"], ["Accent (hover)", "accentDark"], ["Page Background", "pageBg"], ["Card Background", "cardBg"], ["Header & Nav", "nav"], ["Heading Text", "text"]].map(([label, key]) => (
@@ -1615,8 +1583,6 @@ function StepExport({ terms, onBack, onExpire }) {
             </div>
           ))}
         </div>
-
-        {/* Live mini preview */}
         <div className="mini-preview">
           <div className="mini-nav" style={{ background:theme.nav }}>
             <div className="mini-dot" style={{ background:theme.accent }} />
@@ -1641,103 +1607,45 @@ function StepExport({ terms, onBack, onExpire }) {
         </div>
       </div>
 
-      {/* ── YOUR DATA PREVIEW ── */}
+      {/* YOUR DATA PREVIEW */}
       <div className="form-card">
         <h3>📖 Your Glossary Preview</h3>
         <p style={{ fontSize:13, color:"var(--mid)", marginBottom:16 }}>Showing your uploaded data. Scroll through or filter by letter before downloading.</p>
         <GlossaryView terms={terms} filterLetter={filterLetter} setFilterLetter={setFilter} searchQ="" />
       </div>
 
-      {/* ── HOW YOUR DOWNLOADED FILE WORKS ── */}
+      {/* HOW YOUR DOWNLOADED FILE WORKS */}
       <div className="form-card" style={{ background:"#FAFAF7", border:"1.5px solid #E8E8E0" }}>
         <h3 id="section-how-it-works" style={{ marginBottom:16 }}>📘 How Your Downloaded Glossary File Works</h3>
         <p style={{ fontSize:13, color:"#444", lineHeight:1.7, marginBottom:16 }}>
           When you download your glossary, you get a <strong>single self-contained HTML file</strong> that works
-          in any browser — no internet connection, no account, no server needed. Here's exactly what you can do with it:
+          in any browser — no internet connection, no account, no server needed.
         </p>
-
-        {/* The four features as clear cards */}
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:12, marginBottom:20 }}>
-
-          {/* Add */}
-          <div style={{ background:"#fff", border:"1.5px solid #E0E0D8", borderRadius:10, padding:"14px 16px" }}>
-            <div style={{ fontWeight:700, fontSize:14, marginBottom:6, display:"flex", alignItems:"center", gap:8 }}>
-              <span style={{ background:"#DAD80A", borderRadius:4, padding:"2px 8px", fontSize:13 }}>＋ Add</span>
-              <span>Add new terms</span>
+          {[
+            ["＋ Add","#DAD80A","#000","Add new terms","Click + Add Term in the header. Type the term and its description, then click Add Term. The new entry appears immediately, sorted into the right alphabetical section.","💾 Saved automatically to your browser. If you close and reopen the file in the same browser, your new term will still be there."],
+            ["✏ Edit","#E3F2FD","#1565C0","Edit any term","Hover over any term card — an Edit button appears in the top-right corner. Click it and the card turns into an editable form. Change what you need, then click Save Changes.","💾 Saved automatically the moment you click Save."],
+            ["✕ Delete","#FDECEA","#C0392B","Remove a term","Hover a card and click Delete. A confirmation box appears so you can't delete by accident.","⚠️ Permanent in this browser. Use Download Updated File beforehand if you want a backup."],
+            ["🔍 Search","#F3E5F5","#7B1FA2","Find anything fast","Type in the search bar to instantly filter all terms and descriptions. Matching text is highlighted. Press Escape or click ✕ to clear.","🔎 Search doesn't affect your saved data — it's a view filter only."],
+          ].map(([badge, bg, color, title, body, note], i) => (
+            <div key={i} style={{ background:"#fff", border:"1.5px solid #E0E0D8", borderRadius:10, padding:"14px 16px" }}>
+              <div style={{ fontWeight:700, fontSize:14, marginBottom:6, display:"flex", alignItems:"center", gap:8 }}>
+                <span style={{ background:bg, border:`1px solid ${color}`, borderRadius:4, padding:"2px 8px", fontSize:13, color }}>{badge}</span>
+                <span>{title}</span>
+              </div>
+              <p style={{ fontSize:13, color:"#555", lineHeight:1.65 }}>{body}</p>
+              <p style={{ fontSize:12, color:"#888", marginTop:8, borderTop:"1px solid #f0f0e8", paddingTop:8 }}>{note}</p>
             </div>
-            <p style={{ fontSize:13, color:"#555", lineHeight:1.65 }}>
-              Click <strong>+ Add Term</strong> in the header. Type the term and its description, then click <strong>Add Term</strong>.
-              The new entry appears immediately, sorted into the right alphabetical section.
-            </p>
-            <p style={{ fontSize:12, color:"#888", marginTop:8, borderTop:"1px solid #f0f0e8", paddingTop:8 }}>
-              💾 <strong>Saved automatically</strong> to your browser. If you close and reopen the file in the same browser,
-              your new term will still be there.
-            </p>
-          </div>
-
-          {/* Edit */}
-          <div style={{ background:"#fff", border:"1.5px solid #E0E0D8", borderRadius:10, padding:"14px 16px" }}>
-            <div style={{ fontWeight:700, fontSize:14, marginBottom:6, display:"flex", alignItems:"center", gap:8 }}>
-              <span style={{ background:"#E3F2FD", border:"1px solid #1565C0", borderRadius:4, padding:"2px 8px", fontSize:13, color:"#1565C0" }}>✏ Edit</span>
-              <span>Edit any term</span>
-            </div>
-            <p style={{ fontSize:13, color:"#555", lineHeight:1.65 }}>
-              Hover over any term card — an <strong>Edit</strong> button appears in the top-right corner.
-              Click it and the card turns into an editable form, pre-filled with the current text.
-              Change what you need, then click <strong>Save Changes</strong>.
-            </p>
-            <p style={{ fontSize:12, color:"#888", marginTop:8, borderTop:"1px solid #f0f0e8", paddingTop:8 }}>
-              💾 <strong>Saved automatically</strong> the moment you click Save. Your edit is persisted in this browser.
-            </p>
-          </div>
-
-          {/* Delete */}
-          <div style={{ background:"#fff", border:"1.5px solid #E0E0D8", borderRadius:10, padding:"14px 16px" }}>
-            <div style={{ fontWeight:700, fontSize:14, marginBottom:6, display:"flex", alignItems:"center", gap:8 }}>
-              <span style={{ background:"#FDECEA", border:"1px solid #C0392B", borderRadius:4, padding:"2px 8px", fontSize:13, color:"#C0392B" }}>✕ Delete</span>
-              <span>Remove a term</span>
-            </div>
-            <p style={{ fontSize:13, color:"#555", lineHeight:1.65 }}>
-              Hover a card and click <strong>Delete</strong>. A confirmation box appears so you can't delete by accident.
-              Confirm and the term is removed.
-            </p>
-            <p style={{ fontSize:12, color:"#888", marginTop:8, borderTop:"1px solid #f0f0e8", paddingTop:8 }}>
-              ⚠️ <strong>Permanent in this browser.</strong> Deletes are saved immediately and cannot be undone —
-              use <em>Download Updated File</em> beforehand if you want a backup.
-            </p>
-          </div>
-
-          {/* Search */}
-          <div style={{ background:"#fff", border:"1.5px solid #E0E0D8", borderRadius:10, padding:"14px 16px" }}>
-            <div style={{ fontWeight:700, fontSize:14, marginBottom:6, display:"flex", alignItems:"center", gap:8 }}>
-              <span style={{ background:"#F3E5F5", border:"1px solid #7B1FA2", borderRadius:4, padding:"2px 8px", fontSize:13, color:"#7B1FA2" }}>🔍 Search</span>
-              <span>Find anything fast</span>
-            </div>
-            <p style={{ fontSize:13, color:"#555", lineHeight:1.65 }}>
-              Type in the search bar to instantly filter all terms and descriptions. Matching text is highlighted in yellow.
-              Press <strong>Escape</strong> or click ✕ to clear the search and see all terms again.
-            </p>
-            <p style={{ fontSize:12, color:"#888", marginTop:8, borderTop:"1px solid #f0f0e8", paddingTop:8 }}>
-              🔎 Search doesn't affect your saved data — it's a view filter only.
-            </p>
-          </div>
+          ))}
         </div>
-
-        {/* Download Updated File explainer — the most important one */}
         <div style={{ background:"#1A1A1A", borderRadius:10, padding:"16px 20px", color:"#fff" }}>
           <div style={{ fontWeight:700, fontSize:14, marginBottom:8, color:"#DAD80A", display:"flex", alignItems:"center", gap:8 }}>
             ⬇ Download Updated File — How to keep and share your changes
           </div>
           <p style={{ fontSize:13, color:"rgba(255,255,255,.75)", lineHeight:1.7, marginBottom:10 }}>
             All adds, edits, and deletes are saved in <strong style={{ color:"#DAD80A" }}>this browser on this device</strong> only.
-            If you open the file in a different browser, a different computer, or send it to someone else,
-            they won't see your changes — because the HTML file itself hasn't been updated yet.
-          </p>
-          <p style={{ fontSize:13, color:"rgba(255,255,255,.75)", lineHeight:1.7, marginBottom:10 }}>
-            To <strong style={{ color:"#DAD80A" }}>bake your changes into the file permanently</strong>, click the
-            <strong style={{ color:"#DAD80A" }}> ⬇ Download Updated File</strong> button in the glossary header.
-            This re-exports the HTML file with all your current terms included as the new starting data.
-            Share that file with anyone — they'll see exactly what you see.
+            To <strong style={{ color:"#DAD80A" }}>bake your changes into the file permanently</strong>, click
+            <strong style={{ color:"#DAD80A" }}> ⬇ Download Updated File</strong> in the glossary header.
           </p>
           <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginTop:4 }}>
             {[
@@ -1754,15 +1662,13 @@ function StepExport({ terms, onBack, onExpire }) {
         </div>
       </div>
 
-      {/* ── FORMAT SELECTOR + GENERATE ── */}
+      {/* FORMAT SELECTOR + GENERATE */}
       <div className="form-card">
         <h3 id="section-choose-format">⬇ Choose Format & Download</h3>
         <p style={{ fontSize:14, color:"var(--mid)", marginBottom:18 }}>
           Every format is a <strong>self-contained HTML file</strong> — print-ready, opens in any browser, no internet needed.
           Your data is <strong>never stored on our servers</strong>.
         </p>
-
-        {/* Format cards */}
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(195px,1fr))", gap:10, marginBottom:20 }}>
           {[
             { id:"glossary",   icon:"📖", label:"Glossary",         desc:"Searchable A–Z reference, add / edit / delete, download updated file" },
@@ -1786,7 +1692,6 @@ function StepExport({ terms, onBack, onExpire }) {
           ))}
         </div>
 
-        {/* Bingo minimum hint */}
         {activeFormat === "bingo" && terms.length < 24 && (
           <div style={{ padding:"10px 14px", borderRadius:8, marginBottom:14,
             background:"#FFF8E1", border:"1.5px solid #FFB30044", fontSize:13, color:"#7A5200" }}>
@@ -1794,7 +1699,6 @@ function StepExport({ terms, onBack, onExpire }) {
           </div>
         )}
 
-        {/* Urgency reminder */}
         {urgency !== "info" && (
           <div style={{ padding:"10px 14px", borderRadius:8, marginBottom:14,
             background: urgencyBg[urgency], border:`1.5px solid ${urgencyFg[urgency]}44`,
@@ -1818,7 +1722,6 @@ function StepExport({ terms, onBack, onExpire }) {
         )}
       </div>
 
-      {/* ── BACK TO TOP ── */}
       <div style={{ textAlign:"center", padding:"10px 0 28px" }}>
         <a href="#step3-top"
           style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"9px 18px",
@@ -1862,12 +1765,11 @@ function StepBar({ step }) {
 // APP ROOT
 // ─────────────────────────────────────────────
 export default function App() {
-  const [step, setStep]     = useState(1);   // 1 = landing, 2 = process, 3 = export
+  const [step, setStep]     = useState(1);
   const [file, setFile]     = useState(null);
   const [terms, setTerms]   = useState(null);
   const [theme]             = useState(THEMES[0]);
 
-  // Inject styles once on mount
   useEffect(() => {
     const el = document.createElement("style");
     el.id = "lgp-styles";
@@ -1884,13 +1786,11 @@ export default function App() {
   };
 
   const handleExpire = () => {
-    // Called by StepExport timer — wipe all state and return to landing
     setFile(null); setTerms(null); setStep(1); window.scrollTo(0,0);
   };
 
   return (
     <div className="app">
-      {/* Topbar */}
       <nav className="topbar">
         <div className="topbar-brand" onClick={() => { setStep(1); setFile(null); setTerms(null); window.scrollTo(0,0); }}>
           <img src={`data:image/png;base64,${LOGO_B64}`} alt="logo" style={{ width:32, height:32, borderRadius:5 }} />
@@ -1901,10 +1801,8 @@ export default function App() {
         </div>
       </nav>
 
-      {/* Step indicator */}
       <StepBar step={step} />
 
-      {/* Pages */}
       {step === 1 && <StepLanding onUpload={handleUpload} />}
       {step === 2 && <StepProcess file={file} onDone={handleProcessed} onBack={() => handleBack()} />}
       {step === 3 && <StepTerms terms={terms} onBack={() => handleBack()} onExpire={handleExpire} />}
@@ -1912,12 +1810,6 @@ export default function App() {
       <div className="footer">
         <strong>Live Glossary Pro</strong> · Upload CSV · Style · Download · No data stored
         <span style={{ opacity:.5, marginLeft:12 }}>v{APP_VERSION}</span>
-        <span style={{ marginLeft:16 }}>
-          <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener"
-            style={{ display:"inline-flex", alignItems:"center", gap:6, background:"#FFDD00", color:"#000", textDecoration:"none", fontWeight:700, fontSize:12, padding:"4px 12px", borderRadius:20 }}>
-            ☕ Buy me a coffee
-          </a>
-        </span>
       </div>
     </div>
   );
