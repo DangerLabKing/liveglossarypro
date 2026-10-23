@@ -26,16 +26,15 @@
     X-Content-Type-Options = "nosniff"
     # Control referrer info
     Referrer-Policy = "strict-origin-when-cross-origin"
-    # Legacy XSS filter (IE/old Edge)
-    X-XSS-Protection = "1; mode=block"
+    # Old browser XSS filter: switched off, as current guidance recommends (the CSP below does the job)
+    X-XSS-Protection = "0"
     # Disable browser features this app never uses
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
-    # Content Security Policy:
-    # - default-src self only
-    # - scripts: self + inline (React needs inline for hydration) + blob: (for generated file downloads)
-    # - styles: self + unsafe-inline (CSS-in-JS via buildStyles()) + Google Fonts
-    # - fonts: Google Fonts CDN + data: (fonts embedded in worksheet previews)
-    # - img: self + data: (base64 logo) + blob: (generated files)
-    # - connect: self only (no external API calls)
-    # - frame/object/base: all denied
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';"
+    # Content Security Policy (what the site may load):
+    # - everything from our own site only ('self') - no Google Fonts or other outside services
+    # - scripts/styles: self + inline (React and the generated worksheet previews need inline)
+    # - fonts: self + data: (worksheet previews embed their fonts so files work offline)
+    # - img: self + data: + blob: (downloads and previews)
+    # - connect/form-action: self only (Netlify Forms posts to our own site)
+    # - frames/objects: none (the in-app preview uses srcdoc, which is still allowed); base: self
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';"

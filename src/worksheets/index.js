@@ -1,8 +1,14 @@
-// Entry point: build a printable worksheet file.
-// Loaded on demand from App.jsx, so the fonts and generators stay out of the main bundle.
+// ═══════════════════════════════════════════════════════════════════════════
+// WORKSHEETS ENTRY POINT  (src/worksheets/index.js)
+// The app loads this file only when someone clicks Generate (import()), so the
+// fonts, clipart and generators stay out of the first page load.
+//   buildWorksheet(format, theme, rows, opts) → printable worksheet .html
+//   buildGlossary(theme, rows, opts)          → interactive Class Glossary .html
+// ═══════════════════════════════════════════════════════════════════════════
 import { buildDoc, dedupe, esc, flowSection } from './engine.js';
 import { pickIcon } from './clipart.js';
 import { flashCards, studySheet, quiz, bingo, wordSearch, crossword, frayer } from './generators.js';
+export { buildGlossary } from './glossary.js';
 
 const GENERATORS = {
   flashcards: flashCards,

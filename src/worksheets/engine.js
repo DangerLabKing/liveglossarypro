@@ -72,7 +72,7 @@ export function maskTerm(text, term) {
  *   puzzleWord("Café au lait") → "CAFEAULAIT"
  */
 export const puzzleWord = (term) => String(term || '')
-  .normalize('NFD').replace(/[̀-ͯ]/g, '')   // split "é" into "e" + accent, then drop the accent
+  .normalize('NFD').replace(/[\u0300-\u036F]/g, '')   // split "é" into "e" + accent, then drop the accent
   .toUpperCase().replace(/[^A-Z]/g, '');
 
 /** Remove duplicate terms (case-insensitive). Duplicates make answer keys ambiguous. */

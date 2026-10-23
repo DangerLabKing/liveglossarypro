@@ -7,11 +7,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.png', 'icons/*.png'],
+      includeAssets: ['favicon.png', 'favicon.svg', 'logo.svg', 'icons/*.png', 'img/*.jpg'],
       manifest: {
         name: 'Live Glossary Pro',
         short_name: 'GlossaryPro',
-        description: 'Upload a CSV, style it, download a beautiful HTML glossary.',
+        description: 'Type your word list, print vocabulary worksheets. Free for K–12 teachers.',
         theme_color: '#1A1A1A',
         background_color: '#F5F5F0',
         display: 'standalone',

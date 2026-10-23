@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// TINY ZIP MAKER  (src/zip.js)
+// TINY ZIP MAKER  (src/lib/zip.js)
 //
 // Packs several files into one .zip without any library, so the app stays
 // small and works offline. Used by "Download all formats".
