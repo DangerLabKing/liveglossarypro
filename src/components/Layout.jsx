@@ -16,8 +16,9 @@ export function Brand({ go, small }) {
 /**
  * Header. On the landing page it shows section links; on the worksheet
  * screen pass `children` (the step indicator) instead.
+ * @param wordCount  words currently loaded — the button then reads "Back to my words (N)"
  */
-export function SiteHeader({ go, children }) {
+export function SiteHeader({ go, children, wordCount = 0 }) {
   return (
     <header className="site-head">
       <nav className="wrap" aria-label="Main">
@@ -28,7 +29,9 @@ export function SiteHeader({ go, children }) {
             <a className="nav-link" href="#how">How it works</a>
             <a className="nav-link" href="#lists">Word lists</a>
             <a className="nav-link" href="#free">Free &amp; private</a>
-            <a className="btn btn-gold" href="/make" onClick={(e) => { e.preventDefault(); go('/make'); }}>Make worksheets</a>
+            <a className={'btn btn-gold' + (wordCount ? ' has-words' : '')} href="/make" onClick={(e) => { e.preventDefault(); go('/make'); }}>
+              {wordCount ? `Back to my words (${wordCount})` : 'Make worksheets'}
+            </a>
           </>
         )}
       </nav>

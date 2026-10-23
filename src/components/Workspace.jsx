@@ -25,12 +25,15 @@ const sanitizeTheme = (t) => {
 const signupDismissed = () => { try { return localStorage.getItem('lgp-signup-dismissed') === '1'; } catch { return false; } };
 
 /**
- * @param rows        the word list (from App.jsx)
- * @param setRows     replace the word list
- * @param listKey     changes when a whole new list is loaded → refreshes the words panel
- * @param onDownloaded  called after any download (moves the step indicator to "Print")
+ * @param rows         the word list (from App.jsx)
+ * @param editRows     update the list while typing
+ * @param replaceList  swap in a whole new list, with Undo (upload, sample)
+ * @param newList      clear the list, with Undo ("New list" button)
+ * @param listName     name of the current list (shown in the words panel)
+ * @param listKey      changes when a whole new list is loaded → refreshes the words panel
+ * @param onDownloaded called after any download (moves the step indicator to "Print")
  */
-export function Workspace({ rows, setRows, listKey, onDownloaded }) {
+export function Workspace({ rows, editRows, replaceList, newList, listName, listKey, onDownloaded }) {
   const [format, setFormat] = useState('quiz');
   const [themeIdx, setThemeIdx] = useState(0);
   // All worksheet options in one object. To add an option: add a default here,
@@ -119,7 +122,8 @@ export function Workspace({ rows, setRows, listKey, onDownloaded }) {
 
   return (
     <div className="wrap workspace">
-      <WordsPanel key={listKey} rows={rows} setRows={setRows} listName={opts.topic} />
+      <WordsPanel key={listKey} rows={rows} editRows={editRows} replaceList={replaceList} newList={newList}
+        listName={listName || opts.topic} />
 
       <section className="work-main" aria-labelledby="pick-h">
         <div className="title-row">

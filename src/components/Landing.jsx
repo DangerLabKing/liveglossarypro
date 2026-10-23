@@ -15,14 +15,35 @@ const BANDS = ['All grades', 'K–2', '3–5', '6–8', '9–12'];
 /**
  * @param go          navigate: go('/make')
  * @param loadSample  load one of SAMPLE_LISTS and open the worksheet screen
+ * @param rows        the words currently loaded (shows the "in progress" bar when not empty)
+ * @param listName    name of that list, if it has one
+ * @param newList     clear the list (with Undo) and open the worksheet screen
  */
-export function Landing({ go, loadSample }) {
+export function Landing({ go, loadSample, rows = [], listName = '', newList }) {
   const [band, setBand] = useState('All grades');
   const lists = band === 'All grades' ? SAMPLE_LISTS : SAMPLE_LISTS.filter(l => l.band === band);
   const toMake = (e) => { e.preventDefault(); go('/make'); };
 
   return (
     <main id="top">
+      {/* ── "YOU HAVE WORDS IN PROGRESS" bar — only while a list is loaded ── */}
+      {rows.length > 0 && (
+        <div className="in-progress" role="region" aria-label="Your list in progress">
+          <div className="wrap">
+            <span className="ip-icon" aria-hidden="true"><PenIcon /></span>
+            <p>
+              <strong>You have {rows.length} word{rows.length === 1 ? '' : 's'} in progress</strong>
+              {listName && <span className="ip-name"> · {listName}</span>}
+              <span className="ip-words"> — {rows.slice(0, 3).map(r => r.term).join(', ')}{rows.length > 3 ? '…' : ''}</span>
+            </p>
+            <div className="ip-actions">
+              <a className="btn btn-gold btn-small" href="/make" onClick={toMake}>Back to my words</a>
+              <button type="button" className="link-btn" onClick={newList}>Start a new list</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── HERO (chalkboard) ── */}
       <section className="hero on-chalk">
         <div className="wrap">

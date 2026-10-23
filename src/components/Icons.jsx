@@ -50,3 +50,7 @@ export const LevelsIcon = () => (
 export const PenIcon = () => (
   <svg {...base}><path d="M4 20h4L19 9l-4-4L4 16z" stroke="#2B2B2B" strokeWidth="2.2" /></svg>
 );
+
+export const PlusIcon = ({ color = 'currentColor' }) => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+);

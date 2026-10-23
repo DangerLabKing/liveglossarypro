@@ -253,6 +253,27 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .more-opts[open] summary { margin-bottom: 10px; }
 
 /* 8. Phones ────────────────────────────────────────────────────────────── */
+
+/* 7b. Keeping teachers oriented ─────────────────────────────────────────
+   "You have N words in progress" bar (home page), list name + New list
+   button (words panel), and the Undo message. */
+.in-progress { position: sticky; top: 0; z-index: 20; background: var(--gold); border-bottom: var(--outline); }
+.in-progress .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding-top: 10px; padding-bottom: 10px; }
+.in-progress p { margin: 0; flex: 1 1 280px; min-width: 0; font-size: 16px; }
+.in-progress .ip-words { color: #4A4A3A; }
+.in-progress .ip-icon { width: 34px; height: 34px; flex: none; display: inline-flex; align-items: center; justify-content: center; background: #fff; border: 2px solid var(--ink); border-radius: 8px; transform: rotate(-4deg); }
+.in-progress .ip-actions { display: flex; align-items: center; gap: 16px; }
+.in-progress .btn-gold { background: #fff; }
+.words-panel h2 { display: flex; align-items: center; gap: 8px; }
+.words-panel .new-list { min-height: 36px; padding: 4px 12px; }
+.list-name { margin: -8px 0 0; font-family: var(--hand); font-size: 19px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.undo-toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 50; display: flex; align-items: center; gap: 14px;
+  max-width: calc(100vw - 32px); background: var(--chalk); color: var(--paper); border: 2px solid var(--paper); border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--amber); padding: 10px 12px 10px 18px; font-weight: 700; }
+.undo-toast span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.undo-toast .btn-gold { border-color: var(--paper); box-shadow: none; flex: none; }
+.undo-toast .close { background: none; border: 0; color: var(--paper); font-size: 24px; line-height: 1; cursor: pointer; padding: 0 4px; min-height: 32px; }
+
 @media (max-width: 640px) {
   body { font-size: 16px; }
   .wrap { padding-left: 16px; padding-right: 16px; }   /* sides only — keeps section spacing */
@@ -265,5 +286,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .site-head .nav-link { display: none; }
   .words-panel { max-width: none; }
   .actions .privacy { margin-left: 0; }
+  .in-progress .ip-words { display: none; }
+  .site-head .has-words { display: none; }   /* the yellow bar already has this button */
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } .spinner { animation: none; } }

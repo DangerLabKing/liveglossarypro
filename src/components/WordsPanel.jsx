@@ -4,33 +4,40 @@
 // Three ways in:  paste/type in the box · Upload CSV · pick a sample list
 // One list out:   `rows` (owned by App.jsx) — every format is built from it.
 // Two ways out:   Save list (CSV) · Copy list
+// "New list" (top right) empties everything; App.jsx shows an Undo message.
+// Uploading or picking a sample over existing words also gets an Undo.
 //
 // The text box and the list stay in sync: typing re-reads the box; uploading
 // or picking a sample rewrites the box. Pictures chosen in a CSV "Icon" column
 // are remembered per word, so editing the box doesn't lose them.
 // ═══════════════════════════════════════════════════════════════════════════
 import { useMemo, useRef, useState } from 'react';
-import { readWordList, toCSV, toText, LIMITS } from '../lib/words.js';
+import { readWordList, toCSV, toText, cleanText, LIMITS } from '../lib/words.js';
 import { saveBlob, today, slugify, copyText } from '../lib/files.js';
 import { pickIcon } from '../worksheets/clipart.js';
 import { SAMPLE_LISTS } from '../content/site.js';
-import { CheckIcon, WarnIcon, DownloadIcon, CopyIcon, UploadIcon } from './Icons.jsx';
+import { CheckIcon, WarnIcon, DownloadIcon, CopyIcon, UploadIcon, PlusIcon } from './Icons.jsx';
 
 const SHOW_MAX = 200;   // how many words to list in the checklist (all are still used)
 
 /**
- * @param rows       current word list [{ term, description, icon? }]
- * @param setRows    replace the word list
- * @param listName   name of the list (topic), used for file names
+ * @param rows         current word list [{ term, description, icon? }]
+ * @param editRows     update the list as the box is typed in
+ * @param replaceList  (rows, name, undoMessage, refill) — swap in a whole new list, with Undo
+ * @param newList      empty the list, with Undo
+ * @param listName     name of the list (sample title, file name or Topic) — shown under the
+ *                     heading and used for file names
  * When another part of the app swaps the whole list (e.g. a sample picked on
- * the home page), App.jsx re-creates this panel, so the box is refilled.
+ * the home page, or Undo), App.jsx re-creates this panel, so the box is refilled.
  */
-export function WordsPanel({ rows, setRows, listName }) {
+export function WordsPanel({ rows, editRows, replaceList, newList, listName }) {
   const [text, setText] = useState(() => toText(rows));
   const [problems, setProblems] = useState([]);
   const [notes, setNotes] = useState([]);
   const [flash, setFlash] = useState('');
-  const icons = useRef(new Map());            // word (lower case) → picture name from an Icon column
+  // word (lower case) → picture name from an Icon column. Starts from the rows we were given,
+  // so pictures survive Undo and moving between pages.
+  const icons = useRef(new Map(rows.filter(r => r.icon).map(r => [r.term.toLowerCase(), r.icon])));
   const fileInput = useRef(null);
   const typingTimer = useRef(null);
 
@@ -41,7 +48,7 @@ export function WordsPanel({ rows, setRows, listName }) {
       if (r.icon) icons.current.set(r.term.toLowerCase(), r.icon);
       else if (icons.current.has(r.term.toLowerCase())) r.icon = icons.current.get(r.term.toLowerCase());
     });
-    setRows(res.rows);
+    editRows(res.rows);
     setProblems(res.problems);
     setNotes(res.notes);
   };
@@ -61,11 +68,14 @@ export function WordsPanel({ rows, setRows, listName }) {
     if (f.size > LIMITS.fileBytes) { setNotes([`That file is ${(f.size / 1048576).toFixed(1)} MB — the limit is 2 MB.`]); return; }
     const content = await f.text();                            // read as plain text, never run
     const res = readWordList(content);
+    // An empty or unreadable file must not wipe out the list that's already here.
+    if (!res.rows.length) { setNotes(['No words found in that file. Each row needs a word and its meaning.']); return; }
     icons.current = new Map(res.rows.filter(r => r.icon).map(r => [r.term.toLowerCase(), r.icon]));
     setText(toText(res.rows));
-    setRows(res.rows);
+    // name the list after the file ("grade5-cells.csv" → "grade5-cells")
+    replaceList(res.rows, cleanText(f.name.replace(/\.[^.]+$/, '')).slice(0, 60), `Loaded “${f.name.slice(0, 40)}”`, false);
     setProblems(res.problems);
-    setNotes(res.rows.length ? res.notes : ['No words found in that file. Each row needs a word and its meaning.']);
+    setNotes(res.notes);
   };
 
   const onSample = (e) => {
@@ -73,9 +83,12 @@ export function WordsPanel({ rows, setRows, listName }) {
     e.target.value = '';
     if (!list) return;
     const t = list.words.map(([w, d]) => `${w} — ${d}`).join('\n');
+    const res = readWordList(t);
     icons.current = new Map();
     setText(t);
-    apply(t);
+    setProblems([]);
+    setNotes([]);
+    replaceList(res.rows, `${list.grade} · ${list.title}`, `Switched to “${list.title}”`, false);
   };
 
   const done = (what) => { setFlash(what); setTimeout(() => setFlash(''), 1500); };
@@ -89,9 +102,12 @@ export function WordsPanel({ rows, setRows, listName }) {
   return (
     <aside className="card words-panel" aria-labelledby="words-h">
       <div className="head">
-        <h2 id="words-h">Your words</h2>
-        <span className="count-pill" aria-label={`${rows.length} words`}>{rows.length}</span>
+        <h2 id="words-h">Your words <span className="count-pill" aria-label={`${rows.length} words`}>{rows.length}</span></h2>
+        {/* Start over. App.jsx shows "List cleared · Undo", so nothing is lost by accident. */}
+        <button type="button" className="btn btn-small new-list" onClick={newList} disabled={!rows.length}
+          title="Clear these words and start a new list"><PlusIcon /> New list</button>
       </div>
+      {rows.length > 0 && <p className="list-name" title={listName || 'Untitled list'}>{listName || 'Untitled list'}</p>}
 
       <label className="field">Paste or type — word, dash, meaning
         <textarea rows={8} value={text} onChange={onType} spellCheck="true"
