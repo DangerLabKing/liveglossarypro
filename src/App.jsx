@@ -211,31 +211,41 @@ const buildStyles = (t) => `
 // ─────────────────────────────────────────────
 // CSV PARSER
 // ─────────────────────────────────────────────
+// Handles quoted fields (with commas, line breaks and "" escaped quotes).
+// Optional 3rd column = clipart keyword (e.g. "volcano"), used only when it looks like one.
 function parseCSV(text, delim = ",") {
-  const lines = text.split(/\r?\n/).filter(l => l.trim());
-  const results = [];
-  for (const line of lines) {
-    const fields = [];
-    let cur = "", inQuote = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') { inQuote = !inQuote; }
-      else if (ch === delim && !inQuote) { fields.push(cur.trim()); cur = ""; }
-      else { cur += ch; }
-    }
-    fields.push(cur.trim());
-    const term = (fields[0] || "").replace(/^"|"$/g, "").trim();
-    const desc = (fields[1] || "").replace(/^"|"$/g, "").trim();
-    if (term && desc) results.push({ term, description: desc });
+  const records = [];
+  let row = [], cur = "", inQuote = false;
+  const src = String(text).replace(/^\uFEFF/, "");  // remove the invisible marker Excel adds to the start of some CSVs
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (inQuote) {
+      if (ch === '"' && src[i + 1] === '"') { cur += '"'; i++; }
+      else if (ch === '"') inQuote = false;
+      else cur += ch;
+    } else if (ch === '"' && cur.trim() === "") { inQuote = true; cur = ""; }
+    else if (ch === delim) { row.push(cur.trim()); cur = ""; }
+    else if (ch === "\n" || ch === "\r") {
+      if (ch === "\r" && src[i + 1] === "\n") i++;
+      row.push(cur.trim()); records.push(row); row = []; cur = "";
+    } else cur += ch;
   }
-  return results;
-}
+  row.push(cur.trim()); records.push(row);
 
-function stripHeader(rows) {
-  if (!rows.length) return rows;
-  const first = rows[0].term.toLowerCase();
-  if (["term", "word", "name", "title", "glossary term"].includes(first)) return rows.slice(1);
-  return rows;
+  const nonEmpty = records.filter(r => r.some(f => f !== ""));
+  const hdr = nonEmpty[0] || [];
+  const hasHeader = ["term", "word", "name", "title", "glossary term", "vocabulary"].includes((hdr[0] || "").toLowerCase());
+  const iconCol = hasHeader && ["icon", "picture", "image", "clipart"].includes((hdr[2] || "").toLowerCase());
+  const body = hasHeader ? nonEmpty.slice(1) : nonEmpty;
+  const rows = []; let skipped = 0;
+  for (const f of body) {
+    const term = (f[0] || "").trim(), description = (f[1] || "").trim();
+    if (!term || !description) { skipped++; continue; }
+    const raw = (f[2] || "").trim();
+    const icon = (iconCol || /^[A-Za-z][A-Za-z -]{1,24}$/.test(raw)) ? raw : "";
+    rows.push(icon ? { term, description, icon } : { term, description });
+  }
+  return { rows, skipped };
 }
 
 function groupTerms(rows) {
@@ -254,6 +264,32 @@ function groupTerms(rows) {
 // ─────────────────────────────────────────────
 const Alert = ({ type, children }) => <div className={`alert alert-${type}`}>{children}</div>;
 const Spinner = () => <span className="spinner" />;
+
+// ─────────────────────────────────────────────
+// PREVIEW FRAME
+// Shows a generated file inside the app before it's downloaded.
+//  • srcDoc loads the HTML string straight into the frame – no upload, no server.
+//  • sandbox keeps the preview walled off from the app. "allow-scripts" lets the
+//    worksheet's layout script run; "allow-modals" lets its Print button work.
+//  • "Open in new tab" shows the same file full-size (handy for printing from the preview).
+// ─────────────────────────────────────────────
+function PreviewFrame({ html, label }) {
+  const openInTab = () => {
+    const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+    window.open(url, "_blank", "noopener");
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);   // free the memory after a minute
+  };
+  return (
+    <div style={{ marginTop:12, border:"1.5px solid #E0E0D8", borderRadius:10, overflow:"hidden", background:"#DCD8CF" }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 12px", background:"#fff", borderBottom:"1.5px solid #E0E0D8" }}>
+        <strong style={{ fontSize:13 }}>Preview — {label}</strong>
+        <button className="btn btn-ghost" style={{ padding:"6px 12px", fontSize:12 }} onClick={openInTab}>↗ Open in new tab</button>
+      </div>
+      <iframe title={`Preview of ${label}`} srcDoc={html} sandbox="allow-scripts allow-modals"
+        style={{ display:"block", width:"100%", height:"min(78vh, 760px)", border:0 }} />
+    </div>
+  );
+}
 
 function GlossaryView({ terms, filterLetter, setFilterLetter, searchQ }) {
   const grouped = groupTerms(terms);
@@ -334,7 +370,7 @@ function StepLanding({ onUpload }) {
           <span>Live Glossary Pro</span>
         </div>
         <h1 className="hero-title">Turn your CSV into a<br/><em>Beautiful Glossary</em></h1>
-        <p className="hero-sub">Upload a two-column CSV of terms and definitions. We'll instantly generate <strong style={{color:"var(--accent)"}}>7 ready-to-download formats</strong> — a searchable glossary, flash cards, study sheet, quiz, bingo cards, word search, and crossword puzzle. Print-ready, styled, and yours in seconds.</p>
+        <p className="hero-sub">Upload a two-column CSV of terms and definitions. We'll instantly generate <strong style={{color:"var(--accent)"}}>{FORMATS.length} ready-to-download formats</strong> — a searchable glossary, flash cards, study sheet, quiz, bingo cards, word search, crossword puzzle, and Frayer model word maps. Print-ready, styled, and yours in seconds.</p>
         <button className="hero-cta" onClick={() => uploadRef.current?.click()}>
           ↑ Upload Your CSV to Get Started
         </button>
@@ -350,6 +386,10 @@ function StepLanding({ onUpload }) {
             Prepare a CSV file with <strong>two columns</strong> — the term in column 1, and the description in column 2.
             A header row (<code>Term,Description</code>) is optional and will be detected automatically.
             Commas, tabs, or pipe characters are all accepted as delimiters.
+          </p>
+          <p>
+            <strong>Pictures:</strong> worksheets pick clipart to match each term automatically. To choose one yourself,
+            add a third column named <code>Icon</code> with a word like <code>volcano</code>, <code>magnet</code> or <code>money</code>.
           </p>
           <p>
             <strong>File requirements:</strong> Maximum 2 MB · up to {MAX_TERMS.toLocaleString()} terms · <code>.csv</code>, <code>.txt</code>, or <code>.tsv</code> format.
@@ -428,16 +468,16 @@ function StepProcess({ file, onDone, onBack }) {
     const reader = new FileReader();
     reader.onload = e => {
       try {
-        let rows = parseCSV(e.target.result, delimiter === "\\t" ? "\t" : delimiter);
-        rows = stripHeader(rows);
+        const parsed = parseCSV(e.target.result, delimiter === "\\t" ? "\t" : delimiter);
+        let rows = parsed.rows;
         const errs = [];
         if (rows.length === 0) errs.push("No valid rows found. Check your delimiter selection and file format.");
         if (rows.length > MAX_TERMS) {
           errs.push(`File contains ${rows.length} rows — trimming to first ${MAX_TERMS}.`);
           rows = rows.slice(0, MAX_TERMS);
         }
-        const missing = rows.filter(r => !r.term || !r.description).length;
-        if (missing > 0) errs.push(`${missing} row${missing > 1 ? "s" : ""} were skipped (missing term or description).`);
+        const missing = parsed.skipped;
+        if (missing > 0) errs.push(`${missing} row${missing > 1 ? "s were" : " was"} skipped (missing term or description).`);
         const clean = rows.filter(r => r.term && r.description);
         setParsedRows(clean);
         setErrors(errs);
@@ -507,8 +547,44 @@ function StepProcess({ file, onDone, onBack }) {
 // ─────────────────────────────────────────────
 // STEP 3 — STYLE & DOWNLOAD
 // ─────────────────────────────────────────────
-const EXPIRY_MINUTES = 30;
-const EXPIRY_MS      = EXPIRY_MINUTES * 60 * 1000;
+// ─────────────────────────────────────────────
+// FORMATS — every downloadable format, in the order shown on screen.
+// This is the ONE place to add/rename a format:
+//   id     must match a key in GENERATORS (src/worksheets/index.js),
+//          except "glossary", which is built by mkGlossary() in this file
+//   slug   used in the downloaded file name, e.g. "word-search-2026-10-22.html"
+// ─────────────────────────────────────────────
+const FORMATS = [
+  { id:"glossary",   icon:"📖", label:"Glossary",          slug:"glossary",       desc:"Searchable A–Z reference, add / edit / delete, download updated file" },
+  { id:"flashcards", icon:"🃏", label:"Flash Cards",       slug:"flashcards",     desc:"8 per sheet with matching pictures — print double-sided, backs line up" },
+  { id:"studysheet", icon:"✏️", label:"Study Sheet",       slug:"study-sheet",    desc:"Word study, fill-in-the-blank with word bank, matching — answer key on its own page" },
+  { id:"quiz",       icon:"📝", label:"Quiz",              slug:"quiz",           desc:"Multiple choice + matching, up to 4 shuffled versions — answer keys on their own pages" },
+  { id:"bingo",      icon:"🎲", label:"Bingo & Word Wall", slug:"bingo-wordwall", desc:"Unique bingo cards, teacher caller sheet, and cut-out word wall cards" },
+  { id:"wordsearch", icon:"🔍", label:"Word Search",       slug:"word-search",    desc:"Easy, medium or challenge levels, picture word list — highlighted answer key page" },
+  { id:"crossword",  icon:"⬛", label:"Crossword",         slug:"crossword",      desc:"Across/down clues with letter counts — filled-in answer key page" },
+  { id:"frayer",     icon:"🧩", label:"Frayer Model",      slug:"frayer-model",   desc:"Word map per term: definition, picture, examples, non-examples — 1 or 2 per page" },
+];
+const formatById = (id) => FORMATS.find(f => f.id === id) || FORMATS[0];
+
+// Little instruction sheet included in the "Download all formats" zip.
+const ZIP_README = `Live Glossary Pro – your vocabulary files
+==========================================
+
+Each .html file opens in any web browser (double-click it). No internet needed.
+
+PRINTING
+  1. Open a worksheet file.
+  2. Choose US Letter or A4 in the bar at the top, then click "Print / Save as PDF".
+  3. In the print dialog set Scale to 100% and Margins to "Default" or "None".
+     Choose "Save as PDF" as the printer to get a PDF instead.
+
+TIPS
+  • Answer keys are always on their own pages at the end – print pages selectively.
+  • Flash cards: print double-sided, flip on the LONG edge, then cut on the dashed lines.
+  • The Glossary file is interactive: add, edit and search terms, then use
+    "Download Updated File" to keep your changes.
+`;
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INLINE SVG CLIPART LIBRARY
@@ -541,16 +617,7 @@ const SVGS = {
   compass: '<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="15" fill="#E3F2FD" stroke="#1976D2" stroke-width="1.5"/><polygon points="20,8 17,20 20,18 23,20" fill="#E53935"/><polygon points="20,32 23,20 20,22 17,20" fill="#455A64"/><circle cx="20" cy="20" r="2" fill="#1976D2"/></svg>',
   calculator:'<svg viewBox="0 0 40 40" fill="none"><rect x="8" y="4" width="24" height="32" rx="3" fill="#37474F" stroke="#263238" stroke-width="1.5"/><rect x="11" y="7" width="18" height="8" rx="2" fill="#B2EBF2"/><circle cx="14" cy="21" r="2.5" fill="#4CAF50"/><circle cx="20" cy="21" r="2.5" fill="#FFD700"/><circle cx="26" cy="21" r="2.5" fill="#FF7043"/><circle cx="14" cy="29" r="2.5" fill="#90A4AE"/><circle cx="20" cy="29" r="2.5" fill="#90A4AE"/><circle cx="26" cy="29" r="2.5" fill="#E53935"/></svg>',
 };
-const SVGK = Object.keys(SVGS);
-const svgAt = (i) => SVGS[SVGK[i % SVGK.length]];
 const esc   = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const shuf  = (a) => [...a].sort(() => Math.random() - 0.5);
-
-// Simple clean footer used in all generated HTML files — no external links
-const SIMPLE_FOOTER = (navColor, accentColor) => `
-<div style="background:${navColor};color:rgba(255,255,255,.35);text-align:center;padding:14px 24px;font-size:11px;margin-top:auto;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
-  <span style="display:inline-flex;align-items:center;gap:6px;">${SVGS.book} Made with <strong style="color:${accentColor};">Live Glossary Pro</strong></span>
-</div>`;
 
 // Sanitize theme color values before injecting into CSS
 const sanitizeTheme = (t) => {
@@ -566,7 +633,10 @@ const sanitizeTheme = (t) => {
 // HTML GENERATORS
 // ═══════════════════════════════════════════════════════════════════════════
 
-function mkGlossary(t, data) {
+// opts.credit      – show "Made with Live Glossary Pro" in the footer (default true)
+// opts.footerText  – the teacher's own footer line, e.g. "© Ms. Rivera 2026"
+function mkGlossary(t, data, opts = {}) {
+  const footParts = [opts.footerText ? esc(opts.footerText) : '', opts.credit !== false ? 'Made with <strong>Live Glossary Pro</strong>' : ''].filter(Boolean);
   const sd = JSON.stringify(data).replace(new RegExp('</'+'script>','gi'), '<\\/'+'script>');
   return `<!DOCTYPE html>
 <html lang="en">
@@ -687,7 +757,7 @@ function mkGlossary(t, data) {
   <div class="alpha" id="alpha-nav"></div>
   <div id="glossary-root"></div>
 </div>
-<div class="ftr">&#128218; My Glossary Pro &mdash; Made with <strong>Live Glossary Pro</strong></div>
+<div class="ftr">&#128218; My Glossary${footParts.length ? ' &mdash; ' + footParts.join(' &middot; ') : ''}</div>
 <a href="#top" class="top-btn">&#x2191;</a>
 <div class="overlay" id="del-overlay">
   <div class="dialog">
@@ -740,7 +810,7 @@ function saveFile(){
   const src=document.documentElement.outerHTML;
   const marker='const INITIAL_DATA=';const p1=src.indexOf(marker);const p2=src.indexOf('];',p1)+2;const upd=src.slice(0,p1)+marker+fd+';'+src.slice(p2);
   const blob=new Blob([upd],{type:'text/html'});const url=URL.createObjectURL(blob);const a=document.createElement('a');
-  a.href=url;a.download='my-glossary-'+new Date().toISOString().split('T')[0]+'.html';
+  var d=new Date();a.href=url;a.download='my-glossary-'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.html';
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
   const btn=document.getElementById('save-btn');btn.classList.add('flash');setTimeout(()=>btn.classList.remove('flash'),1500);toast('Updated file downloaded');
 }
@@ -754,701 +824,14 @@ document.getElementById('add-desc').addEventListener('keydown',function(e){if(e.
 </html>`;
 }
 
-function mkFlashCards(t, data) {
-  const pairs = shuf(data).map((d, i) => {
-    const icon = svgAt(i);
-    return `
-<div class="fc-front fc-cell">
-  <div class="fc-icon">${icon}</div>
-  <div class="fc-badge">TERM</div>
-  <div class="fc-term">${esc(d.term)}</div>
-  <div class="fc-num">${i+1}</div>
-</div>
-<div class="fc-back fc-cell">
-  <div class="fc-badge fc-badge-def">DEFINITION</div>
-  <div class="fc-def">${esc(d.description)}</div>
-  <div class="fc-num">${i+1}</div>
-</div>`;
-  }).join('\n');
-
-  // Decorative header icons row
-  const hdrIcons = [SVGS.star, SVGS.pencil, SVGS.brain, SVGS.bulb, SVGS.trophy, SVGS.rocket, SVGS.owl, SVGS.apple]
-    .map(s => `<span style="display:inline-block;width:32px;height:32px;">${s}</span>`).join('');
-
-  return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/>
-<title>Flash Cards</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;display:flex;flex-direction:column;min-height:100vh;}
-.hdr{background:${t.nav};color:#fff;text-align:center;padding:18px 20px 14px;}
-.hdr-icons{display:flex;justify-content:center;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
-.hdr-icons svg{width:32px;height:32px;}
-.hdr h1{font-family:Georgia,serif;font-size:26px;font-weight:900;}
-.hdr h1 em{color:${t.accent};}
-.hdr-sub{color:rgba(255,255,255,.45);font-size:12px;margin-top:4px;}
-.instr{max-width:700px;margin:16px auto 6px;padding:12px 18px;background:#fff;border-radius:10px;border-left:4px solid ${t.accent};font-size:13px;color:#555;line-height:1.6;}
-.instr-row{display:flex;align-items:flex-start;gap:10px;}
-.instr-icon{flex-shrink:0;width:28px;height:28px;}
-.instr-icon svg{width:100%;height:100%;}
-.no-print{text-align:center;margin:12px 0 16px;}
-.no-print button{background:${t.accent};color:${t.nav};border:none;padding:10px 28px;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
-.grid{max-width:760px;margin:0 auto;padding:0 20px 40px;display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:1;}
-.fc-cell{background:#fff;border-radius:12px;padding:18px 16px;min-height:185px;border:2px solid #e8e8e0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;}
-.fc-front{border-top:5px solid ${t.accent};}
-.fc-back{border-top:5px solid ${t.accentDark};background:${t.accentPale};}
-.fc-icon{width:50px;height:50px;margin-bottom:8px;}
-.fc-icon svg{width:100%;height:100%;}
-.fc-badge{font-size:8px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:rgba(0,0,0,.3);margin-bottom:5px;}
-.fc-badge-def{color:${t.accentDark};opacity:.8;}
-.fc-term{font-family:Georgia,serif;font-size:clamp(15px,3vw,20px);font-weight:900;color:${t.nav};line-height:1.3;}
-.fc-def{font-size:12px;color:#444;line-height:1.65;max-height:115px;overflow:hidden;}
-.fc-num{position:absolute;bottom:7px;right:11px;font-size:9px;color:#ccc;font-weight:700;}
-.ftr{background:${t.nav};color:rgba(255,255,255,.35);text-align:center;padding:14px;font-size:11px;}
-@media print{
-  body{background:#fff;}
-  .hdr,.instr,.no-print{display:none!important;}
-  .grid{max-width:100%;padding:0;gap:10px;}
-  .fc-cell{min-height:155px;border:1.5px solid #ccc;border-radius:8px;box-shadow:none;break-inside:avoid;}
-  .fc-back{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .ftr{display:none!important;}
-}
-</style>
-</head>
-<body>
-<div class="hdr">
-  <div class="hdr-icons">${hdrIcons}</div>
-  <h1>Flash Cards <em>&#9734;</em></h1>
-  <div class="hdr-sub">${data.length} terms &nbsp;&middot;&nbsp; Print, cut &amp; fold</div>
-</div>
-<div class="instr">
-  <div class="instr-row">
-    <div class="instr-icon">${SVGS.clipboard}</div>
-    <div><strong>Instructions:</strong> Print this page. Each left/right pair makes one card &mdash; TERM on the left, DEFINITION on the right. Cut along grid lines and fold in half, or print double-sided for classic flash cards.</div>
-  </div>
-</div>
-<div class="no-print"><button onclick="window.print()">&#128424; Print Flash Cards</button></div>
-<div class="grid">${pairs}</div>
-<div class="ftr">&#127794; Made with Live Glossary Pro</div>
-</body></html>`;
-}
-
-function mkStudySheet(t, data) {
-  const mData = shuf(data).slice(0, Math.min(data.length, 20));
-  const mDefs = shuf(mData);
-  const termRows = shuf(data).map((d,i) =>
-    `<tr class="${i%2===0?'re':'ro'}"><td class="tn">${i+1}</td><td class="tt">${esc(d.term)}</td><td class="tb"></td></tr>`
-  ).join('');
-  const wb = [...data].sort((a,b)=>a.term.localeCompare(b.term)).map(d=>`<span class="wb">${esc(d.term)}</span>`).join(' ');
-  const matchL = mData.map((d,i)=>`<tr><td class="mn">${i+1}.</td><td class="mt">${esc(d.term)}</td><td class="mb">_____</td></tr>`).join('');
-  const matchR = mDefs.map((d,i)=>`<li>${String.fromCharCode(65+i)}.&nbsp;${esc(d.description.length>90?d.description.slice(0,90)+'...':d.description)}</li>`).join('');
-  const ak = mData.map((d,i)=>{ const li=mDefs.findIndex(x=>x.term===d.term); return `${i+1}=${String.fromCharCode(65+li)}`; }).join('  ');
-
-  // Fun icon row for header — education themed
-  const hdrIcons = [SVGS.pencil, SVGS.book, SVGS.apple, SVGS.star, SVGS.owl, SVGS.ruler, SVGS.brain, SVGS.note]
-    .map(s => `<span style="display:inline-block;width:28px;height:28px;">${s}</span>`).join('');
-
-  return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/>
-<title>Study Sheet</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;font-size:13px;display:flex;flex-direction:column;min-height:100vh;}
-.hdr{background:${t.nav};color:#fff;padding:14px 24px 12px;text-align:center;}
-.hdr-icons{display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
-.hdr-icons svg{width:28px;height:28px;}
-.hdr h1{font-family:Georgia,serif;font-size:24px;font-weight:900;color:#fff;}
-.hdr h1 em{color:${t.accent};}
-.hdr-sub{color:rgba(255,255,255,.45);font-size:11px;margin-top:3px;}
-.nrow{max-width:820px;margin:14px auto 0;padding:0 20px;display:flex;gap:18px;}
-.nf{flex:1;border-bottom:2px solid ${t.accent};padding-bottom:4px;font-size:13px;color:#888;}
-.wrap{max-width:820px;margin:12px auto;padding:0 20px 40px;flex:1;}
-.sec{font-family:Georgia,serif;font-size:15px;font-weight:900;color:${t.nav};border-bottom:3px solid ${t.accent};padding-bottom:5px;margin:20px 0 10px;display:flex;align-items:center;gap:8px;}
-.sec svg{width:20px;height:20px;flex-shrink:0;}
-table{width:100%;border-collapse:collapse;}
-.tn{width:28px;color:#bbb;font-size:11px;padding:6px 2px;vertical-align:middle;}
-.tt{font-weight:700;padding:6px 8px;vertical-align:middle;color:${t.nav};width:36%;}
-.tb{border-bottom:1.5px solid #c0bfb5;padding:6px 8px;}
-.re{background:#fff;} .ro{background:${t.accentPale};}
-.wbbox{background:#fff;border-radius:8px;padding:12px 14px;border:1.5px solid ${t.accent}33;display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
-.wbl{font-size:10px;font-weight:800;letter-spacing:1px;color:#aaa;width:100%;margin-bottom:2px;display:flex;align-items:center;gap:5px;}
-.wbl svg{width:16px;height:16px;}
-.wb{background:${t.accentPale};border:1px solid ${t.accent}55;border-radius:20px;padding:3px 11px;font-size:12px;font-weight:600;color:${t.nav};}
-.mn{width:26px;color:#bbb;font-size:11px;padding:5px 2px;}
-.mt{font-weight:700;padding:5px 8px;color:${t.nav};width:34%;}
-.mb{padding:5px 8px;color:#bbb;letter-spacing:3px;}
-ol.md{list-style:none;font-size:12px;color:#444;line-height:2.1;}
-.ak{background:${t.nav};color:rgba(255,255,255,.6);margin-top:24px;padding:12px 16px;border-radius:8px;font-size:11px;line-height:2;display:flex;align-items:flex-start;gap:10px;}
-.ak svg{width:18px;height:18px;flex-shrink:0;margin-top:2px;}
-.ak strong{color:${t.accent};}
-.np{text-align:center;margin:10px 0 14px;}
-.np button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-.ftr{background:${t.nav};color:rgba(255,255,255,.35);text-align:center;padding:14px;font-size:11px;}
-@media print{body{background:#fff;}.hdr,.re,.ro,.ak{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.np{display:none!important;}.wrap{max-width:100%;padding:0 12px;}.ftr{display:none!important;}}
-</style></head>
-<body>
-<div class="hdr">
-  <div class="hdr-icons">${hdrIcons}</div>
-  <h1>Study Sheet <em>&#9734;</em></h1>
-  <div class="hdr-sub">${data.length} vocabulary terms</div>
-</div>
-<div class="nrow"><div class="nf">Name: _________________________________</div><div class="nf">Date: _____________ &nbsp; Class: _____________</div></div>
-<div class="wrap">
-<div class="np"><button onclick="window.print()">&#128424; Print Study Sheet</button></div>
-<div class="sec">${SVGS.pencil} Part 1 &mdash; Fill in the Blank</div>
-<p style="font-size:12px;color:#666;margin-bottom:10px;">Write the definition for each term in the blank. Use the Word Bank if needed.</p>
-<div class="wbbox"><div class="wbl">${SVGS.book} WORD BANK</div>${wb}</div>
-<table><tbody>${termRows}</tbody></table>
-<div class="sec" style="margin-top:24px;">${SVGS.magnify} Part 2 &mdash; Matching</div>
-<p style="font-size:12px;color:#666;margin-bottom:10px;">Match each term to its definition. Write the letter in the blank.</p>
-<div style="display:flex;gap:22px;align-items:flex-start;"><table><tbody>${matchL}</tbody></table><ol class="md">${matchR}</ol></div>
-<div class="ak">${SVGS.check}<div><strong>&#10003; Answer Key (Matching):</strong> ${ak}</div></div>
-</div>
-<div class="ftr">&#128218; Made with Live Glossary Pro</div>
-</body></html>`;
-}
-
-function mkQuiz(t, data) {
-  const mcQ = shuf(data).slice(0, Math.min(data.length, 15)).map((item, qi) => {
-    const wrongs = shuf(data.filter(d=>d.term!==item.term)).slice(0,3);
-    const opts   = shuf([item,...wrongs]);
-    const cIdx   = opts.findIndex(o=>o.term===item.term);
-    const ltrs   = ['A','B','C','D'];
-    const oh = opts.map((o,oi)=>
-      `<div class="mo"><span class="ml">${ltrs[oi]}</span>${esc(o.description.length>100?o.description.slice(0,100)+'...':o.description)}</div>`
-    ).join('');
-    return {qi, item, oh, cl:ltrs[cIdx]};
-  });
-  const mData = shuf(data).slice(0, Math.min(data.length, 10));
-  const mDefs = shuf(mData);
-  const matchL = mData.map((d,i)=>`<tr><td class="mn">${i+1}.</td><td class="mt">${esc(d.term)}</td><td class="mb">_____</td></tr>`).join('');
-  const matchR = mDefs.map((d,i)=>`<li>${String.fromCharCode(65+i)}.&nbsp;${esc(d.description.length>80?d.description.slice(0,80)+'...':d.description)}</li>`).join('');
-  const mcKey  = mcQ.map(({qi,cl})=>`Q${qi+1}=${cl}`).join('  ');
-  const mkKey2 = mData.map((d,i)=>{ const li=mDefs.findIndex(x=>x.term===d.term); return `${i+1}=${String.fromCharCode(65+li)}`; }).join('  ');
-  const mcHtml = mcQ.map(({qi,item,oh})=>`<div class="qb"><div class="qn">Q${qi+1}.</div><div class="qt">What is the definition of <strong>${esc(item.term)}</strong>?</div><div class="mo-grid">${oh}</div></div>`).join('');
-
-  // Quiz header icon row
-  const hdrIcons = [SVGS.trophy, SVGS.star, SVGS.bulb, SVGS.pencil, SVGS.check, SVGS.lightning, SVGS.brain, SVGS.flag]
-    .map(s => `<span style="display:inline-block;width:30px;height:30px;">${s}</span>`).join('');
-
-  return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/>
-<title>Vocabulary Quiz</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;font-size:13px;display:flex;flex-direction:column;min-height:100vh;}
-.hdr{background:${t.nav};color:#fff;padding:14px 24px 12px;text-align:center;}
-.hdr-icons{display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
-.hdr-icons svg{width:30px;height:30px;}
-.hdr h1{font-family:Georgia,serif;font-size:24px;font-weight:900;color:#fff;}
-.hdr h1 em{color:${t.accent};}
-.hdr-sub{color:rgba(255,255,255,.45);font-size:11px;margin-top:3px;}
-.nrow{max-width:820px;margin:14px auto 0;padding:0 20px;display:flex;gap:16px;align-items:flex-end;}
-.nf{flex:1;border-bottom:2px solid ${t.accent};padding-bottom:4px;font-size:13px;color:#888;}
-.sb{border:2px solid ${t.accent};border-radius:6px;padding:4px 12px;font-size:13px;color:#888;min-width:110px;text-align:center;}
-.wrap{max-width:820px;margin:12px auto;padding:0 20px 40px;flex:1;}
-.sec{font-family:Georgia,serif;font-size:15px;font-weight:900;color:${t.nav};border-bottom:3px solid ${t.accent};padding-bottom:5px;margin:22px 0 12px;display:flex;align-items:center;gap:8px;}
-.sec svg{width:20px;height:20px;}
-.qb{margin-bottom:14px;padding:12px 15px;background:#fff;border-radius:8px;border-left:3px solid ${t.accent};box-shadow:0 1px 5px rgba(0,0,0,.05);}
-.qn{font-size:10px;font-weight:800;color:${t.accent};letter-spacing:.5px;margin-bottom:3px;}
-.qt{font-size:13px;color:#333;margin-bottom:8px;line-height:1.5;}
-.mo-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
-.mo{font-size:12px;color:#555;line-height:1.5;display:flex;align-items:flex-start;gap:6px;padding:3px 0;}
-.ml{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border:1.5px solid ${t.accent};border-radius:50%;font-size:10px;font-weight:700;color:${t.accent};flex-shrink:0;margin-top:1px;}
-table{width:100%;}
-.mn{width:26px;color:#bbb;font-size:11px;padding:5px 2px;}
-.mt{font-weight:700;padding:5px 8px;color:${t.nav};width:36%;}
-.mb{padding:5px 8px;color:#bbb;letter-spacing:3px;}
-ol.md{list-style:none;font-size:12px;color:#444;line-height:2.1;}
-.ak{background:${t.nav};color:rgba(255,255,255,.6);margin-top:24px;padding:12px 16px;border-radius:8px;font-size:11px;line-height:2;display:flex;align-items:flex-start;gap:10px;}
-.ak svg{width:18px;height:18px;flex-shrink:0;margin-top:2px;}
-.ak strong{color:${t.accent};display:block;margin-bottom:3px;}
-.np{text-align:center;margin:10px 0 14px;}
-.np button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-.ftr{background:${t.nav};color:rgba(255,255,255,.35);text-align:center;padding:14px;font-size:11px;}
-@media print{body{background:#fff;}.hdr,.qb,.ak{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.np{display:none!important;}.wrap{max-width:100%;padding:0 12px;}.qb{break-inside:avoid;}.ftr{display:none!important;}}
-</style></head>
-<body>
-<div class="hdr">
-  <div class="hdr-icons">${hdrIcons}</div>
-  <h1>Vocabulary Quiz <em>&#9734;</em></h1>
-  <div class="hdr-sub">${mcQ.length} multiple choice &nbsp;&middot;&nbsp; ${mData.length} matching</div>
-</div>
-<div class="nrow"><div class="nf">Name: _________________________________</div><div class="nf">Date: _______________</div><div class="sb">Score: _____ / ${mcQ.length + mData.length}</div></div>
-<div class="wrap">
-<div class="np"><button onclick="window.print()">&#128424; Print Quiz</button></div>
-<div class="sec">${SVGS.bulb} Part 1 &mdash; Multiple Choice</div>
-<p style="font-size:12px;color:#666;margin-bottom:12px;">Circle the letter of the best answer.</p>
-${mcHtml}
-<div class="sec">${SVGS.magnify} Part 2 &mdash; Matching</div>
-<p style="font-size:12px;color:#666;margin-bottom:10px;">Match each term to its definition. Write the letter in the blank.</p>
-<div style="display:flex;gap:26px;align-items:flex-start;"><table><tbody>${matchL}</tbody></table><ol class="md">${matchR}</ol></div>
-<div class="ak">${SVGS.check}<div><strong>&#10003; Answer Key &mdash; Multiple Choice:</strong> ${mcKey}<strong style="margin-top:5px;">&#10003; Answer Key &mdash; Matching:</strong> ${mkKey2}</div></div>
-</div>
-<div class="ftr">&#127941; Made with Live Glossary Pro</div>
-</body></html>`;
-}
-
-function mkBingo(t, data) {
-  const makeGrid = () => {
-    const pool = shuf(data); let pi=0;
-    return Array.from({length:5},(_,r)=>Array.from({length:5},(_,c)=>{
-      if(r===2&&c===2) return {term:'FREE',free:true};
-      return pool[pi++%pool.length]||{term:'?',free:false};
-    }));
-  };
-  const COLS=['B','I','N','G','O'];
-  const renderCard=(grid,idx)=>{
-    const icon=svgAt(idx);
-    const rows=grid.map(row=>'<tr>'+row.map(cell=>
-      cell.free
-        ? `<td class="fr"><div class="fsvg">${SVGS.star}</div><div class="fl">FREE</div></td>`
-        : `<td class="bc">${esc(cell.term.length>16?cell.term.slice(0,14)+'...':cell.term)}</td>`
-    ).join('')+'</tr>').join('');
-    return `<div class="card"><div class="ch"><div class="ci">${icon}</div><div class="ct">BINGO</div><div class="cn">Card #${idx+1}</div></div><table class="bt"><thead><tr>${COLS.map(l=>`<th class="bcol">${l}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
-  };
-  const numCards=data.length>=24?Math.min(6,1+Math.floor(data.length/24)):1;
-  const cards=Array.from({length:numCards},(_,i)=>renderCard(makeGrid(),i)).join('');
-  const wall=shuf(data).map((d,i)=>`<div class="wc"><div class="wi">${svgAt(i)}</div><div class="wt">${esc(d.term)}</div><div class="wd">${esc(d.description.length>110?d.description.slice(0,110)+'...':d.description)}</div></div>`).join('');
-
-  // Fun icon row for bingo header
-  const hdrIcons = [SVGS.dice, SVGS.star, SVGS.trophy, SVGS.rocket, SVGS.lightning, SVGS.heart, SVGS.puzzle, SVGS.globe]
-    .map(s => `<span style="display:inline-block;width:30px;height:30px;">${s}</span>`).join('');
-
-  return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/>
-<title>Bingo &amp; Word Wall</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;display:flex;flex-direction:column;min-height:100vh;}
-.hdr{background:${t.nav};color:#fff;padding:14px 24px 12px;text-align:center;}
-.hdr-icons{display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
-.hdr-icons svg{width:30px;height:30px;}
-.hdr h1{font-family:Georgia,serif;font-size:26px;font-weight:900;color:#fff;}
-.hdr h1 em{color:${t.accent};}
-.hdr-sub{color:rgba(255,255,255,.45);font-size:12px;margin-top:4px;}
-.tabs{display:flex;justify-content:center;gap:8px;padding:12px;background:#fff;border-bottom:2px solid #eee;}
-.tab{padding:8px 22px;border-radius:20px;border:2px solid ${t.accent};background:#fff;color:${t.nav};font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
-.tab svg{width:16px;height:16px;}
-.tab.on{background:${t.accent};}
-.np{text-align:center;padding:10px 0;}
-.np button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-#bs{display:block;} #ws{display:none;}
-.cg{max-width:900px;margin:0 auto;padding:16px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(370px,1fr));gap:20px;flex:1;}
-.card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,.1);border:2px solid ${t.accent}33;}
-.ch{background:${t.nav};padding:10px 14px;display:flex;align-items:center;gap:10px;}
-.ci{width:34px;height:34px;flex-shrink:0;} .ci svg{width:100%;height:100%;}
-.ct{font-family:Georgia,serif;font-size:20px;font-weight:900;color:#fff;letter-spacing:5px;flex:1;text-align:center;}
-.cn{font-size:10px;color:rgba(255,255,255,.35);}
-.bt{width:100%;border-collapse:collapse;}
-.bcol{background:${t.accent};color:${t.nav};font-family:Georgia,serif;font-size:16px;font-weight:900;text-align:center;padding:7px 2px;width:20%;}
-.bc{border:1px solid #eee;text-align:center;padding:5px 3px;font-size:10px;font-weight:700;color:${t.nav};height:50px;vertical-align:middle;line-height:1.3;}
-.bc:nth-child(odd){background:#fafaf7;}
-.fr{border:1px solid #eee;text-align:center;padding:4px;background:${t.accentPale};height:50px;vertical-align:middle;}
-.fsvg{width:26px;height:26px;margin:0 auto 1px;} .fsvg svg{width:100%;height:100%;}
-.fl{font-size:8px;font-weight:900;letter-spacing:1px;color:${t.accentDark};}
-.wg{max-width:900px;margin:0 auto;padding:16px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px;}
-.wc{background:#fff;border-radius:10px;padding:14px 12px;text-align:center;border-top:4px solid ${t.accent};box-shadow:0 2px 8px rgba(0,0,0,.07);}
-.wi{width:42px;height:42px;margin:0 auto 7px;} .wi svg{width:100%;height:100%;}
-.wt{font-family:Georgia,serif;font-size:14px;font-weight:900;color:${t.nav};margin-bottom:5px;line-height:1.3;}
-.wd{font-size:11px;color:#666;line-height:1.6;}
-.ftr{background:${t.nav};color:rgba(255,255,255,.35);text-align:center;padding:14px;font-size:11px;}
-@media print{body{background:#fff;}.hdr,.tabs,.np{display:none!important;}#bs,#ws{display:block!important;}.cg,.wg{max-width:100%;padding:0;gap:10px;}.card,.wc{break-inside:avoid;box-shadow:none;}.ch,.bcol,.bc:nth-child(odd),.fr{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.ftr{display:none!important;}}
-</style></head>
-<body>
-<div class="hdr">
-  <div class="hdr-icons">${hdrIcons}</div>
-  <h1>Bingo &amp; Word Wall <em>&#9734;</em></h1>
-  <div class="hdr-sub">${numCards} bingo card${numCards!==1?'s':''} &nbsp;&middot;&nbsp; ${data.length} word wall cards</div>
-</div>
-<div class="tabs">
-  <button class="tab on" onclick="st('b',this)">${SVGS.dice} Bingo Cards</button>
-  <button class="tab" onclick="st('w',this)">${SVGS.book} Word Wall</button>
-</div>
-<div class="np"><button onclick="window.print()">&#128424; Print Current View</button></div>
-<div id="bs"><div class="cg">${cards}</div></div>
-<div id="ws"><div class="wg">${wall}</div></div>
-<div class="ftr">&#127922; Made with Live Glossary Pro</div>
-<script>function st(n,b){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');document.getElementById('bs').style.display=n==='b'?'block':'none';document.getElementById('ws').style.display=n==='w'?'block':'none';}<\/script>
-</body></html>`;
-}
-
-
-// ═══════════════════════════════════════════════════════════════════════════
-// WORD SEARCH GENERATOR
-// ═══════════════════════════════════════════════════════════════════════════
-function mkWordSearch(t, data) {
-  const words = shuf(data).map(d => d.term.toUpperCase().replace(/[^A-Z]/g,''))
-                           .filter(w => w.length >= 3 && w.length <= 20)
-                           .slice(0, 24);
-  const SIZE = Math.max(20, Math.min(26, words.reduce((m,w)=>Math.max(m,w.length),0) + 6));
-  const DIRS = [[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
-  const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
-  const grid = Array.from({length:SIZE}, () => Array(SIZE).fill(''));
-  const placed = [];
-
-  function canPlace(word, r, c, dr, dc) {
-    for (let i = 0; i < word.length; i++) {
-      const nr = r + dr*i, nc = c + dc*i;
-      if (nr < 0 || nr >= SIZE || nc < 0 || nc >= SIZE) return false;
-      if (grid[nr][nc] !== '' && grid[nr][nc] !== word[i]) return false;
-    }
-    return true;
-  }
-  function doPlace(word, r, c, dr, dc) {
-    for (let i = 0; i < word.length; i++) grid[r+dr*i][c+dc*i] = word[i];
-  }
-
-  for (const word of words) {
-    let ok = false;
-    const dirs = shuf(DIRS);
-    const positions = shuf(Array.from({length:SIZE*SIZE},(_,i)=>[Math.floor(i/SIZE),i%SIZE]));
-    for (const [dr,dc] of dirs) {
-      for (const [r,c] of positions) {
-        if (canPlace(word,r,c,dr,dc)) { doPlace(word,r,c,dr,dc); ok=true; break; }
-      }
-      if (ok) break;
-    }
-    if (ok) placed.push(word);
-  }
-
-  for (let r = 0; r < SIZE; r++)
-    for (let c = 0; c < SIZE; c++)
-      if (grid[r][c] === '') grid[r][c] = ALPHA[Math.floor(Math.random()*26)];
-
-  const ansGrid = Array.from({length:SIZE}, () => Array(SIZE).fill(false));
-  for (const word of placed) {
-    outer: for (const [dr,dc] of DIRS) {
-      for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
-        let match=true;
-        for (let i=0;i<word.length;i++) {
-          const nr=r+dr*i,nc=c+dc*i;
-          if (nr<0||nr>=SIZE||nc<0||nc>=SIZE||grid[nr][nc]!==word[i]){match=false;break;}
-        }
-        if (match){for(let i=0;i<word.length;i++) ansGrid[r+dr*i][c+dc*i]=true; continue outer;}
-      }
-    }
-  }
-
-  const gridRows = grid.map((row,r) =>
-    '<tr>'+row.map((cell,c)=>`<td>${cell}</td>`).join('')+'</tr>'
-  ).join('');
-
-  const wordList = placed.map((w,i) => {
-    const orig = data.find(d=>d.term.toUpperCase().replace(/[^A-Z]/g,'')=== w);
-    return `<div class="wli"><div class="wli-icon">${svgAt(i)}</div><span class="wlt">${esc(orig?orig.term:w)}</span></div>`;
-  }).join('');
-
-  const ansRows = grid.map((row,r) =>
-    '<tr>'+row.map((cell,c)=>`<td class="${ansGrid[r][c]?'ah':''}">${cell}</td>`).join('')+'</tr>'
-  ).join('');
-
-  // Header icons for word search
-  const hdrIcons = [SVGS.magnify, SVGS.globe, SVGS.compass, SVGS.brain, SVGS.lightning, SVGS.rocket, SVGS.star, SVGS.bulb]
-    .map(s => `<span style="display:inline-block;width:30px;height:30px;">${s}</span>`).join('');
-
-  return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/>
-<title>Word Search</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;display:flex;flex-direction:column;min-height:100vh;}
-.hdr{background:${t.nav};color:#fff;padding:14px 24px 12px;text-align:center;}
-.hdr-icons{display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
-.hdr-icons svg{width:30px;height:30px;}
-.hdr h1{font-family:Georgia,serif;font-size:26px;font-weight:900;}
-.hdr h1 em{color:${t.accent};}
-.hdr-sub{color:rgba(255,255,255,.45);font-size:12px;margin-top:4px;}
-.np{text-align:center;padding:12px 0 6px;}
-.np button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-.wrap{max-width:900px;margin:0 auto;padding:16px 20px 40px;flex:1;}
-.nrow{display:flex;gap:18px;margin-bottom:16px;}
-.nf{flex:1;border-bottom:2px solid ${t.accent};padding-bottom:4px;font-size:13px;color:#888;}
-.layout{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;}
-.puzzle-wrap{overflow-x:auto;}
-table.grid{border-collapse:collapse;}
-table.grid td{width:24px;height:24px;text-align:center;font-size:12px;font-weight:700;font-family:'Courier New',monospace;color:#222;border:1px solid #ddd;cursor:default;}
-table.grid td.ah{background:${t.accent};color:${t.nav};-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-.wordlist{min-width:170px;}
-.wl-title{font-family:Georgia,serif;font-size:14px;font-weight:900;color:${t.nav};border-bottom:3px solid ${t.accent};padding-bottom:5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-.wl-title svg{width:18px;height:18px;}
-.wli{display:flex;align-items:center;gap:7px;padding:3px 0;font-size:13px;color:#333;}
-.wli-icon{width:20px;height:20px;flex-shrink:0;}
-.wli-icon svg{width:100%;height:100%;}
-.wlt{font-weight:600;}
-.ans-section{margin-top:28px;padding-top:20px;border-top:2px dashed #ddd;}
-.ans-title{font-family:Georgia,serif;font-size:14px;font-weight:900;color:#999;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-.ans-title svg{width:18px;height:18px;}
-.ftr{background:${t.nav};color:rgba(255,255,255,.35);text-align:center;padding:14px;font-size:11px;}
-@media print{
-  body{background:#fff;}.hdr,.np{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .np{display:none!important;}.wrap{max-width:100%;padding:0 10px;}
-  table.grid td{width:20px;height:20px;font-size:10px;}
-  .ans-section{page-break-before:always;}
-  .ftr{display:none!important;}
-}
-</style></head>
-<body>
-<div class="hdr">
-  <div class="hdr-icons">${hdrIcons}</div>
-  <h1>Word Search <em>&#9733;</em></h1>
-  <div class="hdr-sub">${placed.length} hidden words &nbsp;&middot;&nbsp; ${SIZE}&times;${SIZE} grid</div>
-</div>
-<div class="np"><button onclick="window.print()">&#128424; Print Word Search</button></div>
-<div class="wrap">
-  <div class="nrow">
-    <div class="nf">Name: _________________________________</div>
-    <div class="nf">Date: _______________ &nbsp; Class: ___________</div>
-  </div>
-  <div class="layout">
-    <div class="puzzle-wrap"><table class="grid"><tbody>${gridRows}</tbody></table></div>
-    <div class="wordlist">
-      <div class="wl-title">${SVGS.magnify} Find these words</div>
-      ${wordList}
-    </div>
-  </div>
-  <div class="ans-section">
-    <div class="ans-title">${SVGS.check} Answer Key</div>
-    <table class="grid"><tbody>${ansRows}</tbody></table>
-  </div>
-</div>
-<div class="ftr">&#128269; Made with Live Glossary Pro</div>
-</body></html>`;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// CROSSWORD GENERATOR
-// ═══════════════════════════════════════════════════════════════════════════
-function mkCrossword(t, data) {
-  const pool = shuf(data)
-    .filter(d => d.term.replace(/[^A-Za-z]/g,'').length >= 3)
-    .slice(0, 20)
-    .map(d => ({ word: d.term.toUpperCase().replace(/[^A-Z]/g,''), clue: d.description }));
-
-  const SIZE = 22;
-  const grid  = Array.from({length:SIZE}, () => Array(SIZE).fill(null));
-  const placed = [];
-
-  function canPlace(word, r, c, dir) {
-    const dr = dir==='across'?0:1, dc = dir==='across'?1:0;
-    const br=r-dr, bc=c-dc;
-    if (br>=0&&br<SIZE&&bc>=0&&bc<SIZE&&grid[br][bc]!==null) return false;
-    const er=r+dr*word.length, ec=c+dc*word.length;
-    if (er>=0&&er<SIZE&&ec>=0&&ec<SIZE&&grid[er][ec]!==null) return false;
-    let intersects = 0;
-    for (let i=0;i<word.length;i++) {
-      const nr=r+dr*i, nc=c+dc*i;
-      if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) return false;
-      const cell = grid[nr][nc];
-      if (cell===null) {
-        const pr=nr+(dir==='across'?1:0), pc=nc+(dir==='across'?0:1);
-        const qr=nr-(dir==='across'?1:0), qc=nc-(dir==='across'?0:1);
-        if ((pr<SIZE&&pr>=0&&qc<SIZE&&pc>=0&&grid[pr][pc]!==null)||
-            (qr>=0&&qr<SIZE&&qc>=0&&qc<SIZE&&grid[qr][qc]!==null)) return false;
-      } else if (cell===word[i]) {
-        intersects++;
-      } else return false;
-    }
-    return placed.length===0 || intersects>0;
-  }
-
-  function doPlace(word, r, c, dir) {
-    const dr=dir==='across'?0:1, dc=dir==='across'?1:0;
-    for (let i=0;i<word.length;i++) grid[r+dr*i][c+dc*i]=word[i];
-  }
-
-  if (pool.length > 0) {
-    const w = pool[0];
-    const r = Math.floor(SIZE/2), c = Math.floor((SIZE-w.word.length)/2);
-    doPlace(w.word, r, c, 'across');
-    placed.push({...w, r, c, dir:'across', num:1});
-  }
-
-  for (let pi=1; pi<pool.length; pi++) {
-    const {word, clue} = pool[pi];
-    let best = null;
-    for (const p of placed) {
-      const pdr=p.dir==='across'?0:1, pdc=p.dir==='across'?1:0;
-      const newDir = p.dir==='across'?'down':'across';
-      const ndr=newDir==='across'?0:1, ndc=newDir==='across'?1:0;
-      for (let pi2=0;pi2<p.word.length;pi2++) {
-        const ch = p.word[pi2];
-        for (let wi=0;wi<word.length;wi++) {
-          if (word[wi]!==ch) continue;
-          const r = p.r+pdr*pi2 - ndr*wi;
-          const c = p.c+pdc*pi2 - ndc*wi;
-          if (canPlace(word,r,c,newDir)) {
-            const score = placed.filter(pp=>{
-              const pdr2=pp.dir==='across'?0:1,pdc2=pp.dir==='across'?1:0;
-              for(let i=0;i<word.length;i++){const nr=r+ndr*i,nc=c+ndc*i;for(let j=0;j<pp.word.length;j++) if(nr===pp.r+pdr2*j&&nc===pp.c+pdc2*j) return true;} return false;
-            }).length;
-            if (!best || score > best.score) best={r,c,dir:newDir,score};
-          }
-        }
-      }
-    }
-    if (best) {
-      doPlace(word, best.r, best.c, best.dir);
-      placed.push({word, clue, r:best.r, c:best.c, dir:best.dir, num:placed.length+1});
-    }
-  }
-
-  if (placed.length === 0) return `<!DOCTYPE html><html><body><p>Could not build crossword — try more terms.</p></body></html>`;
-
-  let minR=SIZE,maxR=0,minC=SIZE,maxC=0;
-  for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) if (grid[r][c]!==null){minR=Math.min(minR,r);maxR=Math.max(maxR,r);minC=Math.min(minC,c);maxC=Math.max(maxC,c);}
-  const PAD=1;
-  minR=Math.max(0,minR-PAD); maxR=Math.min(SIZE-1,maxR+PAD);
-  minC=Math.max(0,minC-PAD); maxC=Math.min(SIZE-1,maxC+PAD);
-
-  const nums = {};
-  for (const p of placed) nums[`${p.r},${p.c}`] = p.num;
-
-  const puzzleRows = [];
-  for (let r=minR;r<=maxR;r++) {
-    let row = '<tr>';
-    for (let c=minC;c<=maxC;c++) {
-      const cell=grid[r][c];
-      const num=nums[`${r},${c}`]||'';
-      if (cell===null) row+=`<td class="blk"></td>`;
-      else row+=`<td class="cel">${num?`<span class="cn">${num}</span>`:''}<span class="cl"></span></td>`;
-    }
-    row+='</tr>';
-    puzzleRows.push(row);
-  }
-
-  const answerRows = [];
-  for (let r=minR;r<=maxR;r++) {
-    let row = '<tr>';
-    for (let c=minC;c<=maxC;c++) {
-      const cell=grid[r][c];
-      const num=nums[`${r},${c}`]||'';
-      if (cell===null) row+=`<td class="blk"></td>`;
-      else row+=`<td class="cel afill">${num?`<span class="cn">${num}</span>`:''}<span class="cl">${cell}</span></td>`;
-    }
-    row+='</tr>';
-    answerRows.push(row);
-  }
-
-  const across = placed.filter(p=>p.dir==='across').sort((a,b)=>a.num-b.num);
-  const down   = placed.filter(p=>p.dir==='down'  ).sort((a,b)=>a.num-b.num);
-  const acrossHtml = across.map(p=>`<div class="cli"><span class="cnum">${p.num}.</span><span class="ctxt">${esc(p.clue)}</span></div>`).join('');
-  const downHtml   = down  .map(p=>`<div class="cli"><span class="cnum">${p.num}.</span><span class="ctxt">${esc(p.clue)}</span></div>`).join('');
-
-  // Header icons for crossword
-  const hdrIcons = [SVGS.pencil, SVGS.bulb, SVGS.puzzle, SVGS.brain, SVGS.star, SVGS.compass, SVGS.note, SVGS.trophy]
-    .map(s => `<span style="display:inline-block;width:30px;height:30px;">${s}</span>`).join('');
-
-  return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/>
-<title>Crossword Puzzle</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;font-size:13px;display:flex;flex-direction:column;min-height:100vh;}
-.hdr{background:${t.nav};color:#fff;padding:14px 24px 12px;text-align:center;}
-.hdr-icons{display:flex;justify-content:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
-.hdr-icons svg{width:30px;height:30px;}
-.hdr h1{font-family:Georgia,serif;font-size:26px;font-weight:900;}
-.hdr h1 em{color:${t.accent};}
-.hdr-sub{color:rgba(255,255,255,.45);font-size:12px;margin-top:4px;}
-.np{text-align:center;padding:12px 0 6px;}
-.np button{background:${t.accent};color:${t.nav};border:none;padding:9px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-.wrap{max-width:960px;margin:0 auto;padding:16px 20px 40px;flex:1;}
-.nrow{display:flex;gap:18px;margin-bottom:16px;}
-.nf{flex:1;border-bottom:2px solid ${t.accent};padding-bottom:4px;font-size:13px;color:#888;}
-.layout{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;}
-.puzzle-wrap{overflow-x:auto;}
-table.cw{border-collapse:collapse;}
-table.cw td{width:28px;height:28px;padding:0;position:relative;}
-table.cw td.blk{background:#222;}
-table.cw td.cel{border:1.5px solid #333;background:#fff;vertical-align:bottom;text-align:center;}
-table.cw td.afill{background:${t.accentPale};}
-.cn{position:absolute;top:1px;left:2px;font-size:7px;font-weight:900;color:#333;line-height:1;}
-.cl{display:block;font-size:13px;font-weight:700;text-align:center;line-height:28px;color:#111;}
-.clues{min-width:220px;max-width:320px;}
-.clue-sec{margin-bottom:18px;}
-.clue-hdr{font-family:Georgia,serif;font-size:14px;font-weight:900;color:${t.nav};border-bottom:3px solid ${t.accent};padding-bottom:4px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
-.clue-hdr svg{width:16px;height:16px;}
-.cli{display:flex;gap:6px;margin-bottom:5px;line-height:1.5;}
-.cnum{font-weight:800;color:${t.accent};min-width:22px;flex-shrink:0;}
-.ctxt{font-size:12px;color:#444;}
-.ans-section{margin-top:28px;padding-top:20px;border-top:2px dashed #ddd;}
-.ans-title{font-family:Georgia,serif;font-size:14px;font-weight:900;color:#999;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-.ans-title svg{width:16px;height:16px;}
-.ftr{background:${t.nav};color:rgba(255,255,255,.35);text-align:center;padding:14px;font-size:11px;}
-@media print{
-  body{background:#fff;}.hdr,.np{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .np{display:none!important;}.wrap{padding:0 10px;}
-  table.cw td{width:24px;height:24px;}
-  .cl{font-size:11px;line-height:24px;}
-  .ans-section{page-break-before:always;}
-  table.cw td.blk,.afill{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .ftr{display:none!important;}
-}
-</style></head>
-<body>
-<div class="hdr">
-  <div class="hdr-icons">${hdrIcons}</div>
-  <h1>Crossword Puzzle <em>&#9733;</em></h1>
-  <div class="hdr-sub">${placed.length} words &nbsp;&middot;&nbsp; ${across.length} across &nbsp;&middot;&nbsp; ${down.length} down</div>
-</div>
-<div class="np"><button onclick="window.print()">&#128424; Print Crossword</button></div>
-<div class="wrap">
-  <div class="nrow">
-    <div class="nf">Name: _________________________________</div>
-    <div class="nf">Date: _______________ &nbsp; Class: ___________</div>
-  </div>
-  <div class="layout">
-    <div class="puzzle-wrap"><table class="cw"><tbody>${puzzleRows.join('')}</tbody></table></div>
-    <div class="clues">
-      <div class="clue-sec"><div class="clue-hdr">${SVGS.ruler} Across</div>${acrossHtml}</div>
-      <div class="clue-sec"><div class="clue-hdr">${SVGS.pencil} Down</div>${downHtml}</div>
-    </div>
-  </div>
-  <div class="ans-section">
-    <div class="ans-title">${SVGS.check} Answer Key</div>
-    <table class="cw"><tbody>${answerRows.join('')}</tbody></table>
-  </div>
-</div>
-<div class="ftr">&#9632; Made with Live Glossary Pro</div>
-</body></html>`;
-}
-
-
-function StepExport({ terms, onBack, onExpire }) {
+// onClear: wipes the word list and returns to the start (the "Clear my data" button).
+function StepExport({ terms, onBack, onClear }) {
   const [theme, setTheme]           = useState({ ...THEMES[0] });
   const [custom, setCustom]         = useState({ ...THEMES[0] });
   const [activePreset, setPreset]   = useState(0);
   const [generating, setGenerating] = useState(false);
   const [htmlReady, setHtmlReady]   = useState(null);
   const [filterLetter, setFilter]   = useState(null);
-
-  const expiryRef   = useRef(Date.now() + EXPIRY_MS);
-  const [secsLeft, setSecsLeft] = useState(EXPIRY_MINUTES * 60);
-  const expired = secsLeft <= 0;
-
-  useEffect(() => {
-    const tick = setInterval(() => {
-      const remaining = Math.max(0, Math.round((expiryRef.current - Date.now()) / 1000));
-      setSecsLeft(remaining);
-      if (remaining <= 0) {
-        clearInterval(tick);
-        setHtmlReady(null);
-        onExpire();
-      }
-    }, 1000);
-    return () => clearInterval(tick);
-  }, []);
-
-  const fmtTime = (s) => {
-    const m = Math.floor(s / 60), sec = s % 60;
-    return `${m}:${String(sec).padStart(2, "0")}`;
-  };
-
-  const urgency   = secsLeft < 120 ? "danger" : secsLeft < 300 ? "warn" : "info";
-  const urgencyBg = { info:"#E3F2FD", warn:"#FFF8E1", danger:"#FDECEA" };
-  const urgencyFg = { info:"#1565C0", warn:"#E67E22", danger:"#C0392B" };
 
   const applyPreset = (i) => { setTheme({ ...THEMES[i] }); setCustom({ ...THEMES[i] }); setPreset(i); setHtmlReady(null); };
   const updateColor = (key, val) => {
@@ -1459,86 +842,131 @@ function StepExport({ terms, onBack, onExpire }) {
   const [activeFormat, setFmt]  = useState("glossary");
   const [readyLabel,   setRLbl] = useState("Glossary");
 
-  const generate = () => {
-    setGenerating(true);
+  // Worksheet options shown under the format cards. They're all kept in ONE
+  // object so adding a new option only means: add a default here, add an
+  // input below, and read it in src/worksheets/generators.js.
+  const [wsOpts, setWsOpts] = useState({
+    topic: "",          // optional line above the title, e.g. "Unit 3 Science"
+    bingoCards: 10,     // Bingo: how many different cards (1–40)
+    versions: 1,        // Quiz: 1–4 versions (A, B, C, D) with shuffled order
+    wsLevel: "medium",  // Word search: "easy" | "medium" | "hard"
+    frayerPerPage: 2,   // Frayer model: 1 or 2 per page
+    footerText: "",     // all formats: teacher's own footer, e.g. "© Ms. Rivera 2026"
+    credit: true,       // all formats: include "Made with Live Glossary Pro"
+  });
+  // Change one option. Clearing htmlReady hides the old preview, so nobody
+  // downloads a file that doesn't match the options on screen.
+  const setOpt = (key, value) => { setWsOpts(o => ({ ...o, [key]: value })); setHtmlReady(null); };
+  const [genError,   setGenError]   = useState(null);
+
+  // ── Building files ─────────────────────────────────────────────────────
+  // buildFile(id) returns the finished HTML text for one format, using the
+  // current colours, word list and options. Shared by Generate and Download all.
+  const buildFile = async (formatId) => {
     const t    = sanitizeTheme(theme);
-    const data = terms.map(({ term, description }) => ({
+    // Clean copy of the word list, with length limits so a huge cell can't break a page.
+    const data = terms.map(({ term, description, icon }) => ({
       term:        String(term       ||'').slice(0, 500),
       description: String(description||'').slice(0, 5000),
+      icon:        icon ? String(icon).slice(0, 40) : undefined,
     })).filter(d => d.term && d.description);
-    let html;
-    if      (activeFormat === "flashcards") html = mkFlashCards(t, data);
-    else if (activeFormat === "studysheet") html = mkStudySheet(t, data);
-    else if (activeFormat === "quiz")       html = mkQuiz(t, data);
-    else if (activeFormat === "bingo")      html = mkBingo(t, data);
-    else if (activeFormat === "wordsearch") html = mkWordSearch(t, data);
-    else if (activeFormat === "crossword")  html = mkCrossword(t, data);
-    else                                    html = mkGlossary(t, data);
-    setRLbl({"glossary":"Glossary","flashcards":"Flash Cards","studysheet":"Study Sheet","quiz":"Quiz","bingo":"Bingo & Word Wall","wordsearch":"Word Search","crossword":"Crossword"}[activeFormat]||"File");
-    setHtmlReady(html);
+    if (formatId === "glossary") return mkGlossary(t, data, wsOpts);
+    // Printable worksheets live in src/worksheets/. import() loads that code
+    // only the first time it's needed, so the app itself starts faster.
+    const { buildWorksheet } = await import("./worksheets/index.js");
+    return buildWorksheet(formatId, t, data, wsOpts);
+  };
+
+  // Today's date as "2026-10-22" in the teacher's own time zone.
+  // (toISOString() would use UTC, which is already "tomorrow" on a US evening.)
+  const today = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
+  // Hand a Blob to the browser as a download with the given file name.
+  const saveBlob = (blob, filename) => {
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  };
+
+  // "Generate" button: build the selected format and show the preview.
+  const generate = async () => {
+    setGenerating(true);
+    setGenError(null);
+    try {
+      const html = await buildFile(activeFormat);
+      setRLbl(formatById(activeFormat).label);
+      setHtmlReady(html);
+    } catch (err) {
+      console.error(err);
+      setGenError("Something went wrong building that file. Please try again — if it keeps happening, try a different format.");
+    }
     setGenerating(false);
   };
 
+  // "Download" button: save the previewed file. The preview stays open, so the
+  // teacher can download it again or switch to another format straight away.
   const download = () => {
     if (!htmlReady) return;
-    const blob = new Blob([htmlReady], { type:"text/html" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    const slug = {"glossary":"glossary","flashcards":"flashcards","studysheet":"study-sheet","quiz":"quiz","bingo":"bingo-wordwall","wordsearch":"word-search","crossword":"crossword"}[activeFormat]||"glossary";
-    a.href = url; a.download = `${slug}-${new Date().toISOString().split("T")[0]}.html`;
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(url);
-    setHtmlReady(null);
+    saveBlob(new Blob([htmlReady], { type:"text/html" }), `${formatById(activeFormat).slug}-${today()}.html`);
   };
 
-  if (expired) {
-    return (
-      <div className="main" style={{ textAlign:"center", padding:"60px 24px" }}>
-        <div style={{ fontSize:56, marginBottom:16 }}>⏱</div>
-        <h2 style={{ fontFamily:"Georgia,serif", fontSize:26, marginBottom:12, color:"#C0392B" }}>Session Expired</h2>
-        <p style={{ color:"var(--mid)", fontSize:15, maxWidth:420, margin:"0 auto 28px" }}>
-          For your privacy, your uploaded data has been automatically cleared after {EXPIRY_MINUTES} minutes.
-          Your CSV was never stored on our servers — it only ever existed in your browser.
-        </p>
-        <button className="btn btn-primary" onClick={onBack}>← Start Over with a New File</button>
-      </div>
-    );
-  }
+  // "Download all formats" button: build every format and pack them into one .zip.
+  // zipProgress holds e.g. "3 / 8" while it works, so the button can show progress.
+  const [zipProgress, setZipProgress] = useState(null);
+  const downloadAll = async () => {
+    setGenError(null);
+    try {
+      const { makeZip } = await import("./zip.js");
+      // Folder name inside the zip, e.g. "unit-3-science-2026-10-22"
+      const folder = `${(wsOpts.topic || "vocabulary").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "vocabulary"}-${today()}`;
+      const files = [];
+      for (let i = 0; i < FORMATS.length; i++) {
+        const f = FORMATS[i];
+        setZipProgress(`${i + 1} / ${FORMATS.length}`);
+        await new Promise(r => setTimeout(r, 0));          // let the screen update between files
+        files.push({ name: `${folder}/${String(i + 1).padStart(2, "0")}-${f.slug}.html`, content: await buildFile(f.id) });
+      }
+      files.push({ name: `${folder}/README.txt`, content: ZIP_README });
+      saveBlob(await makeZip(files), `${folder}.zip`);
+    } catch (err) {
+      console.error(err);
+      setGenError("Couldn't build the ZIP. Please try again, or download formats one at a time.");
+    }
+    setZipProgress(null);
+  };
 
   return (
     <div className="main" id="step3-top">
       <div className="section-title">Choose Style & Download</div>
       <p className="section-sub">{terms.length} terms ready. Pick a color scheme, preview live, then download your glossary.</p>
 
-      {/* SESSION TIMER */}
-      <div style={{
-        display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10,
-        padding:"12px 18px", borderRadius:10, marginBottom:20,
-        background: urgencyBg[urgency],
-        border:`1.5px solid ${urgencyFg[urgency]}22`
-      }}>
+      {/* PRIVACY NOTE
+          The word list only ever lives in this browser tab's memory: it is never
+          uploaded or saved. (This replaced the old 30-minute countdown, which
+          rushed teachers without adding any real protection.) */}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10,
+        padding:"12px 18px", borderRadius:10, marginBottom:20, background:"#E8F5EE", border:"1.5px solid #2D7A4F22" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <span style={{ fontSize:20 }}>{urgency === "danger" ? "🚨" : urgency === "warn" ? "⚠️" : "🕐"}</span>
-          <div>
-            <div style={{ fontWeight:700, fontSize:14, color: urgencyFg[urgency] }}>
-              {urgency === "danger" ? "Download now — time almost up!" : urgency === "warn" ? "Less than 5 minutes remaining" : "Session timer running"}
-            </div>
-            <div style={{ fontSize:12, color:"#666", marginTop:2 }}>
-              Your uploaded data is held in browser memory only. It will be automatically cleared in{" "}
-              <strong style={{ color: urgencyFg[urgency] }}>{fmtTime(secsLeft)}</strong> for your privacy.
-              Download your glossary before time runs out.
-            </div>
+          <span style={{ fontSize:20 }}>🔒</span>
+          <div style={{ fontSize:13, color:"#2D4A3A" }}>
+            <strong>Your word list stays on this device.</strong> Nothing is uploaded or stored —
+            it disappears when you close this tab. Take your time.
           </div>
         </div>
-        <div style={{ fontSize:32, fontWeight:900, fontFamily:"monospace", color: urgencyFg[urgency], letterSpacing:2, flexShrink:0 }}>
-          {fmtTime(secsLeft)}
-        </div>
+        <button className="btn btn-ghost" style={{ padding:"7px 14px", fontSize:13, background:"#fff" }} onClick={onClear}>
+          Clear my data &amp; start over
+        </button>
       </div>
 
       <div className="stats-row">
         <div className="stat-box"><span className="stat-box-num">{terms.length}</span><span className="stat-box-label">Terms</span></div>
         <div className="stat-box"><span className="stat-box-num">{new Set(terms.map(t => t.term[0].toUpperCase())).size}</span><span className="stat-box-label">Letters</span></div>
-        <div className="stat-box"><span className="stat-box-num">{EXPIRY_MINUTES}m</span><span className="stat-box-label">Time Limit</span></div>
+        <div className="stat-box"><span className="stat-box-num">{FORMATS.length}</span><span className="stat-box-label">Formats</span></div>
       </div>
 
       <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:20 }}>
@@ -1670,15 +1098,7 @@ function StepExport({ terms, onBack, onExpire }) {
           Your data is <strong>never stored on our servers</strong>.
         </p>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(195px,1fr))", gap:10, marginBottom:20 }}>
-          {[
-            { id:"glossary",   icon:"📖", label:"Glossary",         desc:"Searchable A–Z reference, add / edit / delete, download updated file" },
-            { id:"flashcards", icon:"🃏", label:"Flash Cards",       desc:"Print, cut & fold — term front, definition back, with clipart" },
-            { id:"studysheet", icon:"✏️",  label:"Study Sheet",       desc:"Fill-in-the-blank + matching section with answer key" },
-            { id:"quiz",       icon:"📝", label:"Quiz Sheet",        desc:"Auto-generated multiple choice + matching with full answer key" },
-            { id:"bingo",      icon:"🎲", label:"Bingo & Word Wall", desc:"Up to 6 unique bingo cards + printable word wall with clipart" },
-            { id:"wordsearch", icon:"🔍", label:"Word Search",       desc:"Hidden-word puzzle with answer key — up to 24 terms in a letter grid" },
-            { id:"crossword",  icon:"⬛", label:"Crossword",         desc:"Auto-placed crossword with across/down clues and answer key" },
-          ].map(f => (
+          {FORMATS.map(f => (
             <div key={f.id}
               onClick={() => { setFmt(f.id); setHtmlReady(null); }}
               style={{ padding:"14px 15px", borderRadius:10, cursor:"pointer", transition:"all .15s",
@@ -1692,32 +1112,97 @@ function StepExport({ terms, onBack, onExpire }) {
           ))}
         </div>
 
+        {activeFormat !== "glossary" && (
+          <div style={{ display:"flex", gap:16, flexWrap:"wrap", alignItems:"flex-end", marginBottom:16 }}>
+            <label style={{ flex:"1 1 260px" }}>
+              <span className="form-label">Worksheet topic (optional)</span>
+              <input value={wsOpts.topic} maxLength={60} onChange={e => setOpt("topic", e.target.value)}
+                placeholder="e.g. Unit 3 Science Vocabulary"
+                style={{ width:"100%", padding:"9px 14px", border:"1.5px solid #E0E0DA", borderRadius:"var(--r)", fontFamily:"'DM Sans',sans-serif", fontSize:14 }} />
+            </label>
+            {activeFormat === "bingo" && (
+              <label>
+                <span className="form-label">Bingo cards</span>
+                <input type="number" min={1} max={40} value={wsOpts.bingoCards}
+                  onChange={e => setOpt("bingoCards", Math.max(1, Math.min(40, parseInt(e.target.value, 10) || 1)))}
+                  style={{ width:90, padding:"9px 12px", border:"1.5px solid #E0E0DA", borderRadius:"var(--r)", fontSize:14 }} />
+              </label>
+            )}
+            {activeFormat === "wordsearch" && (
+              <label>
+                <span className="form-label">Difficulty</span>
+                <select className="form-select" value={wsOpts.wsLevel} onChange={e => setOpt("wsLevel", e.target.value)}>
+                  <option value="easy">Easy — across &amp; down</option>
+                  <option value="medium">Medium — adds diagonals</option>
+                  <option value="hard">Challenge — adds backwards</option>
+                </select>
+              </label>
+            )}
+            {activeFormat === "frayer" && (
+              <label>
+                <span className="form-label">Per page</span>
+                <select className="form-select" value={wsOpts.frayerPerPage} onChange={e => setOpt("frayerPerPage", +e.target.value)}>
+                  <option value={1}>1 per page — more writing room</option>
+                  <option value={2}>2 per page — saves paper</option>
+                </select>
+              </label>
+            )}
+            {activeFormat === "quiz" && (
+              <label>
+                <span className="form-label">Versions</span>
+                {/* Same questions in a different order per version – stops copying */}
+                <select className="form-select" value={wsOpts.versions} onChange={e => setOpt("versions", +e.target.value)}>
+                  <option value={1}>1 version</option>
+                  <option value={2}>2 versions (A, B)</option>
+                  <option value={3}>3 versions (A–C)</option>
+                  <option value={4}>4 versions (A–D)</option>
+                </select>
+              </label>
+            )}
+          </div>
+        )}
+
+        {/* Footer options – apply to every format, including the Glossary */}
+        <div style={{ display:"flex", gap:16, flexWrap:"wrap", alignItems:"flex-end", marginBottom:16 }}>
+          <label style={{ flex:"1 1 260px" }}>
+            <span className="form-label">Your footer text (optional)</span>
+            <input value={wsOpts.footerText} maxLength={80} onChange={e => setOpt("footerText", e.target.value)}
+              placeholder="e.g. © Ms. Rivera 2026 · Room 12"
+              style={{ width:"100%", padding:"9px 14px", border:"1.5px solid #E0E0DA", borderRadius:"var(--r)", fontFamily:"'DM Sans',sans-serif", fontSize:14 }} />
+          </label>
+          <label style={{ display:"flex", alignItems:"center", gap:8, fontSize:13, paddingBottom:10, cursor:"pointer" }}>
+            <input type="checkbox" checked={wsOpts.credit} onChange={e => setOpt("credit", e.target.checked)} />
+            Include “Made with Live Glossary Pro”
+          </label>
+        </div>
+
         {activeFormat === "bingo" && terms.length < 24 && (
           <div style={{ padding:"10px 14px", borderRadius:8, marginBottom:14,
             background:"#FFF8E1", border:"1.5px solid #FFB30044", fontSize:13, color:"#7A5200" }}>
-            ⚠️ Bingo works best with 24+ terms ({terms.length} loaded). One card will still be generated — add more terms for multiple unique cards.
+            ⚠️ A full 5×5 bingo card needs 24+ terms ({terms.length} loaded). {terms.length >= 16 ? "Cards will be 4×4." : terms.length >= 8 ? "Cards will be 3×3." : "Add at least 8 terms to make bingo cards."}
           </div>
         )}
 
-        {urgency !== "info" && (
-          <div style={{ padding:"10px 14px", borderRadius:8, marginBottom:14,
-            background: urgencyBg[urgency], border:`1.5px solid ${urgencyFg[urgency]}44`,
-            fontSize:13, fontWeight:600, color: urgencyFg[urgency] }}>
-            {urgency === "danger" ? "🚨" : "⚠️"} Only <strong>{fmtTime(secsLeft)}</strong> left — download before your session clears.
-          </div>
-        )}
+        {genError && <Alert type="error">{genError}</Alert>}
+
 
         <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-          <button className="btn btn-primary" onClick={generate} disabled={generating || expired}>
-            {generating ? <><Spinner/> Generating…</> : `⚙ Generate ${{"glossary":"📖 Glossary","flashcards":"🃏 Flash Cards","studysheet":"✏️ Study Sheet","quiz":"📝 Quiz","bingo":"🎲 Bingo & Word Wall","wordsearch":"🔍 Word Search","crossword":"⬛ Crossword"}[activeFormat]}`}
+          <button className="btn btn-primary" onClick={generate} disabled={generating}>
+            {generating ? <><Spinner/> Generating…</> : `⚙ Generate ${formatById(activeFormat).icon} ${formatById(activeFormat).label}`}
           </button>
-          {htmlReady && <button className="btn btn-secondary" onClick={download}>⬇ Download {readyLabel} & Clear</button>}
+          {htmlReady && <button className="btn btn-secondary" onClick={download}>⬇ Download {readyLabel}</button>}
+          <button className="btn btn-ghost" onClick={downloadAll} disabled={!!zipProgress || generating}
+            title="Every format with your current colours and options, in one .zip">
+            {zipProgress ? <><Spinner/> Building {zipProgress}…</> : `📦 Download all ${FORMATS.length} formats (.zip)`}
+          </button>
           <button className="btn btn-ghost" onClick={onBack}>← Back</button>
         </div>
 
         {htmlReady && (
           <div className="fade-in" style={{ marginTop:14 }}>
-            <Alert type="success">✓ {readyLabel} ready — {Math.round(htmlReady.length / 1024)} KB · {terms.length} terms</Alert>
+            <Alert type="success">✓ {readyLabel} ready — {Math.round(htmlReady.length / 1024)} KB · {terms.length} terms. Check the preview below, then download.</Alert>
+            {/* Live preview of the exact file that will be downloaded */}
+            <PreviewFrame html={htmlReady} label={readyLabel} />
           </div>
         )}
       </div>
@@ -1785,7 +1270,8 @@ export default function App() {
     else { setFile(null); setTerms(null); setStep(1); window.scrollTo(0,0); }
   };
 
-  const handleExpire = () => {
+  // "Clear my data & start over": forget the file and word list, back to step 1.
+  const handleClear = () => {
     setFile(null); setTerms(null); setStep(1); window.scrollTo(0,0);
   };
 
@@ -1805,7 +1291,7 @@ export default function App() {
 
       {step === 1 && <StepLanding onUpload={handleUpload} />}
       {step === 2 && <StepProcess file={file} onDone={handleProcessed} onBack={() => handleBack()} />}
-      {step === 3 && <StepTerms terms={terms} onBack={() => handleBack()} onExpire={handleExpire} />}
+      {step === 3 && <StepTerms terms={terms} onBack={() => handleBack()} onClear={handleClear} />}
 
       <div className="footer">
         <strong>Live Glossary Pro</strong> · Upload CSV · Style · Download · No data stored
