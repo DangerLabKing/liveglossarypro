@@ -34,8 +34,8 @@
     # - default-src self only
     # - scripts: self + inline (React needs inline for hydration) + blob: (for generated file downloads)
     # - styles: self + unsafe-inline (CSS-in-JS via buildStyles()) + Google Fonts
-    # - fonts: Google Fonts CDN
+    # - fonts: Google Fonts CDN + data: (fonts embedded in worksheet previews)
     # - img: self + data: (base64 logo) + blob: (generated files)
     # - connect: self only (no external API calls)
     # - frame/object/base: all denied
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';"

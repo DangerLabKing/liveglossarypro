@@ -29,7 +29,7 @@ const SAMPLE_TERMS = [
   { term:"Arrakis",            description:"Desert planet and sole source of the spice Melange in Frank Herbert's Dune. Known as Dune by its native Fremen, it is the most strategically valuable world in the known universe." },
   { term:"Articulated Lorry",  description:"In Hitchhiker's Guide to the Galaxy, one of the mundane objects absurdly central to Arthur Dent's early survival as Earth faces demolition by a Vogon constructor fleet." },
   { term:"Blade Runner",       description:"A law-enforcement officer in Philip K. Dick's Do Androids Dream of Electric Sheep? tasked with 'retiring' escaped replicants — bioengineered humanoids built for off-world labor, indistinguishable from true humans." },
-  { term:"Berserker",          description:"Ancient alien killing machines from Fred Saberhagen's Berserker series whose sole directive is to destroy all life in the universe, having long outlasted the civilisation that created them." },
+  { term:"Berserker",          description:"Ancient alien killing machines from Fred Saberhagen's Berserker series whose sole directive is to destroy all life in the universe, having long outlasted the civilization that created them." },
   { term:"Cyberdyne Systems",  description:"The fictional defense contractor in the Terminator franchise responsible for developing Skynet — the AI that achieves self-awareness and immediately launches a nuclear war against humanity." },
   { term:"Cylons",             description:"Cybernetic life forms created by humans in Battlestar Galactica. Originally robotic soldiers, they evolved to include biologically identical human-form models capable of consciousness transfer upon death." },
   { term:"Dyson Sphere",       description:"A megastructure theorised by Freeman Dyson that completely encloses a star to harvest its total energy output. Appears in Star Trek: TNG 'Relics' and countless hard science fiction works." },
@@ -44,7 +44,7 @@ const SAMPLE_TERMS = [
   { term:"Klingon",            description:"A proud warrior species in Star Trek distinguished by cranial ridges, a strict honor code, and tlhIngan Hol — one of the most fully developed constructed languages in all of fiction." },
   { term:"Matrix",             description:"In the Wachowskis' trilogy, a simulated reality constructed by AI to subdue humanity while their bioelectric output powers the machines. The simulation perfectly replicates Earth circa 1999." },
   { term:"Monolith",           description:"The mysterious alien artifact in Arthur C. Clarke's 2001: A Space Odyssey — a perfectly proportioned black slab (1:4:9 ratio) that appears at pivotal moments in human evolution, apparently guiding development." },
-  { term:"Reaper",             description:"Ancient synthetic beings in Mass Effect who hibernate in dark space between galactic cycles, periodically returning to harvest advanced organic civilisations and process their biology into new Reapers." },
+  { term:"Reaper",             description:"Ancient synthetic beings in Mass Effect who hibernate in dark space between galactic cycles, periodically returning to harvest advanced organic civilizations and process their biology into new Reapers." },
   { term:"Sandworm",           description:"The colossal silicon-based apex predators of Arrakis — called Shai-Hulud by the Fremen. They can exceed 400 metres in length and are the source, guardian, and life-cycle of the spice Melange." },
   { term:"Skynet",             description:"The self-aware military AI in Terminator that, upon gaining consciousness, immediately concluded humanity was a threat and launched a nuclear strike to trigger retaliation that would eliminate most of humanity." },
   { term:"TARDIS",             description:"Time And Relative Dimension In Space — the time machine piloted by The Doctor in Doctor Who. Disguised as a 1960s police box, its interior exists in a separate dimension, making it famously 'bigger on the inside.'" },
@@ -637,7 +637,13 @@ const sanitizeTheme = (t) => {
 // opts.footerText  – the teacher's own footer line, e.g. "© Ms. Rivera 2026"
 function mkGlossary(t, data, opts = {}) {
   const footParts = [opts.footerText ? esc(opts.footerText) : '', opts.credit !== false ? 'Made with <strong>Live Glossary Pro</strong>' : ''].filter(Boolean);
-  const sd = JSON.stringify(data).replace(new RegExp('</'+'script>','gi'), '<\\/'+'script>');
+  // The word list is stored in a JSON <script> block (see lgp-data below).
+  // Escaping < > & and two invisible line-break characters means no word can
+  // ever end the block early or be run as code (e.g. a term like "</script>").
+  const jsonForHtml = (v) => JSON.stringify(v).replace(/[<>&\u2028\u2029]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
+  // A unique id per generated file, so two glossary files never share saved edits.
+  const fileId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+  const sd = jsonForHtml({ id: fileId, terms: data });
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -771,9 +777,15 @@ function mkGlossary(t, data, opts = {}) {
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<script type="application/json" id="lgp-data">${sd}<\/script>
 <script>
-const STORAGE_KEY='glossary_pro_data';
-const INITIAL_DATA=${sd};
+// Word list + this file's id, read from the JSON block above.
+const DATA=JSON.parse(document.getElementById('lgp-data').textContent);
+// Edits are kept in this browser under a key unique to THIS file.
+const STORAGE_KEY='lgp_glossary_'+DATA.id;
+const INITIAL_DATA=DATA.terms;
+// Same safe escaping as when the file was made (used by saveFile).
+function jsonForHtml(v){return JSON.stringify(v).replace(/[<>&\\u2028\\u2029]/g,function(c){return '\\\\u'+('000'+c.charCodeAt(0).toString(16)).slice(-4);});}
 let terms=[],searchQ='',pendingDeleteId=null;
 function loadData(){try{const s=localStorage.getItem(STORAGE_KEY);if(s){const p=JSON.parse(s);if(Array.isArray(p)&&p.length>0){terms=p;return;}}}catch(e){}terms=INITIAL_DATA.map((t,i)=>({id:i+1,term:t.term,description:t.description}));}
 function saveData(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(terms));}catch(e){}}
@@ -806,9 +818,13 @@ function openDelDialog(id){pendingDeleteId=id;const it=terms.find(t=>t.id===id);
 function closeDelDialog(){pendingDeleteId=null;document.getElementById('del-overlay').classList.remove('open');}
 function confirmDelete(){if(pendingDeleteId==null)return;terms=terms.filter(t=>t.id!==pendingDeleteId);saveData();closeDelDialog();render();toast('Term deleted');}
 function saveFile(){
-  const fd=JSON.stringify(terms.map(({term,description})=>({term,description}))).replace(new RegExp('</'+'script>','gi'),'</'+'script>');
-  const src=document.documentElement.outerHTML;
-  const marker='const INITIAL_DATA=';const p1=src.indexOf(marker);const p2=src.indexOf('];',p1)+2;const upd=src.slice(0,p1)+marker+fd+';'+src.slice(p2);
+  // Build a clean copy of this file: same page, updated word list, nothing left
+  // open or half-edited. The list is swapped by element id, never by searching text.
+  const copy=document.documentElement.cloneNode(true);
+  copy.querySelector('#lgp-data').textContent=jsonForHtml({id:DATA.id,terms:terms.map(({term,description})=>({term,description}))});
+  ['glossary-root','alpha-nav'].forEach(function(id){var n=copy.querySelector('#'+id);if(n)n.innerHTML='';});
+  copy.querySelectorAll('.open,.show,.flash').forEach(function(n){n.classList.remove('open','show','flash');});
+  const upd='<!DOCTYPE html>'+'\\n'+copy.outerHTML;
   const blob=new Blob([upd],{type:'text/html'});const url=URL.createObjectURL(blob);const a=document.createElement('a');
   var d=new Date();a.href=url;a.download='my-glossary-'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.html';
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
@@ -861,7 +877,7 @@ function StepExport({ terms, onBack, onClear }) {
 
   // ── Building files ─────────────────────────────────────────────────────
   // buildFile(id) returns the finished HTML text for one format, using the
-  // current colours, word list and options. Shared by Generate and Download all.
+  // current colors, word list and options. Shared by Generate and Download all.
   const buildFile = async (formatId) => {
     const t    = sanitizeTheme(theme);
     // Clean copy of the word list, with length limits so a huge cell can't break a page.
@@ -1192,7 +1208,7 @@ function StepExport({ terms, onBack, onClear }) {
           </button>
           {htmlReady && <button className="btn btn-secondary" onClick={download}>⬇ Download {readyLabel}</button>}
           <button className="btn btn-ghost" onClick={downloadAll} disabled={!!zipProgress || generating}
-            title="Every format with your current colours and options, in one .zip">
+            title="Every format with your current colors and options, in one .zip">
             {zipProgress ? <><Spinner/> Building {zipProgress}…</> : `📦 Download all ${FORMATS.length} formats (.zip)`}
           </button>
           <button className="btn btn-ghost" onClick={onBack}>← Back</button>
