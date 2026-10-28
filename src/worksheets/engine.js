@@ -398,8 +398,10 @@ function lgpRuntime() {
     var useBank = sec.getAttribute('data-bank') === '1';
     var items = [].slice.call(shell.children);
     var p, list, bank;
+    var prev = null;                              // the page before the current one (for the "lonely last page" fix)
 
     function start(cont) {
+      if (p) prev = { p: p, list: list, bank: bank };
       p = newPage(sec, cont);
       if (!cont && pre) { p.body.appendChild(pre.cloneNode(true)); fit(p.body); p.hasPre = true; }
       bank = null;
@@ -438,6 +440,25 @@ function lgpRuntime() {
         if (over(p)) p.el.classList.add('overflow');
       }
     });
+
+    // Lonely last page: if only 1–2 items spilled onto the final page, try to
+    // pull them back by shrinking the previous page a little (down to 88%).
+    // This saves a whole sheet of paper per student. If they still don't fit,
+    // everything is put back exactly as it was.
+    if (prev && !p.hasPre && list.children.length > 0 && list.children.length <= 2) {
+      var moving = [].slice.call(list.children);
+      moving.forEach(function (n) { prev.list.appendChild(n); });
+      var z = 1;
+      while (over(prev.p) && z > 0.88) { z -= 0.02; prev.list.style.zoom = z; }
+      if (over(prev.p)) {
+        prev.list.style.zoom = '';                 // didn't work – undo
+        moving.forEach(function (n) { list.appendChild(n); });
+      } else {
+        OUT.removeChild(p.el);                     // worked – drop the now-empty page
+        list = prev.list; bank = prev.bank; p = prev.p;
+        updBank();                                 // the word bank now includes the moved items
+      }
+    }
   }
 
   // FIXED section: each .fixed block becomes exactly one page.

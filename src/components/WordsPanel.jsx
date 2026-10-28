@@ -136,14 +136,14 @@ export function WordsPanel({ rows, editRows, replaceList, newList, listName }) {
             <li key={i}>
               <CheckIcon color="#2E7D32" />
               <b title={r.term}>{r.term}</b>
-              <span className="meta">{r.pic ? 'picture ✓' : 'letter tile'}</span>
+              <span className="meta">{r.pic ? `picture: ${r.pic}` : 'letter tile'}</span>
             </li>
           ))}
           {rows.length > SHOW_MAX && <li><span className="meta" style={{ marginLeft: 0 }}>…and {rows.length - SHOW_MAX} more</span></li>}
         </ul>
       )}
       {noPic > 0 && rows.length > 0 && (
-        <p className="muted" style={{ fontSize: 13 }}>Words without a matching picture get a letter tile. To choose one, add a third CSV column named <b>Icon</b> (e.g. volcano, magnet, money).</p>
+        <p className="muted" style={{ fontSize: 13 }}>Words without a matching picture get a letter tile. To choose a different picture, add a third CSV column named <b>Icon</b> (e.g. volcano, magnet, money).</p>
       )}
 
       <div className="take-out">

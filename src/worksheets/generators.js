@@ -89,6 +89,19 @@ const KEY_CSS = `
 .knote{grid-column:1/-1;font-size:10pt;color:#666;margin-top:6px;}`;
 
 // Answer-key building blocks: a heading row, and one "12. B  Volcano" line.
+// Split a word list into as few groups as possible, each holding at most `max`
+// words, and keep the groups the same size (24 words, max 14 → 12 + 12, not 14 + 10).
+// Longest words are dealt out first, round-robin, so every puzzle gets a fair mix.
+// `maxGroups` stops a huge list from making dozens of puzzles; anything past that
+// comes back in `extra` so it can be listed on the answer key.
+function splitEven(list, max, maxGroups) {
+  const n = Math.min(Math.ceil(list.length / max), maxGroups) || 1;
+  const keep = list.slice(0, n * max), extra = list.slice(n * max);
+  const groups = Array.from({ length: n }, () => []);
+  [...keep].sort((a, b) => b.w.length - a.w.length).forEach((x, i) => groups[i % n].push(x));
+  return { groups, extra };
+}
+
 const keyHead = (txt) => `<div class="kh">${esc(txt)}</div>`;
 const keyItem = (no, ans, extra) => `<div class="ki"><b>${esc(no)}</b><span class="ans">${esc(ans)}${extra ? ` <span style="color:#666;font-weight:400">${esc(extra)}</span>` : ''}</span></div>`;
 
@@ -407,12 +420,33 @@ export function wordSearch(data, o) {
   }
   if (!cands.length) return { title, sections: [], css: '', empty: `No terms of 3–${L.maxSize} letters to hide.` };
 
+  // More words than one grid holds? Make several puzzles instead of dropping words
+  // (24 words at Medium → Puzzle 1 and Puzzle 2, 12 words each). Up to 4 puzzles.
+  const { groups, extra } = splitEven(cands, L.maxWords, 4);
+  const many = groups.length > 1;
+  const levelName = { easy: 'Easy', medium: 'Medium', hard: 'Challenge' }[o.wsLevel] || 'Medium';
+  const puzzles = [], keys = [];
+  groups.forEach((group, gi) => {
+    const isLast = gi === groups.length - 1;
+    // Words that didn't go in any puzzle are listed on the LAST answer key.
+    const left = isLast ? extra.map(c => c.d.term) : [];
+    const built = buildWordSearch(group, L, o, isLast ? tooLong : [], left);
+    const label = `${many ? `Puzzle ${gi + 1} · ` : ''}${levelName} · ${built.count} ${built.count === 1 ? 'word' : 'words'}`;
+    puzzles.push(built.puzzle(label));
+    keys.push(built.key(many ? `Puzzle ${gi + 1} answers` : 'Answers'));
+  });
+  return { title, sections: [...puzzles, ...keys], css: WS_CSS };
+}
+
+// One word search grid + its answer key, for one group of words.
+//   tooLong / left – words to list on this puzzle's answer key as "left out"
+function buildWordSearch(group, L, o, tooLong, left) {
+  const title = 'Word Search';
   // Grid size: a bit bigger than the longest word, within this level's limits.
-  const longest = Math.max(...cands.map(c => c.w.length));
+  const longest = Math.max(...group.map(c => c.w.length));
   const SIZE = Math.max(L.minSize, Math.min(L.maxSize, longest + 2));
   // Longest words first – they're hardest to fit, so place them while the grid is empty.
-  const words = cands.slice(0, L.maxWords).sort((a, b) => b.w.length - a.w.length);
-  const left = cands.slice(words.length).map(c => c.d.term);   // didn't make the cut (word limit)
+  const words = [...group].sort((a, b) => b.w.length - a.w.length);
 
   // ── 2. Place the words ───────────────────────────────────────────────────
   // For each word try every allowed direction and every starting square (in
@@ -470,18 +504,20 @@ export function wordSearch(data, o) {
   const spaced = placed.some(p => /[^A-Za-z]/.test(p.d.term));   // any term with spaces/punctuation?
   const bank = `<div class="ws-bank"><div class="bank-h">Find these words</div><div class="ws-words">${sortedPlaced.map(p =>
     `<div class="ws-w"><span class="box"></span><span class="ws-ic">${iconMarkup(p.d.icon, p.d.term)}</span><span>${esc(p.d.term)}</span></div>`).join('')}</div></div>`;
-  const levelName = { easy: 'Easy', medium: 'Medium', hard: 'Challenge' }[o.wsLevel] || 'Medium';
 
-  const sections = [
+  return {
+    count: placed.length,
     // Puzzle page: the grid goes in `pre` (top of the first page), the word list flows after it.
-    flowSection({ title, topic: o.topic, label: `${levelName} · ${placed.length} words`, heading: 'Find the hidden words', icon: 'magnify',
+    puzzle: (label) => flowSection({ title, topic: o.topic, label, heading: 'Find the hidden words', icon: 'magnify',
       directions: `${L.say} Circle each word and tick it off the list.${spaced ? ' Spaces and punctuation are left out.' : ''}`,
       pre: gridHtml(false) }, [bank]),
     // Answer key page.
-    flowSection({ title, topic: o.topic, kind: 'key', heading: 'Answers', icon: 'check',
+    key: (heading) => flowSection({ title, topic: o.topic, kind: 'key', heading, icon: 'check',
       pre: gridHtml(true) }, skipped.length ? [`<p class="ws-note">Left out to keep the puzzle a good size: ${skipped.map(esc).join(', ')}.</p>`] : []),
-  ];
-  const css = `
+  };
+}
+
+const WS_CSS = `
 .ws-grid{position:relative;display:grid;grid-template-columns:repeat(var(--n),var(--cell));grid-auto-rows:var(--cell);width:max-content;margin:4px auto 14px;border:3px solid #2B2B2B;border-radius:12px;padding:6px;}
 .ws-grid span{display:flex;align-items:center;justify-content:center;font-family:'Andika',sans-serif;font-weight:700;font-size:calc(var(--cell) * .55);}
 .ws-key{position:absolute;left:6px;top:6px;width:calc(var(--n) * var(--cell));height:calc(var(--n) * var(--cell));pointer-events:none;}
@@ -491,8 +527,6 @@ export function wordSearch(data, o) {
 .ws-ic{width:22px;height:22px;flex:none;}
 .box{width:14px;height:14px;border:2px solid #2B2B2B;border-radius:3px;flex:none;}
 .ws-note{font-size:10.5pt;color:#555;}`;
-  return { title, sections, css };
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FRAYER MODEL — one "word map" per word: four boxes around the word.
@@ -653,15 +687,35 @@ function layoutCrossword(list, maxDim) {
 
 export function crossword(data, o) {
   const title = 'Crossword Puzzle';
-  const MAXD = 19;
+  const MAXD = 19;           // longest word (and widest grid) that fits on the page
   const list = [];
+  const tooLong = [];        // terms over 19 letters – listed on the answer key, never dropped silently
   for (const d of shuffle(data)) {
     const w = puzzleWord(d.term);
-    if (w.length < 3 || w.length > MAXD || list.some(x => x.w === w)) continue;
+    if (w.length > MAXD) { tooLong.push(d.term); continue; }
+    if (w.length < 3 || list.some(x => x.w === w)) continue;
     list.push({ w, d });
-    if (list.length >= 20) break;
   }
   if (list.length < 2) return { title, sections: [], css: '', empty: 'The crossword needs at least 2 terms of 3–19 letters.' };
+
+  // More than 20 words? Make several crosswords instead of dropping words
+  // (24 words → two crosswords of 12). Up to 4 crosswords.
+  const { groups, extra } = splitEven(list, 20, 4);
+  const many = groups.length > 1;
+  const puzzles = [], keys = [];
+  groups.forEach((group, gi) => {
+    const isLast = gi === groups.length - 1;
+    const built = buildCrossword(group, MAXD, o, isLast ? tooLong : [], isLast ? extra.map(x => x.d.term) : []);
+    puzzles.push(built.puzzle(`${many ? `Puzzle ${gi + 1} · ` : ''}${built.count} ${built.count === 1 ? 'word' : 'words'}`));
+    keys.push(built.key(many ? `Puzzle ${gi + 1} answers` : 'Answers'));
+  });
+  return { title, sections: [...puzzles, ...keys], css: CW_CSS };
+}
+
+// One crossword grid + clues + answer key, for one group of words.
+//   tooLong / left – words to list on this crossword's answer key
+function buildCrossword(list, MAXD, o, tooLong, left) {
+  const title = 'Crossword Puzzle';
   const L = layoutCrossword(list, MAXD);
 
   // number by reading order; across/down starting on the same square share a number
@@ -691,16 +745,22 @@ export function crossword(data, o) {
     ...(across.length ? [keyHead('Across'), ...across.map(p => keyItem(`${p.num}.`, p.w, p.w !== p.d.term.toUpperCase() ? p.d.term : ''))] : []),
     ...(down.length ? [keyHead('Down'), ...down.map(p => keyItem(`${p.num}.`, p.w, p.w !== p.d.term.toUpperCase() ? p.d.term : ''))] : []),
   ];
-  if (L.skipped.length) keyItems.push(`<div class="knote">Couldn't fit into the grid: ${L.skipped.map(s => esc(s.d.term)).join(', ')}.</div>`);
+  // Anything not in the grid is listed here so the teacher knows (nothing vanishes silently).
+  const notIn = [...L.skipped.map(s => s.d.term), ...left];
+  if (notIn.length) keyItems.push(`<div class="knote">Couldn't fit into the grid: ${notIn.map(esc).join(', ')}.</div>`);
+  if (tooLong.length) keyItems.push(`<div class="knote">Too long for a crossword (over ${MAXD} letters): ${tooLong.map(esc).join(', ')}.</div>`);
 
-  const sections = [
-    flowSection({ title, topic: o.topic, label: `${L.placed.length} words`, heading: 'Solve the puzzle', icon: 'pencil',
+  return {
+    count: L.placed.length,
+    puzzle: (label) => flowSection({ title, topic: o.topic, label, heading: 'Solve the puzzle', icon: 'pencil',
       directions: 'Read each clue and write the word in the boxes, one letter per box. The number in brackets tells you how many letters.',
       pre: gridHtml(false), listClass: 'clue-list' }, clueItems),
-    flowSection({ title, topic: o.topic, kind: 'key', heading: 'Answers', icon: 'check',
+    key: (heading) => flowSection({ title, topic: o.topic, kind: 'key', heading, icon: 'check',
       pre: gridHtml(true), listClass: 'key-list two' }, keyItems),
-  ];
-  const css = KEY_CSS + `
+  };
+}
+
+const CW_CSS = KEY_CSS + `
 .cw-grid{display:grid;grid-template-columns:repeat(var(--cols),var(--cell));grid-auto-rows:var(--cell);width:max-content;margin:4px auto 14px;}
 .cw-c{position:relative;border:1.6px solid #2B2B2B;margin:0 -1.6px -1.6px 0;background:#fff;display:flex;align-items:center;justify-content:center;}
 .cw-c i{position:absolute;top:1px;left:2px;font-style:normal;font-size:calc(var(--cell) * .26);font-weight:700;line-height:1;}
@@ -712,8 +772,6 @@ export function crossword(data, o) {
 .clue{display:flex;gap:7px;font-size:10.5pt;align-items:baseline;}
 .clue b{font-family:'Fredoka',sans-serif;font-weight:600;min-width:1.5em;text-align:right;font-size:11pt;}
 .clue .len{color:#666;white-space:nowrap;}`;
-  return { title, sections, css };
-}
 
 const arrow = (d) => d === 'A'
   ? `<svg viewBox="0 0 24 24"><path d="M3 12h15M13 6l6 6-6 6" fill="none" stroke="#2B2B2B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`

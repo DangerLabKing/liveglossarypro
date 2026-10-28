@@ -76,7 +76,7 @@ const ICONS = [
   // ── Living things ────────────────────────────────────────────────────────
   { n:'leaf', k:'leaf leaves photosynthesis chlorophyll foliage deciduous evergreen green',
     s:`<path d="M8 40C6 22 18 8 41 7c0 23-14 35-33 33z" fill="#66BB6A"/><path d="M8 40L33 15M16 32l1-8M16 32l8 1M23 25l1-8M23 25l8 1" fill="none" stroke-width="1.6"/>` },
-  { n:'sprout', k:'plant plants seed seeds sprout germinate germination grow growth root roots stem soil garden gardening seedling botany nutrient nutrients fertilizer',
+  { n:'sprout', k:'producer producers plant plants seed seeds sprout germinate germination grow growth root roots stem soil garden gardening seedling botany nutrient nutrients fertilizer',
     s:`<path d="M24 28V14" fill="none" stroke-width="2.4"/><path d="M24 19c-1-6-7-9-12-8 0 6 6 9 12 8zM24 15c1-6 7-9 12-8 0 6-6 9-12 8z" fill="#66BB6A"/><path d="M14 31h20l-3 13H17z" fill="#FF8A65"/><rect x="12" y="27" width="24" height="5" rx="1" fill="#FF7043"/>` },
   { n:'flower', k:'flower flowers bloom blossom petal petals pollen pollinate pollination pollinator nectar spring',
     s:`<path d="M24 26v18" fill="none" stroke-width="2.4"/><path d="M24 37c4-6 10-6 12-4-3 5-8 6-12 4z" fill="#66BB6A"/><g fill="#F48FB1"><circle cx="24" cy="9" r="5.5"/><circle cx="31" cy="14" r="5.5"/><circle cx="28.5" cy="22" r="5.5"/><circle cx="19.5" cy="22" r="5.5"/><circle cx="17" cy="14" r="5.5"/></g><circle cx="24" cy="16" r="4.5" fill="#FFD54F"/>` },
@@ -88,11 +88,11 @@ const ICONS = [
     s:`<path d="M24 45V7" fill="none" stroke-width="2.2"/><g fill="#FFCA28"><ellipse cx="19" cy="12" rx="3" ry="5" transform="rotate(-30 19 12)"/><ellipse cx="29" cy="12" rx="3" ry="5" transform="rotate(30 29 12)"/><ellipse cx="19" cy="20" rx="3" ry="5" transform="rotate(-30 19 20)"/><ellipse cx="29" cy="20" rx="3" ry="5" transform="rotate(30 29 20)"/><ellipse cx="19" cy="28" rx="3" ry="5" transform="rotate(-30 19 28)"/><ellipse cx="29" cy="28" rx="3" ry="5" transform="rotate(30 29 28)"/><ellipse cx="24" cy="6" rx="2.6" ry="4.5"/></g>` },
   { n:'apple', k:'apple apples fruit fruits food foods nutrition eat eating healthy diet snack vitamin vitamins',
     s:`<path d="M24 15c-4-3-13-3-14 7-1 9 5 19 10 19 2 0 3-1 4-1s2 1 4 1c5 0 11-10 10-19-1-10-10-10-14-7z" fill="#EF5350"/><path d="M24 15c0-4 1-7 3-9" fill="none"/><path d="M26 11c2-4 7-5 9-3-2 4-6 5-9 3z" fill="#66BB6A"/><path d="M15 22c0-3 2-5 4-5" fill="none" stroke="#fff" stroke-width="2"/>` },
-  { n:'paw', k:'animal animals mammal mammals pet pets species wildlife creature creatures vertebrate vertebrates predator predators prey carnivore herbivore omnivore dog cat zoo hibernate hibernation',
+  { n:'paw', k:'consumer consumers animal animals mammal mammals pet pets species wildlife creature creatures vertebrate vertebrates predator predators prey carnivore herbivore omnivore dog cat zoo hibernate hibernation',
     s:`<g fill="#A1887F"><ellipse cx="24" cy="32" rx="10" ry="9"/><ellipse cx="11" cy="20" rx="4" ry="5"/><ellipse cx="19" cy="12" rx="4" ry="5"/><ellipse cx="29" cy="12" rx="4" ry="5"/><ellipse cx="37" cy="20" rx="4" ry="5"/></g>` },
   { n:'fish', k:'fish fishes gills fins scales aquatic marine aquarium salmon shark',
     s:`<path d="M6 24c6-9 18-11 26-4l8-7v22l-8-7C24 35 12 33 6 24z" fill="#4FC3F7"/><circle cx="14" cy="22" r="2" fill="${O}" stroke="none"/><path d="M20 18c2 3 2 9 0 12" fill="none" stroke-width="1.6"/>` },
-  { n:'bird', k:'bird birds feather feathers wing wings nest nests migrate migration beak egg eggs flock',
+  { n:'bird', k:'scavenger scavengers vulture vultures bird birds feather feathers wing wings nest nests migrate migration beak egg eggs flock',
     s:`<path d="M11 28l-7-5 2 9z" fill="#42A5F5"/><path d="M10 28c0-10 8-16 16-14 8 2 12 10 10 18-2 6-10 10-18 8-5-2-8-6-8-12z" fill="#42A5F5"/><path d="M36 21l8 2.5-8 3z" fill="#FFA726"/><circle cx="30" cy="21" r="2" fill="${O}" stroke="none"/><path d="M15 26c5 0 10 2 12 8-6 1-10-2-12-8z" fill="#90CAF9"/>` },
   { n:'ladybug', k:'insect insects bug bugs beetle ant ants bee bees arthropod arthropods antenna antennae larva pupa',
     s:`<path d="M21 7l-3-4M27 7l3-4" fill="none"/><circle cx="24" cy="12" r="6" fill="${O}"/><ellipse cx="24" cy="28" rx="14" ry="15" fill="#EF5350"/><path d="M24 13v30" fill="none"/><g fill="${O}" stroke="none"><circle cx="17" cy="22" r="2.6"/><circle cx="31" cy="22" r="2.6"/><circle cx="16" cy="32" r="2.2"/><circle cx="32" cy="32" r="2.2"/><circle cx="20" cy="39" r="1.8"/><circle cx="28" cy="39" r="1.8"/></g>` },
@@ -138,7 +138,7 @@ const ICONS = [
     s:`<path d="M4 18h24a5 5 0 10-5-5M4 26h32a5 5 0 11-5 5M4 34h16" fill="none" stroke="#78909C" stroke-width="3.2"/>` },
   { n:'fire', k:'fire fires flame flames burn burning combustion wildfire campfire',
     s:`<path d="M24 4c2 8 12 12 12 24a12 12 0 01-24 0c0-6 3-9 5-12 1 4 3 5 4 5-1-6 1-12 3-17z" fill="#FFA726"/><path d="M24 26c2 3 6 5 6 10a6 6 0 01-12 0c0-3 2-6 6-10z" fill="#FFD54F"/>` },
-  { n:'recycle', k:'recycle recycling reuse reduce conservation conserve sustainable sustainability waste trash garbage renewable pollution cycle cycles',
+  { n:'recycle', k:'decomposer decomposers decompose decomposition recycle recycling reuse reduce conservation conserve sustainable sustainability waste trash garbage renewable pollution cycle cycles',
     s:`<path d="M38 24a14 14 0 01-24 10M10 24a14 14 0 0124-10" fill="none" stroke="#43A047" stroke-width="4"/><path d="M34 7v8h-8M14 41v-8h8" fill="none" stroke="#43A047" stroke-width="4"/>` },
 
   // ── Math ─────────────────────────────────────────────────────────────────
@@ -198,7 +198,7 @@ const ICONS = [
     s:`<path d="M10 7c8-4 14 4 22 0s8-2 10-2v18c-4 0-6 2-10 2-8 4-14-4-22 0z" fill="#EF5350"/><path d="M10 14c8-4 14 4 22 0s8-2 10-2" fill="none" stroke="#fff" stroke-width="2.6"/><path d="M10 7c8-4 14 4 22 0s8-2 10-2v18c-4 0-6 2-10 2-8 4-14-4-22 0z" fill="none"/><path d="M10 44V5" fill="none" stroke-width="2.8"/>` },
   { n:'pyramid', k:'pyramid pyramids egypt egyptian pharaoh pharaohs mummy archaeology archaeologist artifact artifacts civilization civilizations tomb nile monolith',
     s:`<circle cx="38" cy="10" r="5" fill="#FFD54F" stroke-width="1.8"/><path d="M2 42L24 8l22 34z" fill="#FFD54F"/><path d="M24 8l6 34" fill="none"/><path d="M8 33h32M13 25h22" fill="none" stroke-width="1.4"/>` },
-  { n:'people', k:'people person persons community communities society societies social group groups family families friend friends friendship cooperation cooperate together relationship relationships neighbor neighbors human humans humanity individual role tribe team teamwork volunteer humanoid humanoids',
+  { n:'people', k:'population populations people person persons community communities society societies social group groups family families friend friends friendship cooperation cooperate together relationship relationships neighbor neighbors human humans humanity individual role tribe team teamwork volunteer humanoid humanoids',
     s:`<circle cx="32" cy="16" r="5.5" fill="#E0AC69"/><path d="M22 41c0-8 4-14 10-14s10 6 10 14z" fill="#EF5350"/><circle cx="17" cy="14" r="6.5" fill="#FFCC99"/><path d="M5 41c0-9 5-15 12-15s12 6 12 15z" fill="#42A5F5"/>` },
   { n:'school', k:'school schools student students teacher teachers class classroom education educational lesson lessons graduate graduation diploma college university scholar academic study',
     s:`<path d="M12 23v9c0 3 6 6 12 6s12-3 12-6v-9l-12 5z" fill="#37474F"/><path d="M2 18l22-10 22 10-22 10z" fill="#455A64"/><path d="M42 20v12" fill="none" stroke-width="1.8"/><circle cx="42" cy="34" r="2.4" fill="#FFD54F"/>` },
@@ -230,9 +230,9 @@ const ICONS = [
     s:`<path d="M18 34V10l20-5v24M18 16l20-5" fill="none" stroke-width="2.8"/><ellipse cx="13" cy="35" rx="6" ry="5" fill="#AB47BC"/><ellipse cx="33" cy="30" rx="6" ry="5" fill="#AB47BC"/>` },
   { n:'palette', k:'art arts artist artists paint painting painter color colors colour colours draw drawing design sculpture artwork illustrate illustration portrait canvas mural hue',
     s:`<path d="M24 5C12 5 4 13 4 23s8 19 18 19c3 0 4-2 4-4s-2-3-2-5 2-4 5-4h5c5 0 10-3 10-10C44 11 35 5 24 5z" fill="#FFE0B2"/><g stroke-width="1.6"><circle cx="14" cy="18" r="3.5" fill="#EF5350"/><circle cx="23" cy="12" r="3.5" fill="#FFD54F"/><circle cx="33" cy="13" r="3.5" fill="#42A5F5"/><circle cx="38" cy="22" r="3.5" fill="#66BB6A"/></g><circle cx="15" cy="30" r="3.5" fill="#fff" stroke-width="1.6"/>` },
-  { n:'ball', k:'sport sports game games ball soccer football basketball baseball athlete athletes compete competition coach score scoring olympics',
+  { n:'ball', k:'sport sports game games ball soccer football basketball baseball athlete athletes coach score scoring olympics',
     s:`<circle cx="24" cy="24" r="19" fill="#fff"/><path d="M24 15l8.5 6.2-3.2 10H18.7l-3.2-10z" fill="${O}"/><path d="M24 15V5M32.5 21.2l9-3M29.3 31.2l5.5 8M18.7 31.2l-5.5 8M15.5 21.2l-9-3" fill="none" stroke-width="1.8"/>` },
-  { n:'trophy', k:'win winner winners victory award awards prize prizes champion champions championship achievement achieve success successful goal goals reward honor',
+  { n:'trophy', k:'compete competes competition competitor competitors win winner winners victory award awards prize prizes champion champions championship achievement achieve success successful goal goals reward honor',
     s:`<path d="M13 9c-6 0-8 3-7 7s4 6 9 6M35 9c6 0 8 3 7 7s-4 6-9 6" fill="none" stroke="#FFB300" stroke-width="2.8"/><path d="M12 6h24l-2 16c-1 6-6 9-10 9s-9-3-10-9z" fill="#FFD54F"/><rect x="21" y="31" width="6" height="6" fill="#FFCA28"/><rect x="14" y="37" width="20" height="6" rx="1" fill="#8D6E63"/>` },
 ];
 
