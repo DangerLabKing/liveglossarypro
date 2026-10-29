@@ -112,7 +112,7 @@ export default function App() {
 
   /** Load one of the sample lists and open the worksheet screen. */
   const loadSample = (list) => {
-    replaceList(list.words.map(([term, description]) => ({ term, description })), `${list.grade} · ${list.title}`,
+    replaceList(list.words.map(([term, description, icon]) => (icon ? { term, description, icon } : { term, description })), `${list.grade} · ${list.title}`,
       `Switched to “${list.title}”`);
     go('/make');
   };

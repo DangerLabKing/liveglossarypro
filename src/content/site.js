@@ -58,27 +58,21 @@ export const THEMES = [
 //   grade   shown on the card's folder tab
 //   band    one of 'K–2', '3–5', '6–8', '9–12' (used by the grade filter)
 //   color   folder-tab colour
-//   words   [term, definition] pairs
+//   words   [term, definition] pairs, or [term, definition, picture] to choose the picture
+//   tpt     optional link to the full set on TPT (shows a "Full set on TPT" link on the card)
 export const SAMPLE_LISTS = [
   {
-    id: 'g5-science', title: 'Earth, Life & Energy', subject: 'Science', grade: 'Grade 5', band: '3–5', color: '#FFB74D',
+    id: 'g5-science', title: 'Food Chains & Food Webs', subject: 'Science', grade: 'Grade 5', band: '3–5', color: '#FFB74D',
+    tpt: 'https://www.teacherspayteachers.com/Product/Ecosystems-Vocabulary-Activities-5th-Grade-Science-Flash-Cards-Quiz-Frayer-16840738',   // paste the Ecosystems pack's TPT link here
     words: [
-      ['Photosynthesis', 'The process plants use to make food from sunlight, water, and carbon dioxide.'],
-      ['Evaporation', 'When liquid water is heated and changes into water vapor, a gas.'],
-      ['Condensation', 'When water vapor cools and changes back into liquid droplets, like on a cold glass.'],
-      ['Precipitation', 'Water that falls from clouds as rain, snow, sleet, or hail.'],
-      ['Habitat', 'The natural home of an animal or plant where it finds food, water, and shelter.'],
-      ['Ecosystem', 'All the living and nonliving things in an area that interact with each other.'],
-      ['Predator', 'An animal that hunts and eats other animals.'],
-      ['Prey', 'An animal that is hunted and eaten by another animal.'],
-      ['Fossil', 'The preserved remains or traces of a plant or animal that lived long ago.'],
-      ['Erosion', 'The movement of rock and soil from one place to another by wind, water, or ice.'],
-      ['Volcano', "An opening in the Earth's crust where melted rock, called magma, erupts."],
-      ['Magnet', 'An object that attracts iron and steel and has a north and south pole.'],
-      ['Gravity', 'The force that pulls objects toward each other, such as toward the center of Earth.'],
-      ['Friction', 'A force that slows down moving objects when two surfaces rub together.'],
-      ['Circuit', 'A closed path that electricity flows through.'],
-      ['Orbit', 'The curved path an object takes around a planet or star.'],
+      ['Ecosystem', 'A community of living organisms and their physical environment.', 'tree'],
+      ['Producer', 'An organism that makes its own food.', 'sprout'],
+      ['Consumer', 'An organism that obtains energy by eating other organisms.', 'paw'],
+      ['Decomposer', 'An organism that breaks down dead plants and animals.', 'recycle'],
+      ['Predator', 'An animal that hunts other animals.', 'bird'],
+      ['Prey', 'An animal hunted by another animal.', 'fish'],
+      ['Food Chain', 'A sequence showing how energy passes from one organism to another.', 'wheat'],
+      ['Food Web', 'A network of interconnected food chains.', 'puzzle'],
     ],
   },
   {
