@@ -162,15 +162,15 @@ export function Landing({ go, loadSample, rows = [], listName = '', newList }) {
             <div className="includes">
               <h3 style={{ fontSize: 22 }}>Every full set includes</h3>
               <ul>
-                {['The full word list, teacher-written', 'All 8 worksheets as print-ready PDFs', 'Answer keys for everything', 'The CSV, to remix in the free tool']
+                                {['24 teacher-checked words with pictures', '7 activities in one print-ready PDF', 'Answer keys for everything', 'Teacher notes with a ready-made week plan']
                   .map(t => <li key={t}><CheckIcon color="#2B2B2B" />{t}</li>)}
               </ul>
             </div>
             <div className="bundle">
               <span className="tape" />
               <span className="hand" style={{ fontSize: 22, color: '#DAD80A' }}>best value</span>
-              <h3 style={{ fontSize: 26 }}>Whole-year grade bundles</h3>
-              <p style={{ color: '#CFCBC0' }}>Every unit for one grade and subject in a single download — vocabulary planned for the year.</p>
+                            <h3 style={{ fontSize: 26 }}>5th Grade Science bundle</h3>
+              <p style={{ color: '#CFCBC0' }}>Every unit in one download, and new packs are added free. Try the free sampler first.</p>
               <a className="btn btn-gold" style={{ alignSelf: 'flex-start', borderColor: '#F5F5F0' }} href={STORE.tptUrl} target="_blank" rel="noopener noreferrer">See bundles in the TPT store</a>
             </div>
           </div>

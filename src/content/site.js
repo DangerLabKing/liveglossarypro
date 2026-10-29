@@ -13,7 +13,7 @@
 // Leave tptUrl empty ('') and the site simply hides every "on TPT" button.
 // When your store page is ready, paste its address between the quotes.
 export const STORE = {
-  tptUrl: '',                                         // e.g. 'https://www.teacherspayteachers.com/store/your-store'
+    tptUrl: 'https://www.teacherspayteachers.com/store/liveglossarypro-resources',                                        // e.g. 'https://www.teacherspayteachers.com/store/your-store'
   coffeeUrl: 'https://buymeacoffee.com/cliffowright',
 };
 
