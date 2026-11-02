@@ -50,7 +50,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .hand { font-family: var(--hand); }
 /* outlined "sticker" heading: gold fill with a thick dark outline behind it */
 .outlined { color: var(--gold); -webkit-text-stroke: 6px var(--ink); paint-order: stroke fill; }
-.highlight { background: linear-gradient(transparent 58%, var(--gold) 58%, var(--gold) 92%, transparent 92%); padding: 0 4px; }
+/* Highlighter stroke. It sits BELOW the letters (like a marker underline) so the
+   light headline text never sits on top of the bright gold — that failed contrast.
+   box-decoration-break: clone keeps the stroke under every line if the text wraps. */
+.highlight { background: linear-gradient(transparent 87%, var(--gold) 87%, var(--gold) 100%); padding: 0 4px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 .section-title { font-size: clamp(32px, 4vw, 46px); }
 
 /* 4. Buttons & small parts ─────────────────────────────────────────────── */
@@ -187,6 +190,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .request form { background: #fff; border: var(--outline); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
 .request .row { display: flex; flex-wrap: wrap; gap: 12px; }
 .request .row > * { flex: 1 1 160px; }
+/* privacy note under the request form: says exactly what this form sends */
+.form-note { font-size: 13px; line-height: 1.45; color: var(--muted); }
+/* full-width privacy line at the bottom of every page */
+.site-foot .privacy-line { flex-basis: 100%; font-size: 14px; color: var(--muted); }
 .check { display: flex; gap: 8px; align-items: center; font-size: 14px; }
 .check input { width: 20px; height: 20px; }
 .honey { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
@@ -243,6 +250,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .preview .placeholder { padding: 60px 24px; text-align: center; color: var(--paper); display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .preview .placeholder .hand { font-size: 22px; color: var(--gold); }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.download-hint { font-size: 14px; color: var(--muted); margin-top: -8px; }  /* sits right under the download buttons */
 .actions .privacy { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
 .signup { background: #FFFDF3; border: var(--outline); border-radius: var(--radius); box-shadow: 4px 4px 0 var(--amber); padding: 18px 20px; display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; }
 .signup .msg { flex: 1 1 280px; display: flex; gap: 14px; align-items: flex-start; }

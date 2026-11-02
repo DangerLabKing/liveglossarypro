@@ -12,7 +12,18 @@ import { FORMATS, THEMES, ZIP_README, formatById } from '../content/site.js';
 import { saveBlob, today, slugify } from '../lib/files.js';
 import { WordsPanel } from './WordsPanel.jsx';
 import { SignupCard } from './Forms.jsx';
-import { LockIcon, DownloadIcon, NewTabIcon } from './Icons.jsx';
+import { LockIcon, DownloadIcon, NewTabIcon, PrintIcon } from './Icons.jsx';
+
+// ── Printing straight from the preview ──
+// The preview iframe is sandboxed, so this page can't call print() on it directly.
+// Instead, the PREVIEW copy of the worksheet gets this tiny listener added: when this
+// page sends it the message "lgp-print", the worksheet opens its own print dialog.
+// Only the preview gets it — downloaded files are left exactly as they were.
+const PRINT_LISTENER = '<script>window.addEventListener("message",function(e){if(e.source===window.parent&&e.data==="lgp-print")window.print();});</script>';
+const withPrintListener = (h) => {
+  const i = h.lastIndexOf('</body>');
+  return i === -1 ? h + PRINT_LISTENER : h.slice(0, i) + PRINT_LISTENER + h.slice(i);
+};
 
 // Only #RRGGBB colours ever reach the generated files' CSS.
 const sanitizeTheme = (t) => {
@@ -55,6 +66,7 @@ export function Workspace({ rows, editRows, replaceList, newList, listName, list
   const [zipProgress, setZipProgress] = useState(null);
   const [showSignup, setShowSignup] = useState(false);
   const buildNo = useRef(0);                      // ignore results from older builds
+  const previewRef = useRef(null);                // the preview <iframe> (for Print)
 
   const fmt = formatById(format);
 
@@ -111,6 +123,16 @@ export function Workspace({ rows, editRows, replaceList, newList, listName, list
       setError('Couldn’t build the zip. Please try again, or download formats one at a time.');
     }
     setZipProgress(null);
+  };
+
+  // Print / Save as PDF: ask the preview to open its print dialog (see PRINT_LISTENER).
+  // Counts as finishing, so the step indicator moves to "Print" — but no email card,
+  // because that card says "Your … is downloaded!".
+  const printPreview = () => {
+    const win = previewRef.current?.contentWindow;
+    if (!html || building || !win) return;
+    win.postMessage('lgp-print', '*');
+    onDownloaded?.();
   };
 
   const openInTab = () => {
@@ -205,7 +227,7 @@ export function Workspace({ rows, editRows, replaceList, newList, listName, list
           </div>
           {html ? (
             // sandbox: the preview can run its own layout script (and Print), but can't touch the app
-            <iframe title={`Preview of ${fmt.label}`} srcDoc={html} sandbox="allow-scripts allow-modals" />
+            <iframe ref={previewRef} title={`Preview of ${fmt.label}`} srcDoc={withPrintListener(html)} sandbox="allow-scripts allow-modals" />
           ) : (
             <div className="placeholder">
               <span className="hand">Your worksheet will appear here</span>
@@ -215,14 +237,18 @@ export function Workspace({ rows, editRows, replaceList, newList, listName, list
         </div>
 
         {/* ── downloads ── */}
+        {/* Print is the main action — it's what most teachers want. Downloading the
+            file is secondary, with a plain-English hint instead of the word "HTML". */}
         <div className="actions">
-          <button type="button" className="btn btn-gold btn-big" onClick={download} disabled={!html || building}><DownloadIcon /> Download {fmt.label.toLowerCase()}</button>
+          <button type="button" className="btn btn-gold btn-big" onClick={printPreview} disabled={!html || building}><PrintIcon /> Print / Save as PDF</button>
+          <button type="button" className="btn" onClick={download} disabled={!html || building}><DownloadIcon /> Download {fmt.label.toLowerCase()} file</button>
           <button type="button" className="btn" onClick={downloadAll} disabled={!rows.length || !!zipProgress}
             title="Every format with your current colors and options, in one .zip">
             {zipProgress ? <><span className="spinner" /> Building {zipProgress}…</> : `Download all ${FORMATS.length} (.zip)`}
           </button>
           <span className="privacy"><LockIcon /> Stays on this device</span>
         </div>
+        <p className="download-hint">Downloaded files open in any web browser — print them anytime, even offline. To get a PDF, choose “Save as PDF” in the print window.</p>
 
         {showSignup && <SignupCard label={fmt.label} onClose={() => { setShowSignup(false); try { localStorage.setItem('lgp-signup-dismissed', '1'); } catch { /* storage blocked: fine */ } }} />}
       </section>

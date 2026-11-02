@@ -49,6 +49,8 @@ export function SiteFooter({ go }) {
         {STORE.tptUrl && <a href={STORE.tptUrl} target="_blank" rel="noopener noreferrer">Our TPT store</a>}
         {STORE.coffeeUrl && <a href={STORE.coffeeUrl} target="_blank" rel="noopener noreferrer">Buy me a coffee</a>}
         <span className="muted" style={{ fontSize: 14 }}>© {new Date().getFullYear()} Live Glossary Pro</span>
+        {/* Privacy line on every page. Matches the wording in the "Free & private" section. */}
+        <p className="privacy-line">Privacy: worksheets are made in your browser, and your word lists are never uploaded. Only the request form and email signup send anything to us.</p>
       </div>
     </footer>
   );

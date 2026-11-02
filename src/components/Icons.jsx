@@ -10,6 +10,10 @@ export const LockIcon = ({ color = 'currentColor' }) => (
 export const DownloadIcon = ({ color = 'currentColor' }) => (
   <svg {...base}><path d="M12 4v11M7 10l5 5 5-5M5 20h14" stroke={color} strokeWidth="2.6" /></svg>
 );
+// Printer: used on the main "Print / Save as PDF" button
+export const PrintIcon = ({ color = 'currentColor' }) => (
+  <svg {...base}><path d="M7 9V4h10v5" stroke={color} strokeWidth="2.4" /><rect x="3" y="9" width="18" height="8" rx="2" stroke={color} strokeWidth="2.4" /><path d="M7 14h10v6H7z" stroke={color} strokeWidth="2.4" /></svg>
+);
 export const CopyIcon = ({ color = 'currentColor' }) => (
   <svg {...base}><rect x="8" y="8" width="12" height="12" rx="2" stroke={color} strokeWidth="2.4" /><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" stroke={color} strokeWidth="2.4" /></svg>
 );

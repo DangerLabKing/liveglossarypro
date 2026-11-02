@@ -64,6 +64,8 @@ export function RequestForm() {
       <label className="check"><input type="checkbox" name="monthly" /> Also send me a free list each month</label>
       {error && <p className="notice error" role="alert">{error}</p>}
       {state === 'error' && <p className="notice error" role="alert">Sorry — that didn’t send. Please try again in a moment.</p>}
+      {/* Privacy note: this form is the exception to "nothing leaves your device", so say so plainly */}
+      <p className="form-note">What you type here — and your email, if you add one — is sent to us so we can write your list. Worksheets you make on this site are never uploaded.</p>
       <button type="submit" className="btn btn-dark" style={{ alignSelf: 'flex-start' }} disabled={state === 'sending'}>
         {state === 'sending' ? <><span className="spinner" /> Sending…</> : 'Request this list'}
       </button>

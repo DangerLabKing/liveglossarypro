@@ -207,7 +207,11 @@ export function Landing({ go, loadSample, rows = [], listName = '', newList }) {
         <div className="wrap">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <h2 className="section-title">Free. No account.<br />Your list stays with you.</h2>
-            <p>Everything happens in your browser. Your words are never uploaded or stored, and the files you download work offline — on any computer.</p>
+            {/* Privacy wording is deliberately exact: worksheets are made in the browser, the
+                interactive glossary saves on the teacher's own computer, and the two forms are
+                the only things that send anything to us. Keep it that way if you edit it. */}
+            <p>Worksheets are made right in your browser — your word list is never uploaded. The files you download work offline on any computer, and the interactive glossary saves its words on that computer only.</p>
+            <p style={{ color: 'var(--chalk-text)', fontSize: 15 }}>The only things ever sent to us are what you type into the word-list request form or the email signup.</p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'flex-start' }}>
             <a className="btn btn-gold btn-big" href="/make" onClick={toMake}>Make your first worksheet</a>
