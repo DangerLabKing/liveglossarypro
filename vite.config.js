@@ -7,6 +7,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        // The teacher guides in public/resources are real HTML pages, not part of
+        // the React app. Without this line, the offline service worker could answer
+        // a visit to /resources/... with the app's index.html instead of the guide.
+        navigateFallbackDenylist: [/^\/resources\//]
+      },
       includeAssets: ['favicon.png', 'favicon.svg', 'logo.svg', 'icons/*.png', 'img/*.jpg'],
       manifest: {
         name: 'Live Glossary Pro',

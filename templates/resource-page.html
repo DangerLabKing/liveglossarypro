@@ -1,0 +1,100 @@
+<!--
+  TEACHER GUIDE TEMPLATE
+  To publish a new guide:
+    1. Copy this file to public/resources/<slug>/index.html  (slug = lowercase-words-with-dashes)
+    2. Replace every {{...}} placeholder (search for "{{" to find them all)
+    3. Add a <li> for it at the top of the list in public/resources/index.html
+    4. Add a <url> block for it in public/sitemap.xml
+    5. npm run build, commit, push. Then request indexing in Search Console.
+  This file lives outside public/ so it is never published itself.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- SEO basics for this guide: title, description and the one official address -->
+  <title>{{TITLE}} | Live Glossary Pro</title>
+  <meta name="description" content="{{META_DESCRIPTION — 140-155 characters}}" />
+  <link rel="canonical" href="https://liveglossarypro.com/resources/{{SLUG}}/" />
+  <meta name="theme-color" content="#1A1A1A" />
+  <!-- How the page looks when shared on Facebook, Pinterest, etc. -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="{{TITLE}}" />
+  <meta property="og:description" content="{{SHORT SHARE TEXT}}" />
+  <meta property="og:url" content="https://liveglossarypro.com/resources/{{SLUG}}/" />
+  <meta property="og:image" content="https://liveglossarypro.com/icons/icon-512.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="stylesheet" href="/resources/resources.css" />
+  <!-- Structured data: tells Google and AI answer engines what this page is -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "{{TITLE}}",
+    "description": "{{META_DESCRIPTION — 140-155 characters}}",
+    "datePublished": "{{YYYY-MM-DD}}",
+    "dateModified": "{{YYYY-MM-DD}}",
+    "author": { "@type": "Person", "name": "Cliff Wright" },
+    "publisher": { "@type": "Organization", "name": "Live Glossary Pro", "url": "https://liveglossarypro.com/" },
+    "mainEntityOfPage": "https://liveglossarypro.com/resources/{{SLUG}}/"
+  }
+  </script>
+</head>
+<body>
+
+  <!-- HEADER: same brand and button as the app -->
+  <header class="site-head">
+    <nav aria-label="Main">
+      <a href="/" class="brand"><img src="/logo.svg" alt="" width="44" height="44" /><span>Live Glossary <span class="pro-pill">Pro</span></span></a>
+      <a class="btn btn-gold" href="/make">Make worksheets</a>
+    </nav>
+  </header>
+
+  <main class="read">
+    <p class="crumbs"><a href="/">Home</a> › <a href="/resources/">Teacher guides</a></p>
+
+    <!-- ARTICLE: the one H1 on the page -->
+    <article>
+      <h1>{{HEADLINE START}} <span class="hl">{{HIGHLIGHTED WORDS}}</span></h1>
+      <p class="byline">By Cliff Wright · {{Month D, YYYY}}</p>
+
+      <!-- First paragraph: answer the question directly in 1-2 sentences -->
+      <p class="lede">{{DIRECT ANSWER}}</p>
+
+      <h2>{{SECTION HEADING}}</h2>
+      <p>{{PARAGRAPH}}</p>
+
+      <!-- Optional: a word list teachers can copy into the generator. Delete if not needed. -->
+      <div class="wordlist">
+        <p><b>{{word}}</b> — {{meaning}}</p>
+      </div>
+
+      <h2>{{SECTION HEADING}}</h2>
+      <p>{{PARAGRAPH}}</p>
+
+      <!-- CALL TO ACTION -->
+      <section class="cta">
+        <h2>Try it with your own list</h2>
+        <p>Free for teachers. No sign-up. Your word list is never uploaded.</p>
+        <a class="btn btn-gold btn-big" href="/make">Make worksheets</a>
+      </section>
+    </article>
+  </main>
+
+  <!-- FOOTER: same links and privacy line as the app -->
+  <footer class="site-foot">
+    <div class="wrap">
+      <a href="/" class="brand"><img src="/logo.svg" alt="" width="34" height="34" /><span>Live Glossary <span class="pro-pill">Pro</span></span></a>
+      <a href="/make">Make worksheets</a>
+      <a href="/resources/">Teacher guides</a>
+      <a href="https://www.teacherspayteachers.com/store/liveglossarypro-resources" target="_blank" rel="noopener noreferrer">Our TPT store</a>
+      <a href="https://buymeacoffee.com/cliffowright" target="_blank" rel="noopener noreferrer">Buy me a coffee</a>
+      <span style="font-size:14px;color:var(--muted)">© 2026 Live Glossary Pro</span>
+      <p class="privacy-line">Privacy: worksheets are made in your browser, and your word lists are never uploaded. Only the request form and email signup send anything to us.</p>
+    </div>
+  </footer>
+
+</body>
+</html>

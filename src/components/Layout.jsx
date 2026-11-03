@@ -46,6 +46,8 @@ export function SiteFooter({ go }) {
         <Brand go={go} small />
         <a href="/make" onClick={(e) => { e.preventDefault(); go('/make'); }}>Make worksheets</a>
         <a href="/#lists" onClick={(e) => { e.preventDefault(); go('/', 'lists'); }}>Word lists</a>
+        {/* Teacher guides are plain HTML pages in public/resources, so this is a normal link (full page load) */}
+        <a href="/resources/">Teacher guides</a>
         {STORE.tptUrl && <a href={STORE.tptUrl} target="_blank" rel="noopener noreferrer">Our TPT store</a>}
         {STORE.coffeeUrl && <a href={STORE.coffeeUrl} target="_blank" rel="noopener noreferrer">Buy me a coffee</a>}
         <span className="muted" style={{ fontSize: 14 }}>© {new Date().getFullYear()} Live Glossary Pro</span>
