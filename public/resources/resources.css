@@ -96,3 +96,15 @@ p { margin: 0 0 16px; }
   h2 { font-size: 24px; }
   .cta { padding: 22px; }
 }
+
+/* Lists and small headings inside a guide */
+article ul, article ol { margin: 0 0 16px; padding-left: 26px; }
+article li { margin-bottom: 8px; }
+h3 { font-family: var(--display); font-weight: 600; font-size: 20px; line-height: 1.2; margin: 22px 0 6px; }
+
+/* "More teacher guides" box near the end of each guide */
+.more { border-top: var(--outline); margin-top: 40px; }
+.more h2 { font-size: 24px; margin-top: 28px; }
+.more ul { list-style: none; padding: 0; }
+.more li { margin-bottom: 10px; }
+.more a { font-weight: 700; }
