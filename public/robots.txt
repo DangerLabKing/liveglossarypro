@@ -1,0 +1,6 @@
+# Allow all search engines and AI crawlers to index the whole site
+User-agent: *
+Allow: /
+
+# Tell crawlers where the sitemap lives
+Sitemap: https://liveglossarypro.com/sitemap.xml
