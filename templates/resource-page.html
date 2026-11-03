@@ -3,9 +3,12 @@
   To publish a new guide:
     1. Copy this file to public/resources/<slug>/index.html  (slug = lowercase-words-with-dashes)
     2. Replace every {{...}} placeholder (search for "{{" to find them all)
-    3. Add a <li> for it at the top of the list in public/resources/index.html
-    4. Add a <url> block for it in public/sitemap.xml
-    5. npm run build, commit, push. Then request indexing in Search Console.
+    3. Run:  python templates/update-guides-index.py
+       It lists the guide on /resources/ (newest first, with its date)
+       and adds it to public/sitemap.xml.
+    4. npm run build, commit, push. Then request indexing in Search Console.
+  If you edit a guide later, change "dateModified" in its structured data
+  and run step 3 again: the index then shows "Updated <date>".
   This file lives outside public/ so it is never published itself.
 -->
 <!DOCTYPE html>
@@ -16,6 +19,9 @@
   <!-- SEO basics for this guide: title, description and the one official address -->
   <title>{{TITLE}} | Live Glossary Pro</title>
   <meta name="description" content="{{META_DESCRIPTION — 140-155 characters}}" />
+  <!-- Card on /resources/: name and one-line description -->
+  <meta name="lgp:card-title" content="{{NAME ON THE GUIDES PAGE, sentence case}}" />
+  <meta name="lgp:card" content="{{ONE-LINE DESCRIPTION}}" />
   <link rel="canonical" href="https://liveglossarypro.com/resources/{{SLUG}}/" />
   <meta name="theme-color" content="#1A1A1A" />
   <!-- How the page looks when shared on Facebook, Pinterest, etc. -->
@@ -23,7 +29,8 @@
   <meta property="og:title" content="{{TITLE}}" />
   <meta property="og:description" content="{{SHORT SHARE TEXT}}" />
   <meta property="og:url" content="https://liveglossarypro.com/resources/{{SLUG}}/" />
-  <meta property="og:image" content="https://liveglossarypro.com/icons/icon-512.png" />
+  <meta property="og:image" content="https://liveglossarypro.com/img/og-share.png" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="stylesheet" href="/resources/resources.css" />

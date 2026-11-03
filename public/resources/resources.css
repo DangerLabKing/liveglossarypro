@@ -108,3 +108,23 @@ h3 { font-family: var(--display); font-weight: 600; font-size: 20px; line-height
 .more ul { list-style: none; padding: 0; }
 .more li { margin-bottom: 10px; }
 .more a { font-weight: 700; }
+
+/* ── Word list pages (built by templates/build-wordlist-page.py) ── */
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 8px; }
+.actions .btn { cursor: pointer; }
+.actions-note { font-size: 15px; color: var(--muted); margin-bottom: 28px; }
+h3 .count { font-family: var(--body); font-weight: 400; font-size: 15px; color: var(--muted); margin-left: 6px; }
+.wl { margin: 0; }
+.wl-row { padding: 10px 0; border-bottom: 1.5px dashed #CFCBC0; }
+.wl-row:first-child { padding-top: 0; }
+.wl-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.wl dt { font-family: var(--display); font-weight: 600; font-size: 19px; }
+.wl dd { margin: 2px 0 0; }
+
+/* TPT pack box: amber outline so it reads as a separate, optional offer */
+.pack { background: #fff; border: var(--outline); border-left: 10px solid var(--amber); border-radius: 16px; padding: 22px 24px; margin: 40px 0 0; }
+.pack h2 { margin: 2px 0 8px; font-size: 24px; }
+.pack-kicker { font-weight: 700; font-size: 14px; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); margin: 0; }
+
+/* Date on each card on /resources/ */
+.guide-list time { display: block; font-size: 14px; color: var(--muted); margin: 2px 0 4px; }

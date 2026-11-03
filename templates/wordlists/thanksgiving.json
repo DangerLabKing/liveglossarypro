@@ -1,0 +1,44 @@
+{
+  "slug": "thanksgiving-vocabulary-words",
+  "csv": "thanksgiving-grades-3-5.csv",
+  "csvDownloadName": "thanksgiving-vocabulary-grades-3-5.csv",
+  "title": "Thanksgiving Vocabulary Words for Grades 3–5",
+  "h1": ["Thanksgiving vocabulary words", "for grades 3–5"],
+  "meta": "24 Thanksgiving vocabulary words for grades 3–5 with kid-friendly meanings. Copy the list or download the CSV, then print free worksheets. No sign-up.",
+  "card": "24 words on the harvest, the 1621 celebration at Plymouth and fall, with meanings.",
+  "date": "2026-11-03",
+  "dateText": "November 3, 2026",
+  "lede": "Here are 24 Thanksgiving and fall vocabulary words for grades 3–5, each with a kid-friendly meaning. The list covers the harvest and the holiday, the history of the 1621 harvest celebration at Plymouth, including the Wampanoag nation, and a few fall science words. Copy it or download it, then make free printable worksheets in Live Glossary Pro.",
+  "groups": {
+    "The holiday and the harvest": ["Thanksgiving", "Gratitude", "Harvest", "Crops", "Feast", "Tradition", "Autumn", "Cornucopia"],
+    "History: Plymouth and the Wampanoag": ["Mayflower", "Voyage", "Pilgrims", "Colony", "Plymouth", "Wampanoag", "Massasoit", "Tisquantum", "Indigenous", "Three Sisters", "Ancestor"],
+    "Fall and Thanksgiving today": ["Migration", "Deciduous", "Proclamation", "Parade", "Volunteer"]
+  },
+  "sections": [
+    ["How to use it in the weeks before Thanksgiving", [
+      "Start with flash cards and the study sheet. The study sheet gives students every word with its meaning, then fill in the blank and matching practice.",
+      "Frayer models work well for a few big ideas, such as <b>gratitude</b>, <b>tradition</b> or <b>Indigenous</b>. Writing examples and non-examples gets students talking about what each word really means.",
+      "With all 24 words, bingo prints full 5 by 5 cards with a free space, plus a caller sheet and word wall cards. It makes a good review game in the days before break.",
+      "Finish with the quiz. You can print up to four shuffled versions, each with its own answer key.",
+      "For younger students, paste in only the words you need. Most worksheets work with a short list, and bingo needs at least 8 words."
+    ]],
+    ["About the history words", [
+      "The history words describe the 1621 harvest celebration at Plymouth as it happened. The Wampanoag appear as a nation with thousands of years of history who still live in Massachusetts and Rhode Island today, and Massasoit and Tisquantum are named as the real people they were. The words pair well with your social studies lessons."
+    ]]
+  ],
+  "pack": {
+    "name": "Thanksgiving Vocabulary Worksheets, Grades 3–5",
+    "url": "https://www.teacherspayteachers.com/store/liveglossarypro-resources",
+    "blurb": "All 24 words as a print-ready set: flash cards, a study sheet, Frayer models, a quiz in two versions, two word searches, two crosswords, and bingo with a word wall, plus teacher notes and answer keys."
+  },
+  "faq": [
+    ["What are good Thanksgiving vocabulary words for grades 3 to 5?", "Words such as gratitude, harvest, tradition, cornucopia, Mayflower, Wampanoag, colony and Three Sisters. This list has 24 words with meanings, covering the holiday, its history and fall."],
+    ["Can I make free Thanksgiving worksheets from this list?", "Yes. Copy the list or download the CSV, then paste or upload it into Live Glossary Pro to print flash cards, a quiz, bingo, a word search and more. It is free and needs no sign-up."]
+  ],
+  "related": [
+    ["vocabulary-bingo-cards", "How to make vocabulary bingo cards"],
+    ["vocabulary-word-search", "How to make a vocabulary word search"],
+    ["printable-vocabulary-flash-cards", "How to make printable vocabulary flash cards"],
+    ["vocabulary-quiz-with-answer-key", "How to make a vocabulary quiz with an answer key"]
+  ]
+}

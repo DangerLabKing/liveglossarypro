@@ -6,17 +6,75 @@
     <title>Live Glossary Pro — free vocabulary worksheets from your word list</title>
     <!-- Canonical URL: tells search engines this is the official address of the page -->
     <link rel="canonical" href="https://liveglossarypro.com/" />
-    <meta name="description" content="Type or paste your vocabulary list and print flash cards, bingo, word searches, crosswords, quizzes and Frayer models in seconds. Free for K–12 teachers. No sign-up — your list never leaves your computer." />
+    <meta name="description" content="Type or paste your vocabulary list and print flash cards, study sheets, quizzes, bingo, word searches, crosswords and Frayer models. Free for K–12 teachers. No sign-up." />
     <meta name="theme-color" content="#1A1A1A" />
     <meta property="og:title" content="Live Glossary Pro — Type your word list. Print the worksheets." />
     <meta property="og:description" content="Free vocabulary worksheets for K–12 teachers: flash cards, bingo, word search, crossword, quiz, Frayer model and more." />
-    <meta property="og:image" content="/icons/icon-512.png" />
+    <!-- Share picture: must be a full https:// address for Facebook, Pinterest and Google -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://liveglossarypro.com/" />
+    <meta property="og:site_name" content="Live Glossary Pro" />
+    <meta property="og:image" content="https://liveglossarypro.com/img/og-share.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <!-- Structured data: tells Google the site's name, who runs it, and what the app is.
+         WebSite → the name Google shows above the search result ("Live Glossary Pro").
+         Organization → name and logo. WebApplication → a free teacher tool that runs in the browser. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        { "@type": "WebSite", "@id": "https://liveglossarypro.com/#website", "url": "https://liveglossarypro.com/",
+          "name": "Live Glossary Pro", "alternateName": ["LiveGlossaryPro", "Live Glossary"], "publisher": { "@id": "https://liveglossarypro.com/#org" } },
+        { "@type": "Organization", "@id": "https://liveglossarypro.com/#org", "name": "Live Glossary Pro", "url": "https://liveglossarypro.com/",
+          "logo": "https://liveglossarypro.com/icons/icon-512.png", "founder": { "@type": "Person", "name": "Cliff Wright" },
+          "sameAs": ["https://www.teacherspayteachers.com/store/liveglossarypro-resources"] },
+        { "@type": "WebApplication", "name": "Live Glossary Pro", "url": "https://liveglossarypro.com/make",
+          "applicationCategory": "EducationalApplication", "operatingSystem": "Any (runs in a web browser)",
+          "description": "Turns a vocabulary list into printable flash cards, study sheets, quizzes, bingo, word searches, crosswords and Frayer models, plus a searchable class glossary.",
+          "isAccessibleForFree": true, "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+          "audience": { "@type": "EducationalAudience", "educationalRole": "teacher" }, "publisher": { "@id": "https://liveglossarypro.com/#org" } }
+      ]
+    }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!--
+        PLAIN-HTML VERSION OF THE HOME PAGE
+        Shown for a split second before the app loads, then React replaces it.
+        It's here so search engines and AI tools that don't run JavaScript
+        still see a real heading, text and links. Keep it in step with
+        src/components/Landing.jsx when the home page wording changes.
+      -->
+      <main style="max-width:760px;margin:0 auto;padding:48px 24px;font-family:Andika,'Trebuchet MS',sans-serif;color:#2B2B2B;line-height:1.6">
+        <h1>Type your word list. Print the worksheets.</h1>
+        <p>Free vocabulary worksheets for K–12 teachers. Type or paste your words, or upload a CSV, and print flash cards, study sheets, quizzes, bingo, word searches, crosswords and Frayer models, each with the answer key on its own page. No sign-up, and your list never leaves your computer.</p>
+        <p><a href="/make">Make worksheets — it’s free</a></p>
+        <h2>Eight ways to practice the same words</h2>
+        <ul>
+          <li><a href="/resources/printable-vocabulary-flash-cards/">Flash cards</a>: 8 to a sheet, printed double-sided.</li>
+          <li><a href="/resources/vocabulary-study-sheet/">Study sheet</a>: word study, fill in the blank with a word bank, and matching.</li>
+          <li><a href="/resources/vocabulary-quiz-with-answer-key/">Quiz</a>: multiple choice and matching, up to four shuffled versions.</li>
+          <li><a href="/resources/vocabulary-bingo-cards/">Bingo and word wall</a>: unique cards, a caller sheet and cut-out word wall cards.</li>
+          <li><a href="/resources/vocabulary-word-search/">Word search</a>: easy, medium or challenge.</li>
+          <li><a href="/resources/vocabulary-crossword-puzzle/">Crossword</a>: clues from your definitions, with letter counts.</li>
+          <li><a href="/resources/frayer-model-vocabulary-worksheet/">Frayer model</a>: definition, picture, examples and non-examples.</li>
+          <li><a href="/resources/class-vocabulary-glossary/">Class glossary</a>: a searchable A–Z page your class can add to and edit.</li>
+        </ul>
+        <h2>Three steps</h2>
+        <ol>
+          <li>Add your words: one per line, a dash, then the meaning. Or upload a CSV, or pick a sample list.</li>
+          <li>Pick a worksheet and see it exactly as it will print.</li>
+          <li>Print it or save it as a PDF, on US Letter or A4.</li>
+        </ol>
+        <p><a href="/resources/">Teacher guides and vocabulary word lists</a> · <a href="https://www.teacherspayteachers.com/store/liveglossarypro-resources">Our TPT store</a></p>
+      </main>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
 
     <!--

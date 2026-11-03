@@ -2,8 +2,17 @@
   command = "npm run build"
   publish = "dist"
 
+# The React app has two pages: "/" and "/make". Only /make needs this rewrite
+# ("/" is index.html already). Every other unknown address now gets a real
+# 404 page (public/404.html) instead of a copy of the home page, which Google
+# reports as a "soft 404". Teacher guides are real files in public/resources.
 [[redirects]]
-  from = "/*"
+  from = "/make"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/make/"
   to = "/index.html"
   status = 200
 
